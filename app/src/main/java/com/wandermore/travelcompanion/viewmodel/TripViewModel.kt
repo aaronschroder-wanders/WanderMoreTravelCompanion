@@ -11,7 +11,9 @@ class TripViewModel : ViewModel() {
 
 
     fun getTrips(): List<Trip> {
+
         return repository.getTrips()
+
     }
 
 
@@ -35,6 +37,13 @@ class TripViewModel : ViewModel() {
             endDate,
             homeCurrency
         )
+
+    }
+
+
+    fun updateTrip(trip: Trip) {
+
+        repository.updateTrip(trip)
 
     }
 }

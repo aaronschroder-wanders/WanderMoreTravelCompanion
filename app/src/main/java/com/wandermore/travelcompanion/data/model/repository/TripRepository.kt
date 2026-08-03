@@ -39,4 +39,20 @@ class TripRepository {
 
         trips.add(trip)
     }
+
+
+    fun updateTrip(updatedTrip: Trip) {
+
+        val index = trips.indexOfFirst { trip ->
+            trip.id == updatedTrip.id
+        }
+
+
+        if (index != -1) {
+
+            trips[index] = updatedTrip
+
+        }
+
+    }
 }

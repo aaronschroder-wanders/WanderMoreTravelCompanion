@@ -13,6 +13,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.wandermore.travelcompanion.ui.screens.CreateTripScreen
+import com.wandermore.travelcompanion.ui.screens.EditTripScreen
 import com.wandermore.travelcompanion.ui.screens.HomeScreen
 import com.wandermore.travelcompanion.ui.screens.TripDetailsScreen
 import com.wandermore.travelcompanion.ui.theme.WanderMoreTravelCompanionTheme
@@ -36,7 +37,6 @@ class MainActivity : ComponentActivity() {
                 Scaffold(
                     modifier = Modifier.fillMaxSize()
                 ) { innerPadding ->
-
 
                     NavHost(
                         navController = navController,
@@ -98,7 +98,48 @@ class MainActivity : ComponentActivity() {
                             if (trip != null) {
 
                                 TripDetailsScreen(
-                                    trip = trip
+                                    trip = trip,
+                                    onEditTrip = {
+
+                                        navController.navigate(
+                                            "editTrip/${trip.id}"
+                                        )
+
+                                    }
+                                )
+
+                            }
+
+                        }
+
+
+                        composable("editTrip/{tripId}") { backStackEntry ->
+
+                            val tripId =
+                                backStackEntry.arguments
+                                    ?.getString("tripId")
+                                    ?.toLong()
+
+
+                            val trip =
+                                tripId?.let {
+                                    tripViewModel.getTripById(it)
+                                }
+
+
+                            if (trip != null) {
+
+                                EditTripScreen(
+                                    trip = trip,
+                                    tripViewModel = tripViewModel,
+
+                                    onTripUpdated = {
+
+                                        navController.navigate(
+                                            "tripDetails/${trip.id}"
+                                        )
+
+                                    }
                                 )
 
                             }
