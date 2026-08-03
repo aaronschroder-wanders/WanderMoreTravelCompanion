@@ -9,10 +9,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import com.wandermore.travelcompanion.ui.screens.CreateTripScreen
 import com.wandermore.travelcompanion.ui.screens.HomeScreen
 import com.wandermore.travelcompanion.ui.theme.WanderMoreTravelCompanionTheme
 import com.wandermore.travelcompanion.viewmodel.TripViewModel
-import java.time.LocalDate
 
 class MainActivity : ComponentActivity() {
 
@@ -22,7 +25,10 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         setContent {
+
             WanderMoreTravelCompanionTheme {
+
+                val navController = rememberNavController()
 
                 val tripViewModel: TripViewModel = viewModel()
 
@@ -30,20 +36,42 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize()
                 ) { innerPadding ->
 
-                    HomeScreen(
-                        modifier = Modifier.padding(innerPadding),
-                        trips = tripViewModel.trips,
-                        onCreateTrip = {
 
-                            tripViewModel.addTrip(
-                                name = "European Adventure",
-                                startDate = LocalDate.of(2025, 5, 1),
-                                endDate = LocalDate.of(2025, 9, 30),
-                                homeCurrency = "NZD"
+                    NavHost(
+                        navController = navController,
+                        startDestination = "home",
+                        modifier = Modifier.padding(innerPadding)
+                    ) {
+
+
+                        composable("home") {
+
+                            HomeScreen(
+                                trips = tripViewModel.trips,
+
+                                onCreateTrip = {
+
+                                    navController.navigate("createTrip")
+
+                                }
                             )
-
                         }
-                    )
+
+
+                        composable("createTrip") {
+
+                            CreateTripScreen(
+                                tripViewModel = tripViewModel,
+
+                                onTripCreated = {
+
+                                    navController.navigate("home")
+
+                                }
+                            )
+                        }
+
+                    }
                 }
             }
         }

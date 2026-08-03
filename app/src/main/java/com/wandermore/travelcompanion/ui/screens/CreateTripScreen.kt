@@ -4,8 +4,12 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Button
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -14,8 +18,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.wandermore.travelcompanion.viewmodel.TripViewModel
+import java.time.Instant
 import java.time.LocalDate
+import java.time.ZoneId
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreateTripScreen(
     tripViewModel: TripViewModel,
@@ -23,9 +30,13 @@ fun CreateTripScreen(
 ) {
 
     var name by remember { mutableStateOf("") }
-    var startDate by remember { mutableStateOf("") }
-    var endDate by remember { mutableStateOf("") }
+    var startDate by remember { mutableStateOf<LocalDate?>(null) }
+    var endDate by remember { mutableStateOf<LocalDate?>(null) }
     var currency by remember { mutableStateOf("NZD") }
+
+    var showStartPicker by remember { mutableStateOf(false) }
+    var showEndPicker by remember { mutableStateOf(false) }
+
 
     Column(
         modifier = Modifier.fillMaxSize(),
@@ -37,23 +48,31 @@ fun CreateTripScreen(
             text = "Create New Trip"
         )
 
+
         OutlinedTextField(
             value = name,
             onValueChange = { name = it },
             label = { Text("Trip name") }
         )
 
-        OutlinedTextField(
-            value = startDate,
-            onValueChange = { startDate = it },
-            label = { Text("Start date YYYY-MM-DD") }
-        )
 
-        OutlinedTextField(
-            value = endDate,
-            onValueChange = { endDate = it },
-            label = { Text("End date YYYY-MM-DD") }
-        )
+        Button(
+            onClick = { showStartPicker = true }
+        ) {
+            Text(
+                text = startDate?.toString() ?: "Select start date"
+            )
+        }
+
+
+        Button(
+            onClick = { showEndPicker = true }
+        ) {
+            Text(
+                text = endDate?.toString() ?: "Select end date"
+            )
+        }
+
 
         OutlinedTextField(
             value = currency,
@@ -61,20 +80,99 @@ fun CreateTripScreen(
             label = { Text("Home currency") }
         )
 
+
         Button(
             onClick = {
 
-                tripViewModel.addTrip(
-                    name = name,
-                    startDate = LocalDate.parse(startDate),
-                    endDate = LocalDate.parse(endDate),
-                    homeCurrency = currency
-                )
+                if (
+                    name.isNotBlank()
+                    && startDate != null
+                    && endDate != null
+                ) {
 
-                onTripCreated()
+                    tripViewModel.addTrip(
+                        name = name,
+                        startDate = startDate!!,
+                        endDate = endDate!!,
+                        homeCurrency = currency
+                    )
+
+                    onTripCreated()
+                }
+
             }
         ) {
             Text("Save Trip")
+        }
+    }
+
+
+    if (showStartPicker) {
+
+        val datePickerState = rememberDatePickerState()
+
+        DatePickerDialog(
+            onDismissRequest = {
+                showStartPicker = false
+            },
+            confirmButton = {
+
+                Button(
+                    onClick = {
+
+                        startDate =
+                            datePickerState.selectedDateMillis?.let {
+                                Instant.ofEpochMilli(it)
+                                    .atZone(ZoneId.systemDefault())
+                                    .toLocalDate()
+                            }
+
+                        showStartPicker = false
+                    }
+                ) {
+                    Text("OK")
+                }
+            }
+        ) {
+
+            DatePicker(
+                state = datePickerState
+            )
+        }
+    }
+
+
+    if (showEndPicker) {
+
+        val datePickerState = rememberDatePickerState()
+
+        DatePickerDialog(
+            onDismissRequest = {
+                showEndPicker = false
+            },
+            confirmButton = {
+
+                Button(
+                    onClick = {
+
+                        endDate =
+                            datePickerState.selectedDateMillis?.let {
+                                Instant.ofEpochMilli(it)
+                                    .atZone(ZoneId.systemDefault())
+                                    .toLocalDate()
+                            }
+
+                        showEndPicker = false
+                    }
+                ) {
+                    Text("OK")
+                }
+            }
+        ) {
+
+            DatePicker(
+                state = datePickerState
+            )
         }
     }
 }
