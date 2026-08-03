@@ -34,9 +34,11 @@ class MainActivity : ComponentActivity() {
 
                 val tripViewModel: TripViewModel = viewModel()
 
+
                 Scaffold(
                     modifier = Modifier.fillMaxSize()
                 ) { innerPadding ->
+
 
                     NavHost(
                         navController = navController,
@@ -64,6 +66,7 @@ class MainActivity : ComponentActivity() {
 
                                 }
                             )
+
                         }
 
 
@@ -78,10 +81,12 @@ class MainActivity : ComponentActivity() {
 
                                 }
                             )
+
                         }
 
 
                         composable("tripDetails/{tripId}") { backStackEntry ->
+
 
                             val tripId =
                                 backStackEntry.arguments
@@ -98,14 +103,32 @@ class MainActivity : ComponentActivity() {
                             if (trip != null) {
 
                                 TripDetailsScreen(
+
                                     trip = trip,
+
+
                                     onEditTrip = {
 
                                         navController.navigate(
                                             "editTrip/${trip.id}"
                                         )
 
+                                    },
+
+
+                                    onDeleteTrip = {
+
+                                        tripViewModel.deleteTrip(
+                                            trip.id
+                                        )
+
+
+                                        navController.navigate(
+                                            "home"
+                                        )
+
                                     }
+
                                 )
 
                             }
@@ -114,6 +137,7 @@ class MainActivity : ComponentActivity() {
 
 
                         composable("editTrip/{tripId}") { backStackEntry ->
+
 
                             val tripId =
                                 backStackEntry.arguments
@@ -130,8 +154,11 @@ class MainActivity : ComponentActivity() {
                             if (trip != null) {
 
                                 EditTripScreen(
+
                                     trip = trip,
+
                                     tripViewModel = tripViewModel,
+
 
                                     onTripUpdated = {
 
@@ -140,6 +167,7 @@ class MainActivity : ComponentActivity() {
                                         )
 
                                     }
+
                                 )
 
                             }
@@ -147,8 +175,13 @@ class MainActivity : ComponentActivity() {
                         }
 
                     }
+
                 }
+
             }
+
         }
+
     }
+
 }

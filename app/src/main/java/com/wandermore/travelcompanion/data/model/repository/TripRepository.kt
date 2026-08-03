@@ -55,4 +55,15 @@ class TripRepository {
         }
 
     }
+
+
+    fun deleteTrip(id: Long) {
+
+        trips.removeIf { trip ->
+
+            trip.id == id
+
+        }
+
+    }
 }

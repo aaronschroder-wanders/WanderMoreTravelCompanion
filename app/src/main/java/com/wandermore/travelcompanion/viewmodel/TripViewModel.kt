@@ -46,4 +46,11 @@ class TripViewModel : ViewModel() {
         repository.updateTrip(trip)
 
     }
+
+
+    fun deleteTrip(id: Long) {
+
+        repository.deleteTrip(id)
+
+    }
 }
