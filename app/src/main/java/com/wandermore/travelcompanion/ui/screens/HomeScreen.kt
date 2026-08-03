@@ -1,13 +1,16 @@
 package com.wandermore.travelcompanion.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import com.wandermore.travelcompanion.data.model.Trip
 import com.wandermore.travelcompanion.ui.components.TripCard
 
@@ -18,26 +21,35 @@ fun HomeScreen(
     onCreateTrip: () -> Unit
 ) {
 
-    Column(
+    LazyColumn(
         modifier = modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
 
-        Text(
-            text = "Wander More Travel Companion"
-        )
+        item {
+
+            Text(
+                text = "Wander More Travel Companion",
+                modifier = Modifier.padding(16.dp)
+            )
+
+        }
 
 
         if (trips.isEmpty()) {
 
-            Text(
-                text = "No trips yet"
-            )
+            item {
+
+                Text(
+                    text = "No trips yet"
+                )
+
+            }
 
         } else {
 
-            trips.forEach { trip ->
+            items(trips) { trip ->
 
                 TripCard(
                     trip = trip
@@ -47,13 +59,18 @@ fun HomeScreen(
         }
 
 
-        Button(
-            onClick = onCreateTrip
-        ) {
+        item {
 
-            Text(
-                text = "Create Trip"
-            )
+            Button(
+                onClick = onCreateTrip,
+                modifier = Modifier.padding(16.dp)
+            ) {
+
+                Text(
+                    text = "Create Trip"
+                )
+
+            }
 
         }
     }
