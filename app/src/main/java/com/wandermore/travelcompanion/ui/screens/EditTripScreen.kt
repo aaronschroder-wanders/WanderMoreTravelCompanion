@@ -18,6 +18,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.wandermore.travelcompanion.data.model.Trip
+import com.wandermore.travelcompanion.util.formatDate
 import com.wandermore.travelcompanion.viewmodel.TripViewModel
 import java.time.Instant
 import java.time.LocalDate
@@ -39,6 +40,8 @@ fun EditTripScreen(
     var endDate by remember { mutableStateOf<LocalDate?>(trip.endDate) }
 
     var currency by remember { mutableStateOf(trip.homeCurrency) }
+
+    var errorMessage by remember { mutableStateOf("") }
 
 
     var showStartPicker by remember { mutableStateOf(false) }
@@ -65,24 +68,30 @@ fun EditTripScreen(
 
 
         Button(
-            onClick = { showStartPicker = true }
+            onClick = {
+                showStartPicker = true
+            }
         ) {
 
             Text(
-                text = startDate?.toString()
-                    ?: "Select start date"
+                text = startDate?.let {
+                    formatDate(it)
+                } ?: "Select start date"
             )
 
         }
 
 
         Button(
-            onClick = { showEndPicker = true }
+            onClick = {
+                showEndPicker = true
+            }
         ) {
 
             Text(
-                text = endDate?.toString()
-                    ?: "Select end date"
+                text = endDate?.let {
+                    formatDate(it)
+                } ?: "Select end date"
             )
 
         }
@@ -98,26 +107,56 @@ fun EditTripScreen(
         Button(
             onClick = {
 
-                val updatedTrip = trip.copy(
-                    name = name,
-                    startDate = startDate ?: trip.startDate,
-                    endDate = endDate ?: trip.endDate,
-                    homeCurrency = currency
-                )
+                errorMessage = ""
 
 
-                tripViewModel.updateTrip(
-                    updatedTrip
-                )
+                if (
+                    name.isBlank()
+                    || startDate == null
+                    || endDate == null
+                ) {
+
+                    errorMessage =
+                        "Please complete all fields"
+
+                } else if (endDate!! < startDate!!) {
+
+                    errorMessage =
+                        "End date cannot be before start date"
+
+                } else {
+
+                    val updatedTrip = trip.copy(
+                        name = name,
+                        startDate = startDate!!,
+                        endDate = endDate!!,
+                        homeCurrency = currency
+                    )
 
 
-                onTripUpdated()
+                    tripViewModel.updateTrip(
+                        updatedTrip
+                    )
+
+
+                    onTripUpdated()
+
+                }
 
             }
         ) {
 
             Text(
                 text = "Save Changes"
+            )
+
+        }
+
+
+        if (errorMessage.isNotBlank()) {
+
+            Text(
+                text = errorMessage
             )
 
         }
@@ -148,9 +187,12 @@ fun EditTripScreen(
                             }
 
                         showStartPicker = false
+
                     }
                 ) {
+
                     Text("OK")
+
                 }
 
             }
@@ -161,6 +203,7 @@ fun EditTripScreen(
             )
 
         }
+
     }
 
 
@@ -187,9 +230,12 @@ fun EditTripScreen(
                             }
 
                         showEndPicker = false
+
                     }
                 ) {
+
                     Text("OK")
+
                 }
 
             }
@@ -200,5 +246,7 @@ fun EditTripScreen(
             )
 
         }
+
     }
+
 }

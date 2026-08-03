@@ -14,6 +14,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.wandermore.travelcompanion.data.model.Trip
+import com.wandermore.travelcompanion.util.formatDate
 
 
 @Composable
@@ -41,12 +42,12 @@ fun TripDetailsScreen(
 
 
         Text(
-            text = "📅 Start: ${trip.startDate}"
+            text = "📅 Start: ${formatDate(trip.startDate)}"
         )
 
 
         Text(
-            text = "📅 End: ${trip.endDate}"
+            text = "📅 End: ${formatDate(trip.endDate)}"
         )
 
 
@@ -139,6 +140,7 @@ fun TripDetailsScreen(
 
                     Text(
                         text = "Cancel"
+
                     )
 
                 }
@@ -148,4 +150,5 @@ fun TripDetailsScreen(
         )
 
     }
+
 }

@@ -21,6 +21,8 @@ import com.wandermore.travelcompanion.viewmodel.TripViewModel
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
+import com.wandermore.travelcompanion.util.formatDate
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -33,6 +35,8 @@ fun CreateTripScreen(
     var startDate by remember { mutableStateOf<LocalDate?>(null) }
     var endDate by remember { mutableStateOf<LocalDate?>(null) }
     var currency by remember { mutableStateOf("NZD") }
+
+    var errorMessage by remember { mutableStateOf("") }
 
     var showStartPicker by remember { mutableStateOf(false) }
     var showEndPicker by remember { mutableStateOf(false) }
@@ -57,20 +61,32 @@ fun CreateTripScreen(
 
 
         Button(
-            onClick = { showStartPicker = true }
+            onClick = {
+                showStartPicker = true
+            }
         ) {
+
             Text(
-                text = startDate?.toString() ?: "Select start date"
+                text = startDate?.let {
+                    formatDate(it)
+                } ?: "Select start date"
             )
+
         }
 
 
         Button(
-            onClick = { showEndPicker = true }
+            onClick = {
+                showEndPicker = true
+            }
         ) {
+
             Text(
-                text = endDate?.toString() ?: "Select end date"
+                text = endDate?.let {
+                    formatDate(it)
+                } ?: "Select end date"
             )
+
         }
 
 
@@ -84,11 +100,24 @@ fun CreateTripScreen(
         Button(
             onClick = {
 
+                errorMessage = ""
+
+
                 if (
-                    name.isNotBlank()
-                    && startDate != null
-                    && endDate != null
+                    name.isBlank()
+                    || startDate == null
+                    || endDate == null
                 ) {
+
+                    errorMessage =
+                        "Please complete all fields"
+
+                } else if (endDate!! < startDate!!) {
+
+                    errorMessage =
+                        "End date cannot be before start date"
+
+                } else {
 
                     tripViewModel.addTrip(
                         name = name,
@@ -98,12 +127,25 @@ fun CreateTripScreen(
                     )
 
                     onTripCreated()
+
                 }
 
             }
         ) {
+
             Text("Save Trip")
+
         }
+
+
+        if (errorMessage.isNotBlank()) {
+
+            Text(
+                text = errorMessage
+            )
+
+        }
+
     }
 
 
@@ -111,10 +153,12 @@ fun CreateTripScreen(
 
         val datePickerState = rememberDatePickerState()
 
+
         DatePickerDialog(
             onDismissRequest = {
                 showStartPicker = false
             },
+
             confirmButton = {
 
                 Button(
@@ -128,17 +172,23 @@ fun CreateTripScreen(
                             }
 
                         showStartPicker = false
+
                     }
                 ) {
+
                     Text("OK")
+
                 }
+
             }
         ) {
 
             DatePicker(
                 state = datePickerState
             )
+
         }
+
     }
 
 
@@ -146,10 +196,12 @@ fun CreateTripScreen(
 
         val datePickerState = rememberDatePickerState()
 
+
         DatePickerDialog(
             onDismissRequest = {
                 showEndPicker = false
             },
+
             confirmButton = {
 
                 Button(
@@ -163,16 +215,23 @@ fun CreateTripScreen(
                             }
 
                         showEndPicker = false
+
                     }
                 ) {
+
                     Text("OK")
+
                 }
+
             }
         ) {
 
             DatePicker(
                 state = datePickerState
             )
+
         }
+
     }
+
 }

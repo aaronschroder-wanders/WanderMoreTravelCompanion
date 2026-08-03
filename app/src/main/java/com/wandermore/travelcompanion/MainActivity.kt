@@ -19,12 +19,15 @@ import com.wandermore.travelcompanion.ui.screens.TripDetailsScreen
 import com.wandermore.travelcompanion.ui.theme.WanderMoreTravelCompanionTheme
 import com.wandermore.travelcompanion.viewmodel.TripViewModel
 
+
 class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
+
         super.onCreate(savedInstanceState)
 
         enableEdgeToEdge()
+
 
         setContent {
 
@@ -50,11 +53,14 @@ class MainActivity : ComponentActivity() {
                         composable("home") {
 
                             HomeScreen(
+
                                 trips = tripViewModel.getTrips(),
 
                                 onCreateTrip = {
 
-                                    navController.navigate("createTrip")
+                                    navController.navigate(
+                                        "createTrip"
+                                    )
 
                                 },
 
@@ -65,6 +71,7 @@ class MainActivity : ComponentActivity() {
                                     )
 
                                 }
+
                             )
 
                         }
@@ -72,14 +79,17 @@ class MainActivity : ComponentActivity() {
 
                         composable("createTrip") {
 
+
                             CreateTripScreen(
+
                                 tripViewModel = tripViewModel,
 
                                 onTripCreated = {
 
-                                    navController.navigate("home")
+                                    navController.popBackStack()
 
                                 }
+
                             )
 
                         }
@@ -102,6 +112,7 @@ class MainActivity : ComponentActivity() {
 
                             if (trip != null) {
 
+
                                 TripDetailsScreen(
 
                                     trip = trip,
@@ -117,6 +128,7 @@ class MainActivity : ComponentActivity() {
 
 
                                     onDeleteTrip = {
+
 
                                         tripViewModel.deleteTrip(
                                             trip.id
@@ -153,6 +165,7 @@ class MainActivity : ComponentActivity() {
 
                             if (trip != null) {
 
+
                                 EditTripScreen(
 
                                     trip = trip,
@@ -162,9 +175,7 @@ class MainActivity : ComponentActivity() {
 
                                     onTripUpdated = {
 
-                                        navController.navigate(
-                                            "tripDetails/${trip.id}"
-                                        )
+                                        navController.popBackStack()
 
                                     }
 

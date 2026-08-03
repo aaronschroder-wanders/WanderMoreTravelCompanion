@@ -9,6 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.wandermore.travelcompanion.data.model.Trip
+import com.wandermore.travelcompanion.util.formatDate
 
 
 @Composable
@@ -33,14 +34,18 @@ fun TripCard(
                 text = "🌏 ${trip.name}"
             )
 
+
             Text(
-                text = "📅 ${trip.startDate} - ${trip.endDate}"
+                text = "📅 ${formatDate(trip.startDate)} - ${formatDate(trip.endDate)}"
             )
+
 
             Text(
                 text = "💰 ${trip.homeCurrency}"
             )
 
         }
+
     }
+
 }
