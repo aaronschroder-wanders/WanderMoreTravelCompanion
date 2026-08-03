@@ -23,6 +23,7 @@ import com.wandermore.travelcompanion.viewmodel.TripViewModel
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
+import com.wandermore.travelcompanion.ui.components.CurrencyDropdown
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -97,10 +98,11 @@ fun EditTripScreen(
         }
 
 
-        OutlinedTextField(
-            value = currency,
-            onValueChange = { currency = it },
-            label = { Text("Home currency") }
+        CurrencyDropdown(
+            selectedCurrency = currency,
+            onCurrencySelected = {
+                currency = it
+            }
         )
 
 
