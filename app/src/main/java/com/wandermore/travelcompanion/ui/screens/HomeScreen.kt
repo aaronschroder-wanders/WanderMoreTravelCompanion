@@ -9,6 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.wandermore.travelcompanion.data.model.Trip
+import com.wandermore.travelcompanion.ui.components.TripCard
 
 @Composable
 fun HomeScreen(
@@ -16,6 +17,7 @@ fun HomeScreen(
     trips: List<Trip>,
     onCreateTrip: () -> Unit
 ) {
+
     Column(
         modifier = modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -25,6 +27,7 @@ fun HomeScreen(
         Text(
             text = "Wander More Travel Companion"
         )
+
 
         if (trips.isEmpty()) {
 
@@ -36,24 +39,22 @@ fun HomeScreen(
 
             trips.forEach { trip ->
 
-                Text(
-                    text = trip.name
+                TripCard(
+                    trip = trip
                 )
 
-                Text(
-                    text = "${trip.startDate} - ${trip.endDate}"
-                )
-
-                Text(
-                    text = trip.homeCurrency
-                )
             }
         }
+
 
         Button(
             onClick = onCreateTrip
         ) {
-            Text("Create Trip")
+
+            Text(
+                text = "Create Trip"
+            )
+
         }
     }
 }
