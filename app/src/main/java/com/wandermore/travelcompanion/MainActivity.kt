@@ -12,6 +12,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.wandermore.travelcompanion.ui.theme.WanderMoreTravelCompanionTheme
+import com.wandermore.travelcompanion.ui.screens.HomeScreen
+
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -20,9 +22,10 @@ class MainActivity : ComponentActivity() {
         setContent {
             WanderMoreTravelCompanionTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
+                    HomeScreen(
+                        onCreateTrip = {
+                            // We will add trip creation later
+                        }
                     )
                 }
             }
