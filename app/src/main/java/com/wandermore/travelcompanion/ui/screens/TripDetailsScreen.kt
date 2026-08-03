@@ -21,6 +21,7 @@ import com.wandermore.travelcompanion.util.formatDate
 fun TripDetailsScreen(
     trip: Trip,
     onEditTrip: () -> Unit,
+    onAddExpense: () -> Unit,
     onDeleteTrip: () -> Unit
 ) {
 
@@ -62,6 +63,15 @@ fun TripDetailsScreen(
 
             Text(
                 text = "Edit Trip"
+            )
+
+        }
+        Button(
+            onClick = onAddExpense
+        ) {
+
+            Text(
+                text = "Add Expense"
             )
 
         }

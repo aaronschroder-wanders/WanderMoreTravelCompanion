@@ -1,6 +1,7 @@
 package com.wandermore.travelcompanion.viewmodel
 
 import androidx.lifecycle.ViewModel
+import com.wandermore.travelcompanion.data.model.Expense
 import com.wandermore.travelcompanion.data.model.Trip
 import com.wandermore.travelcompanion.data.repository.TripRepository
 import java.time.LocalDate
@@ -8,6 +9,9 @@ import java.time.LocalDate
 class TripViewModel : ViewModel() {
 
     private val repository = TripRepository()
+
+
+    private val expenses = mutableListOf<Expense>()
 
 
     fun getTrips(): List<Trip> {
@@ -52,5 +56,44 @@ class TripViewModel : ViewModel() {
 
         repository.deleteTrip(id)
 
+        expenses.removeAll {
+            it.tripId == id
+        }
+
     }
+
+
+    // -------------------------
+    // Expense functions
+    // -------------------------
+
+
+    fun addExpense(expense: Expense) {
+
+        expenses.add(expense)
+
+    }
+
+
+    fun getExpensesForTrip(
+        tripId: Long
+    ): List<Expense> {
+
+        return expenses.filter {
+            it.tripId == tripId
+        }
+
+    }
+
+
+    fun deleteExpense(
+        expenseId: Int
+    ) {
+
+        expenses.removeAll {
+            it.id == expenseId
+        }
+
+    }
+
 }

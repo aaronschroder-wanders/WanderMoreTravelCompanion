@@ -12,6 +12,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.wandermore.travelcompanion.ui.screens.AddExpenseScreen
 import com.wandermore.travelcompanion.ui.screens.CreateTripScreen
 import com.wandermore.travelcompanion.ui.screens.EditTripScreen
 import com.wandermore.travelcompanion.ui.screens.HomeScreen
@@ -127,13 +128,20 @@ class MainActivity : ComponentActivity() {
                                     },
 
 
-                                    onDeleteTrip = {
+                                    onAddExpense = {
 
+                                        navController.navigate(
+                                            "addExpense/${trip.id}"
+                                        )
+
+                                    },
+
+
+                                    onDeleteTrip = {
 
                                         tripViewModel.deleteTrip(
                                             trip.id
                                         )
-
 
                                         navController.navigate(
                                             "home"
@@ -174,6 +182,43 @@ class MainActivity : ComponentActivity() {
 
 
                                     onTripUpdated = {
+
+                                        navController.popBackStack()
+
+                                    }
+
+                                )
+
+                            }
+
+                        }
+
+
+                        composable("addExpense/{tripId}") { backStackEntry ->
+
+
+                            val tripId =
+                                backStackEntry.arguments
+                                    ?.getString("tripId")
+                                    ?.toLong()
+
+
+                            val trip =
+                                tripId?.let {
+                                    tripViewModel.getTripById(it)
+                                }
+
+
+                            if (trip != null) {
+
+
+                                AddExpenseScreen(
+
+                                    trip = trip,
+
+                                    tripViewModel = tripViewModel,
+
+                                    onExpenseAdded = {
 
                                         navController.popBackStack()
 
