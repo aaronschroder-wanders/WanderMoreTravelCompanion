@@ -18,7 +18,8 @@ import com.wandermore.travelcompanion.ui.components.TripCard
 fun HomeScreen(
     modifier: Modifier = Modifier,
     trips: List<Trip>,
-    onCreateTrip: () -> Unit
+    onCreateTrip: () -> Unit,
+    onTripSelected: (Trip) -> Unit
 ) {
 
     LazyColumn(
@@ -52,7 +53,10 @@ fun HomeScreen(
             items(trips) { trip ->
 
                 TripCard(
-                    trip = trip
+                    trip = trip,
+                    onClick = {
+                        onTripSelected(trip)
+                    }
                 )
 
             }

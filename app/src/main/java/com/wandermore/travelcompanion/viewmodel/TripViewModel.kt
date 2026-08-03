@@ -1,6 +1,5 @@
 package com.wandermore.travelcompanion.viewmodel
 
-import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
 import com.wandermore.travelcompanion.data.model.Trip
 import com.wandermore.travelcompanion.data.repository.TripRepository
@@ -10,10 +9,18 @@ class TripViewModel : ViewModel() {
 
     private val repository = TripRepository()
 
-    private val _trips = mutableStateListOf<Trip>()
 
-    val trips: List<Trip>
-        get() = _trips
+    fun getTrips(): List<Trip> {
+        return repository.getTrips()
+    }
+
+
+    fun getTripById(id: Long): Trip? {
+
+        return repository.getTripById(id)
+
+    }
+
 
     fun addTrip(
         name: String,
@@ -21,6 +28,7 @@ class TripViewModel : ViewModel() {
         endDate: LocalDate,
         homeCurrency: String
     ) {
+
         repository.addTrip(
             name,
             startDate,
@@ -28,7 +36,5 @@ class TripViewModel : ViewModel() {
             homeCurrency
         )
 
-        _trips.clear()
-        _trips.addAll(repository.getTrips())
     }
 }

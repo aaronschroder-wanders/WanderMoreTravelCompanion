@@ -14,6 +14,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.wandermore.travelcompanion.ui.screens.CreateTripScreen
 import com.wandermore.travelcompanion.ui.screens.HomeScreen
+import com.wandermore.travelcompanion.ui.screens.TripDetailsScreen
 import com.wandermore.travelcompanion.ui.theme.WanderMoreTravelCompanionTheme
 import com.wandermore.travelcompanion.viewmodel.TripViewModel
 
@@ -47,11 +48,19 @@ class MainActivity : ComponentActivity() {
                         composable("home") {
 
                             HomeScreen(
-                                trips = tripViewModel.trips,
+                                trips = tripViewModel.getTrips(),
 
                                 onCreateTrip = {
 
                                     navController.navigate("createTrip")
+
+                                },
+
+                                onTripSelected = { trip ->
+
+                                    navController.navigate(
+                                        "tripDetails/${trip.id}"
+                                    )
 
                                 }
                             )
@@ -69,6 +78,31 @@ class MainActivity : ComponentActivity() {
 
                                 }
                             )
+                        }
+
+
+                        composable("tripDetails/{tripId}") { backStackEntry ->
+
+                            val tripId =
+                                backStackEntry.arguments
+                                    ?.getString("tripId")
+                                    ?.toLong()
+
+
+                            val trip =
+                                tripId?.let {
+                                    tripViewModel.getTripById(it)
+                                }
+
+
+                            if (trip != null) {
+
+                                TripDetailsScreen(
+                                    trip = trip
+                                )
+
+                            }
+
                         }
 
                     }

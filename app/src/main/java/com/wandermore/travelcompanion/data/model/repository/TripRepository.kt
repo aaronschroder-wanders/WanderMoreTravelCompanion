@@ -7,9 +7,20 @@ class TripRepository {
 
     private val trips = mutableListOf<Trip>()
 
+
     fun getTrips(): List<Trip> {
         return trips
     }
+
+
+    fun getTripById(id: Long): Trip? {
+
+        return trips.find { trip ->
+            trip.id == id
+        }
+
+    }
+
 
     fun addTrip(
         name: String,
@@ -17,6 +28,7 @@ class TripRepository {
         endDate: LocalDate,
         homeCurrency: String
     ) {
+
         val trip = Trip(
             id = trips.size.toLong() + 1,
             name = name,
