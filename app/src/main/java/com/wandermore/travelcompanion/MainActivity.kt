@@ -118,6 +118,7 @@ class MainActivity : ComponentActivity() {
 
                                     trip = trip,
 
+                                    tripViewModel = tripViewModel,
 
                                     onEditTrip = {
 

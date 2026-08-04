@@ -3,6 +3,7 @@ package com.wandermore.travelcompanion.ui.screens
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
@@ -13,13 +14,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import com.wandermore.travelcompanion.data.model.Trip
 import com.wandermore.travelcompanion.util.formatDate
-
+import com.wandermore.travelcompanion.viewmodel.TripViewModel
 
 @Composable
 fun TripDetailsScreen(
     trip: Trip,
+    tripViewModel: TripViewModel,
     onEditTrip: () -> Unit,
     onAddExpense: () -> Unit,
     onDeleteTrip: () -> Unit
@@ -29,64 +32,91 @@ fun TripDetailsScreen(
         mutableStateOf(false)
     }
 
+    val expenses = tripViewModel.getExpensesForTrip(trip.id)
+
+    val total = expenses.sumOf { it.amount }
 
     Column(
-        modifier = Modifier.fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
 
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Top
+    ) {
 
         Text(
             text = "🌏 ${trip.name}"
         )
 
-
         Text(
             text = "📅 Start: ${formatDate(trip.startDate)}"
         )
-
 
         Text(
             text = "📅 End: ${formatDate(trip.endDate)}"
         )
 
-
         Text(
             text = "💰 Home currency: ${trip.homeCurrency}"
         )
 
+        Text(
+            text = ""
+        )
+
+        Text(
+            text = "Expenses"
+        )
+
+        if (expenses.isEmpty()) {
+
+            Text(
+                text = "No expenses recorded yet."
+            )
+
+        } else {
+
+            expenses.forEach { expense ->
+
+                Text(
+                    text = "${expense.description} - ${expense.amount} ${expense.currency}"
+                )
+
+            }
+
+            Text(
+                text = ""
+            )
+
+            Text(
+                text = "Total: $total ${trip.homeCurrency}"
+            )
+
+        }
+
+        Text(
+            text = ""
+        )
 
         Button(
             onClick = onEditTrip
         ) {
-
-            Text(
-                text = "Edit Trip"
-            )
-
+            Text("Edit Trip")
         }
+
         Button(
             onClick = onAddExpense
         ) {
-
-            Text(
-                text = "Add Expense"
-            )
-
+            Text("Add Expense")
         }
-
 
         Button(
             onClick = {
                 showDeleteDialog = true
             }
         ) {
-
-            Text(
-                text = "Delete Trip"
-            )
-
+            Text("Delete Trip")
         }
 
     }
@@ -100,24 +130,13 @@ fun TripDetailsScreen(
                 showDeleteDialog = false
             },
 
-
             title = {
-
-                Text(
-                    text = "Delete Trip?"
-                )
-
+                Text("Delete Trip?")
             },
-
 
             text = {
-
-                Text(
-                    text = "Are you sure you want to delete ${trip.name}?"
-                )
-
+                Text("Are you sure you want to delete ${trip.name}?")
             },
-
 
             confirmButton = {
 
@@ -129,14 +148,11 @@ fun TripDetailsScreen(
                     }
                 ) {
 
-                    Text(
-                        text = "Delete"
-                    )
+                    Text("Delete")
 
                 }
 
             },
-
 
             dismissButton = {
 
@@ -148,10 +164,7 @@ fun TripDetailsScreen(
                     }
                 ) {
 
-                    Text(
-                        text = "Cancel"
-
-                    )
+                    Text("Cancel")
 
                 }
 
