@@ -7,11 +7,19 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.wandermore.travelcompanion.data.model.Trip
+import com.wandermore.travelcompanion.database.DatabaseProvider
 import com.wandermore.travelcompanion.ui.screens.AddExpenseScreen
 import com.wandermore.travelcompanion.ui.screens.CreateTripScreen
 import com.wandermore.travelcompanion.ui.screens.EditTripScreen
@@ -19,9 +27,11 @@ import com.wandermore.travelcompanion.ui.screens.HomeScreen
 import com.wandermore.travelcompanion.ui.screens.TripDetailsScreen
 import com.wandermore.travelcompanion.ui.theme.WanderMoreTravelCompanionTheme
 import com.wandermore.travelcompanion.viewmodel.TripViewModel
+import com.wandermore.travelcompanion.viewmodel.TripViewModelFactory
 
 
 class MainActivity : ComponentActivity() {
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
 
@@ -32,11 +42,26 @@ class MainActivity : ComponentActivity() {
 
         setContent {
 
+
             WanderMoreTravelCompanionTheme {
+
 
                 val navController = rememberNavController()
 
-                val tripViewModel: TripViewModel = viewModel()
+
+                val database =
+                    DatabaseProvider.getDatabase(
+                        applicationContext
+                    )
+
+
+                val tripViewModel: TripViewModel = viewModel(
+                    factory = TripViewModelFactory(
+                        database.tripDao(),
+                        database.expenseDao()
+                    )
+                )
+
 
 
                 Scaffold(
@@ -51,11 +76,20 @@ class MainActivity : ComponentActivity() {
                     ) {
 
 
+
                         composable("home") {
+
+
+                            val trips by tripViewModel
+                                .getTrips()
+                                .collectAsState(
+                                    initial = emptyList()
+                                )
+
 
                             HomeScreen(
 
-                                trips = tripViewModel.getTrips(),
+                                trips = trips,
 
                                 onCreateTrip = {
 
@@ -64,6 +98,7 @@ class MainActivity : ComponentActivity() {
                                     )
 
                                 },
+
 
                                 onTripSelected = { trip ->
 
@@ -76,6 +111,8 @@ class MainActivity : ComponentActivity() {
                             )
 
                         }
+
+
 
 
                         composable("createTrip") {
@@ -96,34 +133,34 @@ class MainActivity : ComponentActivity() {
                         }
 
 
-                        composable("tripDetails/{tripId}") { backStackEntry ->
+
+
+                        composable(
+                            "tripDetails/{tripId}"
+                        ) {
 
 
                             val tripId =
-                                backStackEntry.arguments
+                                it.arguments
                                     ?.getString("tripId")
-                                    ?.toLong()
+                                    ?.toLongOrNull()
 
 
-                            val trip =
-                                tripId?.let {
-                                    tripViewModel.getTripById(it)
-                                }
 
-
-                            if (trip != null) {
+                            if (tripId != null) {
 
 
                                 TripDetailsScreen(
 
-                                    trip = trip,
+                                    tripId = tripId,
 
                                     tripViewModel = tripViewModel,
+
 
                                     onEditTrip = {
 
                                         navController.navigate(
-                                            "editTrip/${trip.id}"
+                                            "editTrip/$tripId"
                                         )
 
                                     },
@@ -132,7 +169,7 @@ class MainActivity : ComponentActivity() {
                                     onAddExpense = {
 
                                         navController.navigate(
-                                            "addExpense/${trip.id}"
+                                            "addExpense/$tripId"
                                         )
 
                                     },
@@ -141,48 +178,8 @@ class MainActivity : ComponentActivity() {
                                     onDeleteTrip = {
 
                                         tripViewModel.deleteTrip(
-                                            trip.id
+                                            tripId
                                         )
-
-                                        navController.navigate(
-                                            "home"
-                                        )
-
-                                    }
-
-                                )
-
-                            }
-
-                        }
-
-
-                        composable("editTrip/{tripId}") { backStackEntry ->
-
-
-                            val tripId =
-                                backStackEntry.arguments
-                                    ?.getString("tripId")
-                                    ?.toLong()
-
-
-                            val trip =
-                                tripId?.let {
-                                    tripViewModel.getTripById(it)
-                                }
-
-
-                            if (trip != null) {
-
-
-                                EditTripScreen(
-
-                                    trip = trip,
-
-                                    tripViewModel = tripViewModel,
-
-
-                                    onTripUpdated = {
 
                                         navController.popBackStack()
 
@@ -195,27 +192,47 @@ class MainActivity : ComponentActivity() {
                         }
 
 
-                        composable("addExpense/{tripId}") { backStackEntry ->
+
+
+                        composable(
+                            "addExpense/{tripId}"
+                        ) { backStackEntry ->
 
 
                             val tripId =
                                 backStackEntry.arguments
                                     ?.getString("tripId")
-                                    ?.toLong()
+                                    ?.toLongOrNull()
 
 
-                            val trip =
-                                tripId?.let {
-                                    tripViewModel.getTripById(it)
+
+                            var trip by remember {
+                                mutableStateOf<Trip?>(null)
+                            }
+
+
+
+                            LaunchedEffect(tripId) {
+
+                                if (tripId != null) {
+
+                                    trip =
+                                        tripViewModel.getTripById(
+                                            tripId
+                                        )
+
                                 }
 
+                            }
 
-                            if (trip != null) {
+
+
+                            trip?.let {
 
 
                                 AddExpenseScreen(
 
-                                    trip = trip,
+                                    trip = it,
 
                                     tripViewModel = tripViewModel,
 
@@ -229,7 +246,66 @@ class MainActivity : ComponentActivity() {
 
                             }
 
+
                         }
+
+
+
+
+                        composable(
+                            "editTrip/{tripId}"
+                        ) { backStackEntry ->
+
+
+                            val tripId =
+                                backStackEntry.arguments
+                                    ?.getString("tripId")
+                                    ?.toLongOrNull()
+
+
+
+                            var trip by remember {
+                                mutableStateOf<Trip?>(null)
+                            }
+
+
+
+                            LaunchedEffect(tripId) {
+
+                                if (tripId != null) {
+
+                                    trip =
+                                        tripViewModel.getTripById(
+                                            tripId
+                                        )
+
+                                }
+
+                            }
+
+
+
+                            trip?.let {
+
+
+                                EditTripScreen(
+
+                                    trip = it,
+
+                                    tripViewModel = tripViewModel,
+
+                                    onTripUpdated = {
+
+                                        navController.popBackStack()
+
+                                    }
+
+                                )
+
+                            }
+
+                        }
+
 
                     }
 

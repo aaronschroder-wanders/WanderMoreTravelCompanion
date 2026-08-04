@@ -13,7 +13,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import com.wandermore.travelcompanion.data.model.Expense
+import com.wandermore.travelcompanion.database.ExpenseEntity
 import com.wandermore.travelcompanion.data.model.Trip
 import com.wandermore.travelcompanion.viewmodel.TripViewModel
 import java.time.LocalDate
@@ -44,7 +44,6 @@ fun AddExpenseScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-
 
         Text(
             text = "Add Expense"
@@ -92,7 +91,7 @@ fun AddExpenseScreen(
         Button(
             onClick = {
 
-                val expense = Expense(
+                val expense = ExpenseEntity(
 
                     tripId = trip.id,
 

@@ -1,29 +1,43 @@
 package com.wandermore.travelcompanion.viewmodel
 
 import androidx.lifecycle.ViewModel
-import com.wandermore.travelcompanion.data.model.Expense
+import androidx.lifecycle.viewModelScope
 import com.wandermore.travelcompanion.data.model.Trip
 import com.wandermore.travelcompanion.data.repository.TripRepository
+import com.wandermore.travelcompanion.database.ExpenseDao
+import com.wandermore.travelcompanion.database.ExpenseEntity
+import com.wandermore.travelcompanion.database.TripDao
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import java.time.LocalDate
 
-class TripViewModel : ViewModel() {
 
-    private val repository = TripRepository()
+class TripViewModel(
+    tripDao: TripDao,
+    private val expenseDao: ExpenseDao
+) : ViewModel() {
 
 
-    private val expenses = mutableListOf<Expense>()
+    private val repository = TripRepository(
+        tripDao
+    )
 
 
-    fun getTrips(): List<Trip> {
+    fun getTrips(): Flow<List<Trip>> {
 
         return repository.getTrips()
 
     }
 
 
-    fun getTripById(id: Long): Trip? {
+    suspend fun getTripById(
+        id: Long
+    ): Trip? {
 
-        return repository.getTripById(id)
+        return repository.getTripById(
+            id
+        )
 
     }
 
@@ -35,29 +49,54 @@ class TripViewModel : ViewModel() {
         homeCurrency: String
     ) {
 
-        repository.addTrip(
-            name,
-            startDate,
-            endDate,
-            homeCurrency
-        )
+        viewModelScope.launch {
+
+            repository.addTrip(
+                name,
+                startDate,
+                endDate,
+                homeCurrency
+            )
+
+        }
 
     }
 
 
-    fun updateTrip(trip: Trip) {
+    fun updateTrip(
+        trip: Trip
+    ) {
 
-        repository.updateTrip(trip)
+        viewModelScope.launch {
+
+            repository.updateTrip(
+                trip
+            )
+
+        }
 
     }
 
 
-    fun deleteTrip(id: Long) {
+    fun deleteTrip(
+        id: Long
+    ) {
 
-        repository.deleteTrip(id)
+        viewModelScope.launch {
 
-        expenses.removeAll {
-            it.tripId == id
+            val trip =
+                repository.getTripById(
+                    id
+                )
+
+            if (trip != null) {
+
+                repository.deleteTrip(
+                    trip
+                )
+
+            }
+
         }
 
     }
@@ -68,30 +107,57 @@ class TripViewModel : ViewModel() {
     // -------------------------
 
 
-    fun addExpense(expense: Expense) {
+    fun addExpense(
+        expense: ExpenseEntity
+    ) {
 
-        expenses.add(expense)
+        viewModelScope.launch {
+
+            expenseDao.insertExpense(
+                expense
+            )
+
+        }
 
     }
 
 
     fun getExpensesForTrip(
         tripId: Long
-    ): List<Expense> {
+    ): Flow<List<ExpenseEntity>> {
 
-        return expenses.filter {
-            it.tripId == tripId
-        }
+        return expenseDao.getExpensesForTrip(
+            tripId
+        )
 
     }
 
 
     fun deleteExpense(
-        expenseId: Int
+        expense: ExpenseEntity
     ) {
 
-        expenses.removeAll {
-            it.id == expenseId
+        viewModelScope.launch {
+
+            expenseDao.deleteExpense(
+                expense
+            )
+
+        }
+
+    }
+
+
+    fun updateExpense(
+        expense: ExpenseEntity
+    ) {
+
+        viewModelScope.launch {
+
+            expenseDao.updateExpense(
+                expense
+            )
+
         }
 
     }
