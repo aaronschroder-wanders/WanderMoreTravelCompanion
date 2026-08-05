@@ -8,7 +8,6 @@ import com.wandermore.travelcompanion.database.ExpenseDao
 import com.wandermore.travelcompanion.database.ExpenseEntity
 import com.wandermore.travelcompanion.database.TripDao
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 
@@ -128,6 +127,17 @@ class TripViewModel(
 
         return expenseDao.getExpensesForTrip(
             tripId
+        )
+
+    }
+
+
+    suspend fun getExpenseById(
+        expenseId: Long
+    ): ExpenseEntity? {
+
+        return expenseDao.getExpenseById(
+            expenseId
         )
 
     }

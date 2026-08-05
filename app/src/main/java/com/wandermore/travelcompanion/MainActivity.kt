@@ -7,12 +7,12 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
@@ -22,6 +22,7 @@ import com.wandermore.travelcompanion.data.model.Trip
 import com.wandermore.travelcompanion.database.DatabaseProvider
 import com.wandermore.travelcompanion.ui.screens.AddExpenseScreen
 import com.wandermore.travelcompanion.ui.screens.CreateTripScreen
+import com.wandermore.travelcompanion.ui.screens.EditExpenseScreen
 import com.wandermore.travelcompanion.ui.screens.EditTripScreen
 import com.wandermore.travelcompanion.ui.screens.HomeScreen
 import com.wandermore.travelcompanion.ui.screens.TripDetailsScreen
@@ -63,7 +64,6 @@ class MainActivity : ComponentActivity() {
                 )
 
 
-
                 Scaffold(
                     modifier = Modifier.fillMaxSize()
                 ) { innerPadding ->
@@ -74,7 +74,6 @@ class MainActivity : ComponentActivity() {
                         startDestination = "home",
                         modifier = Modifier.padding(innerPadding)
                     ) {
-
 
 
                         composable("home") {
@@ -114,7 +113,6 @@ class MainActivity : ComponentActivity() {
 
 
 
-
                         composable("createTrip") {
 
 
@@ -134,7 +132,6 @@ class MainActivity : ComponentActivity() {
 
 
 
-
                         composable(
                             "tripDetails/{tripId}"
                         ) {
@@ -144,7 +141,6 @@ class MainActivity : ComponentActivity() {
                                 it.arguments
                                     ?.getString("tripId")
                                     ?.toLongOrNull()
-
 
 
                             if (tripId != null) {
@@ -183,6 +179,15 @@ class MainActivity : ComponentActivity() {
 
                                         navController.popBackStack()
 
+                                    },
+
+
+                                    onEditExpense = { expenseId ->
+
+                                        navController.navigate(
+                                            "editExpense/$expenseId"
+                                        )
+
                                     }
 
                                 )
@@ -190,7 +195,6 @@ class MainActivity : ComponentActivity() {
                             }
 
                         }
-
 
 
 
@@ -205,11 +209,9 @@ class MainActivity : ComponentActivity() {
                                     ?.toLongOrNull()
 
 
-
                             var trip by remember {
                                 mutableStateOf<Trip?>(null)
                             }
-
 
 
                             LaunchedEffect(tripId) {
@@ -224,7 +226,6 @@ class MainActivity : ComponentActivity() {
                                 }
 
                             }
-
 
 
                             trip?.let {
@@ -246,9 +247,70 @@ class MainActivity : ComponentActivity() {
 
                             }
 
-
                         }
 
+
+
+                        composable(
+                            "editExpense/{expenseId}"
+                        ) { backStackEntry ->
+
+
+                            val expenseId =
+                                backStackEntry.arguments
+                                    ?.getString("expenseId")
+                                    ?.toLongOrNull()
+
+
+                            var expense by remember {
+                                mutableStateOf<com.wandermore.travelcompanion.database.ExpenseEntity?>(null)
+                            }
+
+
+                            LaunchedEffect(expenseId) {
+
+                                if (expenseId != null) {
+
+                                    expense =
+                                        tripViewModel.getExpenseById(
+                                            expenseId
+                                        )
+
+                                }
+
+                            }
+
+
+                            expense?.let {
+
+
+                                EditExpenseScreen(
+
+                                    expense = it,
+
+                                    tripViewModel = tripViewModel,
+
+
+                                    onExpenseUpdated = {
+
+                                        navController.popBackStack()
+
+                                    },
+
+
+                                    onDeleteExpense = {
+
+                                        tripViewModel.deleteExpense(it)
+
+                                        navController.popBackStack()
+
+                                    }
+
+                                )
+
+                            }
+
+                        }
 
 
 
@@ -263,11 +325,9 @@ class MainActivity : ComponentActivity() {
                                     ?.toLongOrNull()
 
 
-
                             var trip by remember {
                                 mutableStateOf<Trip?>(null)
                             }
-
 
 
                             LaunchedEffect(tripId) {
@@ -282,7 +342,6 @@ class MainActivity : ComponentActivity() {
                                 }
 
                             }
-
 
 
                             trip?.let {

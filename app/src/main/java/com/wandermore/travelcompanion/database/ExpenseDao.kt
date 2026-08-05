@@ -13,12 +13,20 @@ interface ExpenseDao {
     @Insert
     suspend fun insertExpense(expense: ExpenseEntity)
 
+
     @Query("SELECT * FROM expenses WHERE tripId = :tripId ORDER BY date DESC")
     fun getExpensesForTrip(tripId: Long): Flow<List<ExpenseEntity>>
+
+
+    @Query("SELECT * FROM expenses WHERE id = :expenseId")
+    suspend fun getExpenseById(expenseId: Long): ExpenseEntity?
+
 
     @Delete
     suspend fun deleteExpense(expense: ExpenseEntity)
 
+
     @Update
     suspend fun updateExpense(expense: ExpenseEntity)
+
 }

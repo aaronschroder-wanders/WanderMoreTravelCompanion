@@ -20,7 +20,7 @@ import androidx.compose.ui.unit.dp
 import com.wandermore.travelcompanion.data.model.Trip
 import com.wandermore.travelcompanion.util.formatDate
 import com.wandermore.travelcompanion.viewmodel.TripViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
+import androidx.compose.foundation.clickable
 
 
 @Composable
@@ -29,8 +29,10 @@ fun TripDetailsScreen(
     tripViewModel: TripViewModel,
     onEditTrip: () -> Unit,
     onAddExpense: () -> Unit,
-    onDeleteTrip: () -> Unit
-) {
+    onDeleteTrip: () -> Unit,
+    onEditExpense: (Long) -> Unit
+)
+{
 
 
     var trip by remember {
@@ -143,7 +145,15 @@ fun TripDetailsScreen(
 
 
                 Text(
-                    text = "${expense.description} - ${expense.amount} ${expense.currency}"
+
+                    text = "${expense.description} - ${expense.amount} ${expense.currency}",
+
+                    modifier = Modifier.clickable {
+
+                        onEditExpense(expense.id)
+
+                    }
+
                 )
 
 
