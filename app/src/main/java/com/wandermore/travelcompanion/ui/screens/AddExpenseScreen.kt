@@ -15,6 +15,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.wandermore.travelcompanion.database.ExpenseEntity
 import com.wandermore.travelcompanion.data.model.Trip
+import com.wandermore.travelcompanion.ui.components.CategoryDropdown
+import com.wandermore.travelcompanion.util.ExpenseCategories
 import com.wandermore.travelcompanion.viewmodel.TripViewModel
 import java.time.LocalDate
 
@@ -26,17 +28,23 @@ fun AddExpenseScreen(
     onExpenseAdded: () -> Unit
 ) {
 
+
     var description by remember {
         mutableStateOf("")
     }
+
 
     var amount by remember {
         mutableStateOf("")
     }
 
+
     var category by remember {
-        mutableStateOf("")
+        mutableStateOf(
+            ExpenseCategories.categories.first()
+        )
     }
+
 
 
     Column(
@@ -44,6 +52,7 @@ fun AddExpenseScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
+
 
         Text(
             text = "Add Expense"
@@ -77,19 +86,23 @@ fun AddExpenseScreen(
         )
 
 
-        OutlinedTextField(
-            value = category,
-            onValueChange = {
+        CategoryDropdown(
+
+            selectedCategory = category,
+
+            onCategorySelected = {
+
                 category = it
-            },
-            label = {
-                Text("Category")
+
             }
+
         )
+
 
 
         Button(
             onClick = {
+
 
                 val expense = ExpenseEntity(
 
@@ -116,15 +129,20 @@ fun AddExpenseScreen(
 
                 onExpenseAdded()
 
+
             }
         ) {
+
 
             Text(
                 text = "Save Expense"
             )
 
+
         }
 
+
     }
+
 
 }

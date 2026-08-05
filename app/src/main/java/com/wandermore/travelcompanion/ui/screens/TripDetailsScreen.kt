@@ -2,8 +2,12 @@ package com.wandermore.travelcompanion.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
@@ -18,9 +22,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.wandermore.travelcompanion.data.model.Trip
+import com.wandermore.travelcompanion.ui.components.ExpenseCard
 import com.wandermore.travelcompanion.util.formatDate
 import com.wandermore.travelcompanion.viewmodel.TripViewModel
-import androidx.compose.foundation.clickable
 
 
 @Composable
@@ -31,8 +35,7 @@ fun TripDetailsScreen(
     onAddExpense: () -> Unit,
     onDeleteTrip: () -> Unit,
     onEditExpense: (Long) -> Unit
-)
-{
+) {
 
 
     var trip by remember {
@@ -47,10 +50,7 @@ fun TripDetailsScreen(
 
     LaunchedEffect(tripId) {
 
-        trip =
-            tripViewModel.getTripById(
-                tripId
-            )
+        trip = tripViewModel.getTripById(tripId)
 
     }
 
@@ -73,7 +73,6 @@ fun TripDetailsScreen(
         }
 
         return
-
     }
 
 
@@ -93,10 +92,7 @@ fun TripDetailsScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp),
-
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Top
+            .padding(16.dp)
     ) {
 
 
@@ -120,13 +116,18 @@ fun TripDetailsScreen(
         )
 
 
-        Text(
-            text = ""
+        Spacer(
+            modifier = Modifier.height(16.dp)
         )
 
 
         Text(
             text = "Expenses"
+        )
+
+
+        Spacer(
+            modifier = Modifier.height(8.dp)
         )
 
 
@@ -141,27 +142,35 @@ fun TripDetailsScreen(
         } else {
 
 
-            expenses.forEach { expense ->
+            LazyColumn(
+                modifier = Modifier.weight(1f)
+            ) {
 
 
-                Text(
+                items(expenses) { expense ->
 
-                    text = "${expense.description} - ${expense.amount} ${expense.currency}",
 
-                    modifier = Modifier.clickable {
+                    ExpenseCard(
+                        expense = expense,
+                        onClick = {
+                            onEditExpense(expense.id.toLong())
+                        }
+                    )
 
-                        onEditExpense(expense.id)
 
-                    }
+                    Spacer(
+                        modifier = Modifier.height(4.dp)
+                    )
 
-                )
+
+                }
 
 
             }
 
 
-            Text(
-                text = ""
+            Spacer(
+                modifier = Modifier.height(12.dp)
             )
 
 
@@ -169,12 +178,11 @@ fun TripDetailsScreen(
                 text = "Total: $total ${currentTrip.homeCurrency}"
             )
 
-
         }
 
 
-        Text(
-            text = ""
+        Spacer(
+            modifier = Modifier.height(16.dp)
         )
 
 
