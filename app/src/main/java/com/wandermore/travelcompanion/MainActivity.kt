@@ -18,7 +18,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.wandermore.travelcompanion.data.model.Trip
+import com.wandermore.travelcompanion.model.Trip
 import com.wandermore.travelcompanion.database.DatabaseProvider
 import com.wandermore.travelcompanion.database.ExpenseEntity
 import com.wandermore.travelcompanion.ui.screens.AddExpenseScreen
@@ -34,6 +34,7 @@ import com.wandermore.travelcompanion.viewmodel.TripViewModelFactory
 import com.wandermore.travelcompanion.data.repository.ExchangeRateRepository
 import com.wandermore.travelcompanion.viewmodel.ExchangeRateViewModel
 import com.wandermore.travelcompanion.viewmodel.ExchangeRateViewModelFactory
+import com.wandermore.travelcompanion.model.TripStatus
 
 
 class MainActivity : ComponentActivity() {
@@ -73,6 +74,7 @@ class MainActivity : ComponentActivity() {
 
                 )
 
+
                 val exchangeRateRepository =
                     remember {
 
@@ -98,12 +100,12 @@ class MainActivity : ComponentActivity() {
 
                 }
 
+
                 Scaffold(
 
                     modifier = Modifier.fillMaxSize()
 
                 ) { innerPadding ->
-
 
 
                     NavHost(
@@ -115,7 +117,6 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier.padding(innerPadding)
 
                     ) {
-
 
 
                         composable("home") {
@@ -155,7 +156,6 @@ class MainActivity : ComponentActivity() {
 
 
 
-
                         composable("createTrip") {
 
 
@@ -172,7 +172,6 @@ class MainActivity : ComponentActivity() {
                             )
 
                         }
-
 
 
 
@@ -204,6 +203,16 @@ class MainActivity : ComponentActivity() {
 
                                     },
 
+                                    onRestoreTrip = {
+
+                                        tripViewModel.restoreTrip(
+                                            tripId,
+                                            TripStatus.PLANNED
+                                        )
+
+                                    },
+
+
                                     onAddExpense = {
 
                                         navController.navigate(
@@ -211,6 +220,7 @@ class MainActivity : ComponentActivity() {
                                         )
 
                                     },
+
 
                                     onDeleteTrip = {
 
@@ -222,6 +232,25 @@ class MainActivity : ComponentActivity() {
 
                                     },
 
+
+                                    onStartTrip = {
+
+                                        tripViewModel.startTrip(
+                                            tripId
+                                        )
+
+                                    },
+
+
+                                    onArchiveTrip = {
+
+                                        tripViewModel.archiveTrip(
+                                            tripId
+                                        )
+
+                                    },
+
+
                                     onEditExpense = { expenseId ->
 
                                         navController.navigate(
@@ -229,6 +258,7 @@ class MainActivity : ComponentActivity() {
                                         )
 
                                     },
+
 
                                     onCategoryBreakdown = {
 
@@ -243,8 +273,6 @@ class MainActivity : ComponentActivity() {
                             }
 
                         }
-
-
 
 
 
@@ -266,7 +294,6 @@ class MainActivity : ComponentActivity() {
                             }
 
 
-
                             LaunchedEffect(tripId) {
 
                                 if (tripId != null) {
@@ -279,7 +306,6 @@ class MainActivity : ComponentActivity() {
                                 }
 
                             }
-
 
 
                             trip?.let {
@@ -308,8 +334,6 @@ class MainActivity : ComponentActivity() {
 
 
 
-
-
                         composable(
                             "addExpense/{tripId}"
                         ) { entry ->
@@ -328,7 +352,6 @@ class MainActivity : ComponentActivity() {
                             }
 
 
-
                             LaunchedEffect(tripId) {
 
                                 if (tripId != null) {
@@ -341,7 +364,6 @@ class MainActivity : ComponentActivity() {
                                 }
 
                             }
-
 
 
                             trip?.let {
@@ -370,8 +392,6 @@ class MainActivity : ComponentActivity() {
 
 
 
-
-
                         composable(
                             "editExpense/{expenseId}"
                         ) { entry ->
@@ -390,7 +410,6 @@ class MainActivity : ComponentActivity() {
                             }
 
 
-
                             LaunchedEffect(expenseId) {
 
                                 if (expenseId != null) {
@@ -403,7 +422,6 @@ class MainActivity : ComponentActivity() {
                                 }
 
                             }
-
 
 
                             expense?.let {
@@ -440,8 +458,6 @@ class MainActivity : ComponentActivity() {
 
 
 
-
-
                         composable(
                             "editTrip/{tripId}"
                         ) { entry ->
@@ -460,7 +476,6 @@ class MainActivity : ComponentActivity() {
                             }
 
 
-
                             LaunchedEffect(tripId) {
 
                                 if (tripId != null) {
@@ -473,7 +488,6 @@ class MainActivity : ComponentActivity() {
                                 }
 
                             }
-
 
 
                             trip?.let {

@@ -2,7 +2,8 @@ package com.wandermore.travelcompanion.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.wandermore.travelcompanion.data.model.Trip
+import com.wandermore.travelcompanion.model.Trip
+import com.wandermore.travelcompanion.model.TripStatus
 import com.wandermore.travelcompanion.data.repository.TripRepository
 import com.wandermore.travelcompanion.database.ExpenseDao
 import com.wandermore.travelcompanion.database.ExpenseEntity
@@ -23,11 +24,25 @@ class TripViewModel(
     )
 
 
+
     fun getTrips(): Flow<List<Trip>> {
 
         return repository.getTrips()
 
     }
+
+
+
+    fun getTripByIdFlow(
+        id: Long
+    ): Flow<Trip?> {
+
+        return repository.getTripByIdFlow(
+            id
+        )
+
+    }
+
 
 
     suspend fun getTripById(
@@ -39,6 +54,7 @@ class TripViewModel(
         )
 
     }
+
 
 
     fun addTrip(
@@ -62,6 +78,7 @@ class TripViewModel(
     }
 
 
+
     fun updateTrip(
         trip: Trip
     ) {
@@ -75,6 +92,64 @@ class TripViewModel(
         }
 
     }
+
+
+
+    // -------------------------
+    // Trip status functions
+    // -------------------------
+
+
+    fun startTrip(
+        tripId: Long
+    ) {
+
+        viewModelScope.launch {
+
+            repository.updateTripStatus(
+                tripId,
+                TripStatus.CURRENT
+            )
+
+        }
+
+    }
+
+
+
+    fun archiveTrip(
+        tripId: Long
+    ) {
+
+        viewModelScope.launch {
+
+            repository.updateTripStatus(
+                tripId,
+                TripStatus.ARCHIVED
+            )
+
+        }
+
+    }
+
+
+
+    fun restoreTrip(
+        tripId: Long,
+        status: TripStatus
+    ) {
+
+        viewModelScope.launch {
+
+            repository.updateTripStatus(
+                tripId,
+                status
+            )
+
+        }
+
+    }
+
 
 
     fun deleteTrip(
@@ -101,6 +176,7 @@ class TripViewModel(
     }
 
 
+
     // -------------------------
     // Expense functions
     // -------------------------
@@ -121,6 +197,7 @@ class TripViewModel(
     }
 
 
+
     fun getExpensesForTrip(
         tripId: Long
     ): Flow<List<ExpenseEntity>> {
@@ -132,6 +209,7 @@ class TripViewModel(
     }
 
 
+
     suspend fun getExpenseById(
         expenseId: Long
     ): ExpenseEntity? {
@@ -141,6 +219,7 @@ class TripViewModel(
         )
 
     }
+
 
 
     fun deleteExpense(
@@ -156,6 +235,7 @@ class TripViewModel(
         }
 
     }
+
 
 
     fun updateExpense(

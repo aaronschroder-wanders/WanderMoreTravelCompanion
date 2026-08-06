@@ -14,7 +14,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.wandermore.travelcompanion.database.ExpenseEntity
-import com.wandermore.travelcompanion.data.model.Trip
+import com.wandermore.travelcompanion.model.Trip
 import com.wandermore.travelcompanion.ui.components.CategoryDropdown
 import com.wandermore.travelcompanion.ui.components.CurrencyDropdown
 import com.wandermore.travelcompanion.ui.components.DatePickerButton

@@ -16,6 +16,17 @@ interface TripDao {
     fun getAllTrips(): Flow<List<TripEntity>>
 
 
+    @Query(
+        """
+        SELECT * FROM trips
+        WHERE id = :tripId
+        """
+    )
+    fun getTripById(
+        tripId: Long
+    ): Flow<TripEntity?>
+
+
     @Insert
     suspend fun insertTrip(
         trip: TripEntity
@@ -25,6 +36,19 @@ interface TripDao {
     @Update
     suspend fun updateTrip(
         trip: TripEntity
+    )
+
+
+    @Query(
+        """
+        UPDATE trips 
+        SET status = :status 
+        WHERE id = :tripId
+        """
+    )
+    suspend fun updateTripStatus(
+        tripId: Long,
+        status: String
     )
 
 

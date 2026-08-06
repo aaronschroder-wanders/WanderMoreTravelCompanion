@@ -12,7 +12,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         ExpenseEntity::class,
         ExchangeRateEntity::class
     ],
-    version = 4,
+    version = 5,
     exportSchema = false
 )
 @TypeConverters(DateConverter::class)
@@ -80,6 +80,29 @@ abstract class AppDatabase : RoomDatabase() {
                         lastUpdated TEXT NOT NULL,
                         PRIMARY KEY(currencyCode)
                     )
+                    """.trimIndent()
+                )
+            }
+        }
+
+
+        val MIGRATION_4_5 = object : Migration(4, 5) {
+
+            override fun migrate(
+                database: SupportSQLiteDatabase
+            ) {
+
+                database.execSQL(
+                    """
+                    ALTER TABLE trips
+                    ADD COLUMN status TEXT NOT NULL DEFAULT 'PLANNED'
+                    """.trimIndent()
+                )
+
+                database.execSQL(
+                    """
+                    UPDATE trips
+                    SET status = 'CURRENT'
                     """.trimIndent()
                 )
             }

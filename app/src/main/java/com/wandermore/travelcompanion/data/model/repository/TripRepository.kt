@@ -1,12 +1,14 @@
 package com.wandermore.travelcompanion.data.repository
 
-import com.wandermore.travelcompanion.data.model.Trip
+import com.wandermore.travelcompanion.model.Trip
+import com.wandermore.travelcompanion.model.TripStatus
 import com.wandermore.travelcompanion.database.TripDao
 import com.wandermore.travelcompanion.database.TripEntity
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 import java.time.LocalDate
-import kotlinx.coroutines.flow.firstOrNull
+
 
 class TripRepository(
     private val tripDao: TripDao
@@ -25,7 +27,8 @@ class TripRepository(
                         name = entity.name,
                         startDate = entity.startDate,
                         endDate = entity.endDate,
-                        homeCurrency = entity.homeCurrency
+                        homeCurrency = entity.homeCurrency,
+                        status = TripStatus.valueOf(entity.status)
                     )
 
                 }
@@ -33,6 +36,33 @@ class TripRepository(
             }
 
     }
+
+
+
+    fun getTripByIdFlow(
+        id: Long
+    ): Flow<Trip?> {
+
+        return tripDao.getTripById(id)
+            .map { entity ->
+
+                entity?.let {
+
+                    Trip(
+                        id = it.id,
+                        name = it.name,
+                        startDate = it.startDate,
+                        endDate = it.endDate,
+                        homeCurrency = it.homeCurrency,
+                        status = TripStatus.valueOf(it.status)
+                    )
+
+                }
+
+            }
+
+    }
+
 
 
     suspend fun getTripById(
@@ -57,12 +87,14 @@ class TripRepository(
                     name = entity.name,
                     startDate = entity.startDate,
                     endDate = entity.endDate,
-                    homeCurrency = entity.homeCurrency
+                    homeCurrency = entity.homeCurrency,
+                    status = TripStatus.valueOf(entity.status)
                 )
 
             }
 
     }
+
 
 
     suspend fun addTrip(
@@ -86,6 +118,7 @@ class TripRepository(
     }
 
 
+
     suspend fun updateTrip(
         trip: Trip
     ) {
@@ -97,12 +130,28 @@ class TripRepository(
                 name = trip.name,
                 startDate = trip.startDate,
                 endDate = trip.endDate,
-                homeCurrency = trip.homeCurrency
+                homeCurrency = trip.homeCurrency,
+                status = trip.status.name
             )
 
         )
 
     }
+
+
+
+    suspend fun updateTripStatus(
+        tripId: Long,
+        status: TripStatus
+    ) {
+
+        tripDao.updateTripStatus(
+            tripId = tripId,
+            status = status.name
+        )
+
+    }
+
 
 
     suspend fun deleteTrip(
@@ -116,7 +165,8 @@ class TripRepository(
                 name = trip.name,
                 startDate = trip.startDate,
                 endDate = trip.endDate,
-                homeCurrency = trip.homeCurrency
+                homeCurrency = trip.homeCurrency,
+                status = trip.status.name
             )
 
         )
