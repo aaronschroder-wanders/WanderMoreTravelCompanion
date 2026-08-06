@@ -26,6 +26,9 @@ import com.wandermore.travelcompanion.ui.components.ExpenseCard
 import com.wandermore.travelcompanion.util.formatDate
 import com.wandermore.travelcompanion.viewmodel.TripViewModel
 import com.wandermore.travelcompanion.ui.components.ExpenseSummaryCard
+import com.wandermore.travelcompanion.ui.components.TripSummaryCard
+import java.time.temporal.ChronoUnit
+
 
 
 @Composable
@@ -88,6 +91,12 @@ fun TripDetailsScreen(
         it.amount
     }
 
+    val plannedDays =
+        ChronoUnit.DAYS.between(
+            currentTrip.startDate,
+            currentTrip.endDate
+        ) + 1
+
 
 
     Column(
@@ -114,6 +123,18 @@ fun TripDetailsScreen(
 
         Text(
             text = "💰 Home currency: ${currentTrip.homeCurrency}"
+        )
+
+        TripSummaryCard(
+
+            plannedDays = plannedDays,
+
+            expenseCount = expenses.size,
+
+            totalSpent = total,
+
+            currency = currentTrip.homeCurrency
+
         )
 
 

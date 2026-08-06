@@ -1,0 +1,79 @@
+package com.wandermore.travelcompanion.ui.components
+
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Card
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+
+
+@Composable
+fun TripSummaryCard(
+    plannedDays: Long,
+    expenseCount: Int,
+    totalSpent: Double,
+    currency: String
+) {
+
+
+    Card(
+
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp)
+
+    ) {
+
+
+        Column(
+
+            modifier = Modifier.padding(16.dp)
+
+        ) {
+
+
+            Text(
+
+                text = "🌏 Trip Summary",
+
+                style = MaterialTheme.typography.titleMedium
+
+            )
+
+
+            Text(
+
+                text = "📅 Planned duration: $plannedDays days",
+
+                style = MaterialTheme.typography.bodyMedium
+
+            )
+
+
+            Text(
+
+                text = "💳 Expenses: $expenseCount",
+
+                style = MaterialTheme.typography.bodyMedium
+
+            )
+
+
+            Text(
+
+                text = "💰 Total spent: ${String.format("%.2f", totalSpent)} $currency",
+
+                style = MaterialTheme.typography.bodyMedium
+
+            )
+
+
+        }
+
+    }
+
+}
