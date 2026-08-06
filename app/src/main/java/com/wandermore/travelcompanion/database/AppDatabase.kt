@@ -9,9 +9,10 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 @Database(
     entities = [
         TripEntity::class,
-        ExpenseEntity::class
+        ExpenseEntity::class,
+        ExchangeRateEntity::class
     ],
-    version = 3,
+    version = 4,
     exportSchema = false
 )
 @TypeConverters(DateConverter::class)
@@ -20,6 +21,8 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun tripDao(): TripDao
 
     abstract fun expenseDao(): ExpenseDao
+
+    abstract fun exchangeRateDao(): ExchangeRateDao
 
 
     companion object {
@@ -57,6 +60,26 @@ abstract class AppDatabase : RoomDatabase() {
                     """
                     ALTER TABLE expenses
                     ADD COLUMN numberOfNights INTEGER
+                    """.trimIndent()
+                )
+            }
+        }
+
+
+        val MIGRATION_3_4 = object : Migration(3, 4) {
+
+            override fun migrate(
+                database: SupportSQLiteDatabase
+            ) {
+
+                database.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS exchange_rates (
+                        currencyCode TEXT NOT NULL,
+                        rateToNZD REAL NOT NULL,
+                        lastUpdated TEXT NOT NULL,
+                        PRIMARY KEY(currencyCode)
+                    )
                     """.trimIndent()
                 )
             }

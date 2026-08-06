@@ -31,6 +31,9 @@ import com.wandermore.travelcompanion.ui.screens.TripDetailsScreen
 import com.wandermore.travelcompanion.ui.theme.WanderMoreTravelCompanionTheme
 import com.wandermore.travelcompanion.viewmodel.TripViewModel
 import com.wandermore.travelcompanion.viewmodel.TripViewModelFactory
+import com.wandermore.travelcompanion.data.repository.ExchangeRateRepository
+import com.wandermore.travelcompanion.viewmodel.ExchangeRateViewModel
+import com.wandermore.travelcompanion.viewmodel.ExchangeRateViewModelFactory
 
 
 class MainActivity : ComponentActivity() {
@@ -70,7 +73,30 @@ class MainActivity : ComponentActivity() {
 
                 )
 
+                val exchangeRateRepository =
+                    remember {
 
+                        ExchangeRateRepository(
+                            database.exchangeRateDao()
+                        )
+
+                    }
+
+
+                val exchangeRateViewModel: ExchangeRateViewModel = viewModel(
+
+                    factory = ExchangeRateViewModelFactory(
+                        exchangeRateRepository
+                    )
+
+                )
+
+
+                LaunchedEffect(Unit) {
+
+                    exchangeRateViewModel.initialiseRates()
+
+                }
 
                 Scaffold(
 
