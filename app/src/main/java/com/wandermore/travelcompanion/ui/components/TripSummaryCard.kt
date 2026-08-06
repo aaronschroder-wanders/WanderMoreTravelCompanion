@@ -9,6 +9,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.wandermore.travelcompanion.util.formatMoney
 
 
 @Composable
@@ -65,7 +66,12 @@ fun TripSummaryCard(
 
             Text(
 
-                text = "💰 Total spent: ${String.format("%.2f", totalSpent)} $currency",
+                text = "💰 Total spent: ${
+                    formatMoney(
+                        totalSpent,
+                        currency
+                    )
+                }",
 
                 style = MaterialTheme.typography.bodyMedium
 

@@ -16,6 +16,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.wandermore.travelcompanion.database.ExpenseEntity
 import com.wandermore.travelcompanion.ui.components.CategoryDropdown
+import com.wandermore.travelcompanion.ui.components.CurrencyDropdown
 import com.wandermore.travelcompanion.viewmodel.TripViewModel
 
 
@@ -40,6 +41,11 @@ fun EditExpenseScreen(
 
     var category by remember {
         mutableStateOf(expense.category)
+    }
+
+
+    var currency by remember {
+        mutableStateOf(expense.currency)
     }
 
 
@@ -98,6 +104,22 @@ fun EditExpenseScreen(
 
 
 
+        CurrencyDropdown(
+
+            selectedCurrency = currency,
+
+            onCurrencySelected = {
+
+                currency = it
+
+            },
+
+            label = "Expense Currency"
+
+        )
+
+
+
         CategoryDropdown(
 
             selectedCategory = category,
@@ -123,6 +145,8 @@ fun EditExpenseScreen(
 
                     amount = amount.toDoubleOrNull()
                         ?: 0.0,
+
+                    currency = currency,
 
                     category = category
 

@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import com.wandermore.travelcompanion.database.ExpenseEntity
 import com.wandermore.travelcompanion.data.model.Trip
 import com.wandermore.travelcompanion.ui.components.CategoryDropdown
+import com.wandermore.travelcompanion.ui.components.CurrencyDropdown
 import com.wandermore.travelcompanion.util.ExpenseCategories
 import com.wandermore.travelcompanion.viewmodel.TripViewModel
 import java.time.LocalDate
@@ -42,6 +43,13 @@ fun AddExpenseScreen(
     var category by remember {
         mutableStateOf(
             ExpenseCategories.categories.first()
+        )
+    }
+
+
+    var currency by remember {
+        mutableStateOf(
+            trip.homeCurrency
         )
     }
 
@@ -86,6 +94,15 @@ fun AddExpenseScreen(
         )
 
 
+        CurrencyDropdown(
+            selectedCurrency = currency,
+            onCurrencySelected = {
+                currency = it
+            },
+            label = "Expense Currency"
+        )
+
+
         CategoryDropdown(
 
             selectedCategory = category,
@@ -113,7 +130,7 @@ fun AddExpenseScreen(
                     amount = amount.toDoubleOrNull()
                         ?: 0.0,
 
-                    currency = trip.homeCurrency,
+                    currency = currency,
 
                     date = LocalDate.now(),
 

@@ -1,10 +1,10 @@
 package com.wandermore.travelcompanion.ui.components
 
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -21,8 +21,10 @@ import androidx.compose.material3.ExposedDropdownMenuAnchorType
 @Composable
 fun CurrencyDropdown(
     selectedCurrency: String,
-    onCurrencySelected: (String) -> Unit
+    onCurrencySelected: (String) -> Unit,
+    label: String = "Currency"
 ) {
+
 
     var expanded by remember {
         mutableStateOf(false)
@@ -57,7 +59,7 @@ fun CurrencyDropdown(
             readOnly = true,
 
             label = {
-                Text("Home Currency")
+                Text(label)
             },
 
             trailingIcon = {
@@ -96,7 +98,6 @@ fun CurrencyDropdown(
                             "${currency.code} - ${currency.name}"
                         )
                     },
-
 
                     onClick = {
 

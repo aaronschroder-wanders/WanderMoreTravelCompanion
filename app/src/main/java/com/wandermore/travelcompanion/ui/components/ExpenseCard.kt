@@ -15,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.wandermore.travelcompanion.database.ExpenseEntity
 import com.wandermore.travelcompanion.util.ExpenseCategoryIcons
+import com.wandermore.travelcompanion.util.formatMoney
 import java.time.format.DateTimeFormatter
 
 
@@ -107,7 +108,10 @@ fun ExpenseCard(
 
                 Text(
 
-                    text = "${String.format("%.2f", expense.amount)} ${expense.currency}",
+                    text = formatMoney(
+                        expense.amount,
+                        expense.currency
+                    ),
 
                     style = MaterialTheme.typography.bodyMedium
 

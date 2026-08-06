@@ -1,55 +1,109 @@
 package com.wandermore.travelcompanion.util
 
+
 data class CurrencyItem(
     val code: String,
-    val name: String
+    val name: String,
+    val symbol: String
 )
+
 
 val supportedCurrencies = listOf(
 
     CurrencyItem(
         "NZD",
-        "New Zealand Dollar"
+        "New Zealand Dollar",
+        "$"
     ),
 
     CurrencyItem(
         "AUD",
-        "Australian Dollar"
+        "Australian Dollar",
+        "$"
     ),
 
     CurrencyItem(
         "USD",
-        "US Dollar"
+        "US Dollar",
+        "$"
     ),
 
     CurrencyItem(
         "EUR",
-        "Euro"
+        "Euro",
+        "€"
     ),
 
     CurrencyItem(
         "GBP",
-        "British Pound"
+        "British Pound",
+        "£"
     ),
 
     CurrencyItem(
         "THB",
-        "Thai Baht"
+        "Thai Baht",
+        "฿"
     ),
 
     CurrencyItem(
         "VND",
-        "Vietnamese Dong"
+        "Vietnamese Dong",
+        "₫"
     ),
 
     CurrencyItem(
         "LAK",
-        "Lao Kip"
+        "Lao Kip",
+        "₭"
     ),
 
     CurrencyItem(
         "CNY",
-        "Chinese Yuan"
+        "Chinese Yuan",
+        "¥"
+    ),
+
+    CurrencyItem(
+        "JPY",
+        "Japanese Yen",
+        "¥"
+    ),
+
+    CurrencyItem(
+        "KRW",
+        "South Korean Won",
+        "₩"
+    ),
+
+    CurrencyItem(
+        "MYR",
+        "Malaysian Ringgit",
+        "RM"
+    ),
+
+    CurrencyItem(
+        "SGD",
+        "Singapore Dollar",
+        "$"
+    ),
+
+    CurrencyItem(
+        "IDR",
+        "Indonesian Rupiah",
+        "Rp"
+    ),
+
+    CurrencyItem(
+        "PHP",
+        "Philippine Peso",
+        "₱"
+    ),
+
+    CurrencyItem(
+        "INR",
+        "Indian Rupee",
+        "₹"
     )
 
 )

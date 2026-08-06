@@ -102,7 +102,8 @@ fun EditTripScreen(
             selectedCurrency = currency,
             onCurrencySelected = {
                 currency = it
-            }
+            },
+            label = "Home Currency"
         )
 
 
