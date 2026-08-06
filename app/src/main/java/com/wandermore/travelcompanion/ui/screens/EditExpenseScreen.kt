@@ -17,6 +17,7 @@ import androidx.compose.ui.Modifier
 import com.wandermore.travelcompanion.database.ExpenseEntity
 import com.wandermore.travelcompanion.ui.components.CategoryDropdown
 import com.wandermore.travelcompanion.ui.components.CurrencyDropdown
+import com.wandermore.travelcompanion.ui.components.DatePickerButton
 import com.wandermore.travelcompanion.util.ExchangeRates
 import com.wandermore.travelcompanion.viewmodel.TripViewModel
 
@@ -47,6 +48,11 @@ fun EditExpenseScreen(
 
     var currency by remember {
         mutableStateOf(expense.currency)
+    }
+
+
+    var expenseDate by remember {
+        mutableStateOf(expense.date)
     }
 
 
@@ -138,6 +144,7 @@ fun EditExpenseScreen(
             Text(
                 text = "≈ NZ$ %.2f".format(previewNZD)
             )
+
         }
 
 
@@ -149,6 +156,20 @@ fun EditExpenseScreen(
             onCategorySelected = {
 
                 category = it
+
+            }
+
+        )
+
+
+
+        DatePickerButton(
+
+            selectedDate = expenseDate,
+
+            onDateSelected = {
+
+                expenseDate = it
 
             }
 
@@ -184,6 +205,8 @@ fun EditExpenseScreen(
                     currency = currency,
 
                     category = category,
+
+                    date = expenseDate,
 
                     exchangeRate = exchangeRate,
 

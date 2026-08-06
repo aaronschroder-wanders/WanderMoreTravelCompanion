@@ -1,7 +1,6 @@
 package com.wandermore.travelcompanion.ui.components
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -30,38 +29,47 @@ fun ExpenseCard(
         DateTimeFormatter.ofPattern("dd MMM yyyy")
 
 
+
     Card(
+
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 6.dp)
             .clickable {
                 onClick()
             }
+
     ) {
 
 
         Column(
+
             modifier = Modifier.padding(16.dp)
+
         ) {
 
 
             Row(
+
                 verticalAlignment = Alignment.CenterVertically
+
             ) {
 
 
                 Text(
+
                     text = ExpenseCategoryIcons.getIcon(
                         expense.category
                     ),
 
-                    style = MaterialTheme.typography.titleMedium
+                    style = MaterialTheme.typography.titleLarge
+
                 )
 
 
                 Text(
 
-                    text = " ${expense.description}",
+                    text = expense.description,
 
                     style = MaterialTheme.typography.titleMedium,
 
@@ -90,20 +98,9 @@ fun ExpenseCard(
                     .fillMaxWidth()
                     .padding(top = 12.dp),
 
-                horizontalArrangement = Arrangement.SpaceBetween,
-
                 verticalAlignment = Alignment.CenterVertically
 
             ) {
-
-
-                Text(
-
-                    text = expense.date.format(dateFormatter),
-
-                    style = MaterialTheme.typography.bodySmall
-
-                )
 
 
                 Text(
@@ -113,12 +110,37 @@ fun ExpenseCard(
                         expense.currency
                     ),
 
-                    style = MaterialTheme.typography.bodyMedium
+                    style = MaterialTheme.typography.bodyLarge,
+
+                    modifier = Modifier.weight(1f)
+
+                )
+
+
+                Text(
+
+                    text = "≈ NZ$ %.2f".format(
+                        expense.convertedAmount
+                    ),
+
+                    style = MaterialTheme.typography.titleMedium
 
                 )
 
 
             }
+
+
+
+            Text(
+
+                text = expense.date.format(dateFormatter),
+
+                style = MaterialTheme.typography.bodySmall,
+
+                modifier = Modifier.padding(top = 8.dp)
+
+            )
 
 
         }

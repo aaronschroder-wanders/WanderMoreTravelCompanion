@@ -17,6 +17,7 @@ import com.wandermore.travelcompanion.database.ExpenseEntity
 import com.wandermore.travelcompanion.data.model.Trip
 import com.wandermore.travelcompanion.ui.components.CategoryDropdown
 import com.wandermore.travelcompanion.ui.components.CurrencyDropdown
+import com.wandermore.travelcompanion.ui.components.DatePickerButton
 import com.wandermore.travelcompanion.util.ExchangeRates
 import com.wandermore.travelcompanion.util.ExpenseCategories
 import com.wandermore.travelcompanion.viewmodel.TripViewModel
@@ -50,6 +51,14 @@ fun AddExpenseScreen(
     var currency by remember {
         mutableStateOf(
             trip.homeCurrency
+        )
+    }
+
+
+    // Expense date defaults to today but can be changed
+    var expenseDate by remember {
+        mutableStateOf(
+            LocalDate.now()
         )
     }
 
@@ -119,8 +128,6 @@ fun AddExpenseScreen(
 
 
 
-        // Live NZD conversion preview
-
         val previewAmount =
             amount.toDoubleOrNull()
 
@@ -149,6 +156,20 @@ fun AddExpenseScreen(
             onCategorySelected = {
 
                 category = it
+
+            }
+
+        )
+
+
+
+        DatePickerButton(
+
+            selectedDate = expenseDate,
+
+            onDateSelected = {
+
+                expenseDate = it
 
             }
 
@@ -189,7 +210,7 @@ fun AddExpenseScreen(
 
                     category = category,
 
-                    date = LocalDate.now(),
+                    date = expenseDate,
 
                     exchangeRate = exchangeRate,
 
