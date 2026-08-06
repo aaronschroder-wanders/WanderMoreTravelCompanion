@@ -21,6 +21,10 @@ import com.wandermore.travelcompanion.ui.components.DatePickerButton
 import com.wandermore.travelcompanion.viewmodel.ExchangeRateViewModel
 import com.wandermore.travelcompanion.util.ExpenseCategories
 import com.wandermore.travelcompanion.viewmodel.TripViewModel
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.layout.padding
 import java.time.LocalDate
 
 
@@ -70,10 +74,20 @@ fun AddExpenseScreen(
 
 
 
+    val scrollState = rememberScrollState()
+
+
     Column(
-        modifier = Modifier.fillMaxSize(),
+
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(scrollState)
+            .padding(16.dp),
+
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+
+        verticalArrangement = Arrangement.Top
+
     ) {
 
 

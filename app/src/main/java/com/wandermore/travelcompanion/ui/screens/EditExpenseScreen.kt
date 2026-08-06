@@ -19,6 +19,10 @@ import com.wandermore.travelcompanion.ui.components.CategoryDropdown
 import com.wandermore.travelcompanion.ui.components.CurrencyDropdown
 import com.wandermore.travelcompanion.ui.components.DatePickerButton
 import com.wandermore.travelcompanion.viewmodel.ExchangeRateViewModel
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.layout.padding
 import com.wandermore.travelcompanion.viewmodel.TripViewModel
 
 
@@ -70,13 +74,19 @@ fun EditExpenseScreen(
 
 
 
+    val scrollState = rememberScrollState()
+
+
     Column(
 
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(scrollState)
+            .padding(16.dp),
 
         horizontalAlignment = Alignment.CenterHorizontally,
 
-        verticalArrangement = Arrangement.Center
+        verticalArrangement = Arrangement.Top
 
     ) {
 
