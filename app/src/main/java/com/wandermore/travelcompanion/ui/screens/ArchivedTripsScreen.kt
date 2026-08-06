@@ -2,7 +2,6 @@ package com.wandermore.travelcompanion.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -21,39 +20,33 @@ import com.wandermore.travelcompanion.ui.components.TripCard
 
 
 @Composable
-fun HomeScreen(
-
-    modifier: Modifier = Modifier,
+fun ArchivedTripsScreen(
 
     trips: List<Trip>,
 
-    onCreateTrip: () -> Unit,
+    onTripSelected: (Trip) -> Unit,
 
-    onArchivedTrips: () -> Unit,
-
-    onTripSelected: (Trip) -> Unit
+    onBack: () -> Unit
 
 ) {
 
 
-    val currentTrips =
+    val archivedTrips =
         trips.filter {
-            it.status == TripStatus.CURRENT
-        }
 
+            it.status == TripStatus.ARCHIVED
 
-    val plannedTrips =
-        trips.filter {
-            it.status == TripStatus.PLANNED
         }
 
 
 
     Column(
 
-        modifier = modifier.fillMaxSize()
+        modifier = Modifier
+            .fillMaxSize()
 
     ) {
+
 
 
         // -------------------------
@@ -76,7 +69,7 @@ fun HomeScreen(
 
             Text(
 
-                text = "Wander More",
+                text = "Archived Trips",
 
                 style = MaterialTheme.typography.headlineMedium
 
@@ -85,20 +78,7 @@ fun HomeScreen(
 
             Text(
 
-                text = "Travel Companion",
-
-                style = MaterialTheme.typography.titleMedium,
-
-                modifier = Modifier.padding(
-                    top = 4.dp
-                )
-
-            )
-
-
-            Text(
-
-                text = "Plan. Track. Remember your journeys.",
+                text = "Your completed journeys",
 
                 style = MaterialTheme.typography.bodyMedium,
 
@@ -115,7 +95,7 @@ fun HomeScreen(
 
 
         // -------------------------
-        // SCROLLING TRIP AREA
+        // SCROLLING ARCHIVED LIST
         // -------------------------
 
         LazyColumn(
@@ -132,29 +112,7 @@ fun HomeScreen(
 
 
 
-            // CURRENT TRIP
-
-            item {
-
-
-                Text(
-
-                    text = "Current Trip",
-
-                    style = MaterialTheme.typography.titleLarge,
-
-                    modifier = Modifier.padding(
-                        16.dp
-                    )
-
-                )
-
-
-            }
-
-
-
-            if (currentTrips.isEmpty()) {
+            if (archivedTrips.isEmpty()) {
 
 
                 item {
@@ -162,10 +120,10 @@ fun HomeScreen(
 
                     Text(
 
-                        text = "No active trip",
+                        text = "No archived trips yet.",
 
                         modifier = Modifier.padding(
-                            bottom = 16.dp
+                            top = 32.dp
                         )
 
                     )
@@ -177,76 +135,7 @@ fun HomeScreen(
             } else {
 
 
-                items(currentTrips) { trip ->
-
-
-                    TripCard(
-
-                        trip = trip,
-
-                        onClick = {
-
-                            onTripSelected(trip)
-
-                        }
-
-                    )
-
-
-                }
-
-
-            }
-
-
-
-
-            // PLANNED TRIPS
-
-            item {
-
-
-                Text(
-
-                    text = "Planned Trips",
-
-                    style = MaterialTheme.typography.titleLarge,
-
-                    modifier = Modifier.padding(
-                        16.dp
-                    )
-
-                )
-
-
-            }
-
-
-
-            if (plannedTrips.isEmpty()) {
-
-
-                item {
-
-
-                    Text(
-
-                        text = "No planned trips",
-
-                        modifier = Modifier.padding(
-                            bottom = 16.dp
-                        )
-
-                    )
-
-
-                }
-
-
-            } else {
-
-
-                items(plannedTrips) { trip ->
+                items(archivedTrips) { trip ->
 
 
                     TripCard(
@@ -274,52 +163,30 @@ fun HomeScreen(
 
 
         // -------------------------
-        // FIXED BOTTOM ACTIONS
+        // FIXED BOTTOM BUTTON
         // -------------------------
 
-        Row(
+        Button(
+
+            onClick = onBack,
 
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(
+                    start = 32.dp,
+                    end = 32.dp,
                     top = 8.dp,
                     bottom = 16.dp
-                ),
-
-            horizontalArrangement = Arrangement.SpaceEvenly
+                )
 
         ) {
 
 
-            Button(
+            Text(
 
-                onClick = onCreateTrip
+                text = "Back to Trips"
 
-            ) {
-
-
-                Text(
-                    "Create Trip"
-                )
-
-
-            }
-
-
-
-            Button(
-
-                onClick = onArchivedTrips
-
-            ) {
-
-
-                Text(
-                    "Archived Trips"
-                )
-
-
-            }
+            )
 
 
         }

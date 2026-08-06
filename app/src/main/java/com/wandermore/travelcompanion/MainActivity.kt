@@ -35,6 +35,7 @@ import com.wandermore.travelcompanion.data.repository.ExchangeRateRepository
 import com.wandermore.travelcompanion.viewmodel.ExchangeRateViewModel
 import com.wandermore.travelcompanion.viewmodel.ExchangeRateViewModelFactory
 import com.wandermore.travelcompanion.model.TripStatus
+import com.wandermore.travelcompanion.ui.screens.ArchivedTripsScreen
 
 
 class MainActivity : ComponentActivity() {
@@ -142,6 +143,15 @@ class MainActivity : ComponentActivity() {
                                 },
 
 
+                                onArchivedTrips = {
+
+                                    navController.navigate(
+                                        "archivedTrips"
+                                    )
+
+                                },
+
+
                                 onTripSelected = { trip ->
 
                                     navController.navigate(
@@ -151,6 +161,42 @@ class MainActivity : ComponentActivity() {
                                 }
 
                             )
+
+
+                        }
+
+                        composable("archivedTrips") {
+
+
+                            val trips by tripViewModel
+                                .getTrips()
+                                .collectAsState(
+                                    initial = emptyList()
+                                )
+
+
+                            ArchivedTripsScreen(
+
+                                trips = trips,
+
+
+                                onTripSelected = { trip ->
+
+                                    navController.navigate(
+                                        "tripDetails/${trip.id}"
+                                    )
+
+                                },
+
+
+                                onBack = {
+
+                                    navController.popBackStack()
+
+                                }
+
+                            )
+
 
                         }
 
