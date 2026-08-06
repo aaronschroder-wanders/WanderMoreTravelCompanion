@@ -32,12 +32,21 @@ import java.time.temporal.ChronoUnit
 
 @Composable
 fun TripDetailsScreen(
+
     tripId: Long,
+
     tripViewModel: TripViewModel,
+
     onEditTrip: () -> Unit,
+
     onAddExpense: () -> Unit,
+
     onDeleteTrip: () -> Unit,
-    onEditExpense: (Long) -> Unit
+
+    onEditExpense: (Long) -> Unit,
+
+    onCategoryBreakdown: () -> Unit
+
 ) {
 
 
@@ -67,9 +76,13 @@ fun TripDetailsScreen(
     if (currentTrip == null) {
 
         Column(
+
             modifier = Modifier.fillMaxSize(),
+
             horizontalAlignment = Alignment.CenterHorizontally,
+
             verticalArrangement = Arrangement.Center
+
         ) {
 
             Text(
@@ -79,6 +92,7 @@ fun TripDetailsScreen(
         }
 
         return
+
     }
 
 
@@ -101,8 +115,11 @@ fun TripDetailsScreen(
 
     val plannedDays =
         ChronoUnit.DAYS.between(
+
             currentTrip.startDate,
+
             currentTrip.endDate
+
         ) + 1
 
 
@@ -146,7 +163,13 @@ fun TripDetailsScreen(
 
             totalSpent = total,
 
-            currency = currentTrip.homeCurrency
+            currency = currentTrip.homeCurrency,
+
+            onClick = {
+
+                onCategoryBreakdown()
+
+            }
 
         )
 
@@ -191,9 +214,13 @@ fun TripDetailsScreen(
 
 
                 val groupedExpenses =
-                    expenses.groupBy {
-                        it.date
-                    }
+                    expenses
+                        .groupBy {
+                            it.date
+                        }
+                        .toSortedMap(
+                            compareByDescending { it }
+                        )
 
 
 

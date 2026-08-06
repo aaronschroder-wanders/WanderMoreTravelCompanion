@@ -20,7 +20,9 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.wandermore.travelcompanion.data.model.Trip
 import com.wandermore.travelcompanion.database.DatabaseProvider
+import com.wandermore.travelcompanion.database.ExpenseEntity
 import com.wandermore.travelcompanion.ui.screens.AddExpenseScreen
+import com.wandermore.travelcompanion.ui.screens.CategoryBreakdownScreen
 import com.wandermore.travelcompanion.ui.screens.CreateTripScreen
 import com.wandermore.travelcompanion.ui.screens.EditExpenseScreen
 import com.wandermore.travelcompanion.ui.screens.EditTripScreen
@@ -57,23 +59,37 @@ class MainActivity : ComponentActivity() {
 
 
                 val tripViewModel: TripViewModel = viewModel(
+
                     factory = TripViewModelFactory(
+
                         database.tripDao(),
+
                         database.expenseDao()
+
                     )
+
                 )
 
 
+
                 Scaffold(
+
                     modifier = Modifier.fillMaxSize()
+
                 ) { innerPadding ->
 
 
+
                     NavHost(
+
                         navController = navController,
+
                         startDestination = "home",
+
                         modifier = Modifier.padding(innerPadding)
+
                     ) {
+
 
 
                         composable("home") {
@@ -113,6 +129,7 @@ class MainActivity : ComponentActivity() {
 
 
 
+
                         composable("createTrip") {
 
 
@@ -132,13 +149,14 @@ class MainActivity : ComponentActivity() {
 
 
 
+
                         composable(
                             "tripDetails/{tripId}"
-                        ) {
+                        ) { entry ->
 
 
                             val tripId =
-                                it.arguments
+                                entry.arguments
                                     ?.getString("tripId")
                                     ?.toLongOrNull()
 
@@ -152,7 +170,6 @@ class MainActivity : ComponentActivity() {
 
                                     tripViewModel = tripViewModel,
 
-
                                     onEditTrip = {
 
                                         navController.navigate(
@@ -161,7 +178,6 @@ class MainActivity : ComponentActivity() {
 
                                     },
 
-
                                     onAddExpense = {
 
                                         navController.navigate(
@@ -169,7 +185,6 @@ class MainActivity : ComponentActivity() {
                                         )
 
                                     },
-
 
                                     onDeleteTrip = {
 
@@ -181,11 +196,18 @@ class MainActivity : ComponentActivity() {
 
                                     },
 
-
                                     onEditExpense = { expenseId ->
 
                                         navController.navigate(
                                             "editExpense/$expenseId"
+                                        )
+
+                                    },
+
+                                    onCategoryBreakdown = {
+
+                                        navController.navigate(
+                                            "categoryBreakdown/$tripId"
                                         )
 
                                     }
@@ -198,20 +220,25 @@ class MainActivity : ComponentActivity() {
 
 
 
+
+
                         composable(
-                            "addExpense/{tripId}"
-                        ) { backStackEntry ->
+                            "categoryBreakdown/{tripId}"
+                        ) { entry ->
 
 
                             val tripId =
-                                backStackEntry.arguments
+                                entry.arguments
                                     ?.getString("tripId")
                                     ?.toLongOrNull()
 
 
                             var trip by remember {
+
                                 mutableStateOf<Trip?>(null)
+
                             }
+
 
 
                             LaunchedEffect(tripId) {
@@ -226,6 +253,69 @@ class MainActivity : ComponentActivity() {
                                 }
 
                             }
+
+
+
+                            trip?.let {
+
+
+                                CategoryBreakdownScreen(
+
+                                    tripId = it.id,
+
+                                    currency = it.homeCurrency,
+
+                                    tripViewModel = tripViewModel,
+
+                                    onBack = {
+
+                                        navController.popBackStack()
+
+                                    }
+
+                                )
+
+                            }
+
+
+                        }
+
+
+
+
+
+                        composable(
+                            "addExpense/{tripId}"
+                        ) { entry ->
+
+
+                            val tripId =
+                                entry.arguments
+                                    ?.getString("tripId")
+                                    ?.toLongOrNull()
+
+
+                            var trip by remember {
+
+                                mutableStateOf<Trip?>(null)
+
+                            }
+
+
+
+                            LaunchedEffect(tripId) {
+
+                                if (tripId != null) {
+
+                                    trip =
+                                        tripViewModel.getTripById(
+                                            tripId
+                                        )
+
+                                }
+
+                            }
+
 
 
                             trip?.let {
@@ -247,24 +337,30 @@ class MainActivity : ComponentActivity() {
 
                             }
 
+
                         }
+
+
 
 
 
                         composable(
                             "editExpense/{expenseId}"
-                        ) { backStackEntry ->
+                        ) { entry ->
 
 
                             val expenseId =
-                                backStackEntry.arguments
+                                entry.arguments
                                     ?.getString("expenseId")
                                     ?.toLongOrNull()
 
 
                             var expense by remember {
-                                mutableStateOf<com.wandermore.travelcompanion.database.ExpenseEntity?>(null)
+
+                                mutableStateOf<ExpenseEntity?>(null)
+
                             }
+
 
 
                             LaunchedEffect(expenseId) {
@@ -281,6 +377,7 @@ class MainActivity : ComponentActivity() {
                             }
 
 
+
                             expense?.let {
 
 
@@ -290,13 +387,11 @@ class MainActivity : ComponentActivity() {
 
                                     tripViewModel = tripViewModel,
 
-
                                     onExpenseUpdated = {
 
                                         navController.popBackStack()
 
                                     },
-
 
                                     onDeleteExpense = {
 
@@ -310,24 +405,30 @@ class MainActivity : ComponentActivity() {
 
                             }
 
+
                         }
+
+
 
 
 
                         composable(
                             "editTrip/{tripId}"
-                        ) { backStackEntry ->
+                        ) { entry ->
 
 
                             val tripId =
-                                backStackEntry.arguments
+                                entry.arguments
                                     ?.getString("tripId")
                                     ?.toLongOrNull()
 
 
                             var trip by remember {
+
                                 mutableStateOf<Trip?>(null)
+
                             }
+
 
 
                             LaunchedEffect(tripId) {
@@ -342,6 +443,7 @@ class MainActivity : ComponentActivity() {
                                 }
 
                             }
+
 
 
                             trip?.let {
@@ -362,6 +464,7 @@ class MainActivity : ComponentActivity() {
                                 )
 
                             }
+
 
                         }
 

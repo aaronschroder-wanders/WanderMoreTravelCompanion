@@ -1,5 +1,6 @@
 package com.wandermore.travelcompanion.ui.components
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -14,18 +15,46 @@ import com.wandermore.travelcompanion.util.formatMoney
 
 @Composable
 fun TripSummaryCard(
+
     plannedDays: Long,
+
     expenseCount: Int,
+
     totalSpent: Double,
-    currency: String
+
+    currency: String,
+
+    onClick: () -> Unit
+
 ) {
+
+
+    val averagePerDay =
+        if (plannedDays > 0) {
+
+            totalSpent / plannedDays
+
+        } else {
+
+            0.0
+
+        }
+
 
 
     Card(
 
         modifier = Modifier
+
             .fillMaxWidth()
+
             .padding(vertical = 8.dp)
+
+            .clickable {
+
+                onClick()
+
+            }
 
     ) {
 
@@ -46,6 +75,7 @@ fun TripSummaryCard(
             )
 
 
+
             Text(
 
                 text = "📅 Planned duration: $plannedDays days",
@@ -55,6 +85,7 @@ fun TripSummaryCard(
             )
 
 
+
             Text(
 
                 text = "💳 Expenses: $expenseCount",
@@ -62,6 +93,7 @@ fun TripSummaryCard(
                 style = MaterialTheme.typography.bodyMedium
 
             )
+
 
 
             Text(
@@ -74,6 +106,30 @@ fun TripSummaryCard(
                 }",
 
                 style = MaterialTheme.typography.bodyMedium
+
+            )
+
+
+
+            Text(
+
+                text = "📊 Average per day: ${
+                    formatMoney(
+                        averagePerDay,
+                        currency
+                    )
+                }",
+
+                style = MaterialTheme.typography.bodyMedium
+
+            )
+
+
+            Text(
+
+                text = "Tap for spending breakdown",
+
+                style = MaterialTheme.typography.bodySmall
 
             )
 
