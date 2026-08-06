@@ -30,11 +30,24 @@ fun ExpenseCard(
 
 
 
+    val nightlyRate =
+        if (
+            expense.category == "Accommodation" &&
+            expense.numberOfNights != null &&
+            expense.numberOfNights > 0
+        ) {
+            expense.convertedAmount / expense.numberOfNights
+        } else {
+            null
+        }
+
+
+
     Card(
 
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 6.dp)
+            .padding(vertical = 3.dp)
             .clickable {
                 onClick()
             }
@@ -44,7 +57,7 @@ fun ExpenseCard(
 
         Column(
 
-            modifier = Modifier.padding(16.dp)
+            modifier = Modifier.padding(10.dp)
 
         ) {
 
@@ -62,7 +75,7 @@ fun ExpenseCard(
                         expense.category
                     ),
 
-                    style = MaterialTheme.typography.titleLarge
+                    style = MaterialTheme.typography.titleMedium
 
                 )
 
@@ -73,7 +86,7 @@ fun ExpenseCard(
 
                     style = MaterialTheme.typography.titleMedium,
 
-                    modifier = Modifier.padding(start = 8.dp)
+                    modifier = Modifier.padding(start = 6.dp)
 
                 )
 
@@ -86,7 +99,7 @@ fun ExpenseCard(
 
                 text = expense.category,
 
-                style = MaterialTheme.typography.bodyMedium
+                style = MaterialTheme.typography.bodySmall
 
             )
 
@@ -96,7 +109,7 @@ fun ExpenseCard(
 
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 12.dp),
+                    .padding(top = 8.dp),
 
                 verticalAlignment = Alignment.CenterVertically
 
@@ -123,10 +136,28 @@ fun ExpenseCard(
                         expense.convertedAmount
                     ),
 
-                    style = MaterialTheme.typography.titleMedium
+                    style = MaterialTheme.typography.bodyLarge
 
                 )
 
+            }
+
+
+
+            if (nightlyRate != null) {
+
+
+                Text(
+
+                    text = "${expense.numberOfNights} nights • NZ$ %.2f/night".format(
+                        nightlyRate
+                    ),
+
+                    style = MaterialTheme.typography.bodySmall,
+
+                    modifier = Modifier.padding(top = 4.dp)
+
+                )
 
             }
 
@@ -138,7 +169,7 @@ fun ExpenseCard(
 
                 style = MaterialTheme.typography.bodySmall,
 
-                modifier = Modifier.padding(top = 8.dp)
+                modifier = Modifier.padding(top = 4.dp)
 
             )
 

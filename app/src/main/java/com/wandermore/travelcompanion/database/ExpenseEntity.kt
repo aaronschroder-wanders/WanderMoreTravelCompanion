@@ -42,6 +42,9 @@ data class ExpenseEntity(
     val exchangeRate: Double = 1.0,
 
     // Converted value stored for historical accuracy
-    val convertedAmount: Double = 0.0
+    val convertedAmount: Double = 0.0,
+
+    // Number of nights for accommodation expenses
+    val numberOfNights: Int? = null
 
 )

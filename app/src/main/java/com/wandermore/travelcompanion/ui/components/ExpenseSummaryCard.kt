@@ -9,14 +9,59 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.wandermore.travelcompanion.database.ExpenseEntity
 
 
 @Composable
 fun ExpenseSummaryCard(
-    total: Double,
-    currency: String,
-    expenseCount: Int
+    expenses: List<ExpenseEntity>,
+    currency: String
 ) {
+
+
+    val total =
+        expenses.sumOf {
+            it.convertedAmount
+        }
+
+
+    val expenseCount =
+        expenses.size
+
+
+
+    val accommodationExpenses =
+        expenses.filter {
+            it.category == "Accommodation"
+        }
+
+
+
+    val accommodationTotal =
+        accommodationExpenses.sumOf {
+            it.convertedAmount
+        }
+
+
+
+    val accommodationNights =
+        accommodationExpenses.sumOf {
+
+            it.numberOfNights ?: 0
+
+        }
+
+
+
+    val averageAccommodationNightlyRate =
+        if (accommodationNights > 0) {
+
+            accommodationTotal / accommodationNights
+
+        } else {
+            null
+        }
+
 
 
     Card(
@@ -47,7 +92,7 @@ fun ExpenseSummaryCard(
 
             Text(
 
-                text = "${String.format("%.2f", total)} $currency",
+                text = "NZ$ %.2f".format(total),
 
                 style = MaterialTheme.typography.headlineSmall
 
@@ -63,9 +108,45 @@ fun ExpenseSummaryCard(
             )
 
 
+
+            if (accommodationNights > 0) {
+
+
+                Text(
+
+                    text = "Accommodation",
+
+                    style = MaterialTheme.typography.titleMedium,
+
+                    modifier = Modifier.padding(top = 12.dp)
+
+                )
+
+
+                Text(
+
+                    text = "$accommodationNights nights",
+
+                    style = MaterialTheme.typography.bodyMedium
+
+                )
+
+
+                Text(
+
+                    text = "Average: NZ$ %.2f/night".format(
+                        averageAccommodationNightlyRate
+                    ),
+
+                    style = MaterialTheme.typography.bodyMedium
+
+                )
+
+            }
+
+
         }
 
     }
-
 
 }

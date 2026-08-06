@@ -22,14 +22,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import com.wandermore.travelcompanion.data.model.Trip
 import com.wandermore.travelcompanion.ui.components.ExpenseCard
 import com.wandermore.travelcompanion.ui.components.TripSummaryCard
 import com.wandermore.travelcompanion.util.formatDate
 import com.wandermore.travelcompanion.viewmodel.TripViewModel
 import java.time.temporal.ChronoUnit
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
 
 
 @Composable
@@ -137,22 +137,65 @@ fun TripDetailsScreen(
 
 
         Text(
-            text = "🌏 ${currentTrip.name}"
+
+            text = "🌏",
+
+            style = MaterialTheme.typography.displaySmall,
+
+            modifier = Modifier.align(
+                Alignment.CenterHorizontally
+            )
+
         )
 
 
         Text(
-            text = "📅 Start: ${formatDate(currentTrip.startDate)}"
+
+            text = currentTrip.name,
+
+            style = MaterialTheme.typography.headlineMedium,
+
+            modifier = Modifier
+                .align(Alignment.CenterHorizontally)
+                .padding(top = 4.dp)
+
+        )
+
+
+        Spacer(
+            modifier = Modifier.height(8.dp)
         )
 
 
         Text(
-            text = "📅 End: ${formatDate(currentTrip.endDate)}"
+
+            text = "📅 ${formatDate(currentTrip.startDate)} - ${formatDate(currentTrip.endDate)}",
+
+            style = MaterialTheme.typography.bodyMedium,
+
+            modifier = Modifier.align(
+                Alignment.CenterHorizontally
+            )
+
         )
 
 
         Text(
-            text = "💰 Home currency: ${currentTrip.homeCurrency}"
+
+            text = "💰 Home currency: ${currentTrip.homeCurrency}",
+
+            style = MaterialTheme.typography.bodyMedium,
+
+            modifier = Modifier.align(
+                Alignment.CenterHorizontally
+            )
+
+        )
+
+
+
+        Spacer(
+            modifier = Modifier.height(16.dp)
         )
 
 
@@ -178,19 +221,23 @@ fun TripDetailsScreen(
 
 
         Spacer(
-            modifier = Modifier.height(16.dp)
+            modifier = Modifier.height(8.dp)
         )
 
 
 
         Text(
-            text = "Expenses"
+
+            text = "Expenses",
+
+            style = MaterialTheme.typography.titleMedium
+
         )
 
 
 
         Spacer(
-            modifier = Modifier.height(8.dp)
+            modifier = Modifier.height(4.dp)
         )
 
 
@@ -237,10 +284,11 @@ fun TripDetailsScreen(
 
                             text = formatDate(date),
 
-                            style = MaterialTheme.typography.titleMedium,
+                            style = MaterialTheme.typography.bodyMedium,
 
                             modifier = Modifier.padding(
-                                vertical = 8.dp
+                                top = 6.dp,
+                                bottom = 2.dp
                             )
 
                         )
@@ -272,7 +320,7 @@ fun TripDetailsScreen(
 
                         Spacer(
 
-                            modifier = Modifier.height(4.dp)
+                            modifier = Modifier.height(2.dp)
 
                         )
 
@@ -288,7 +336,7 @@ fun TripDetailsScreen(
 
 
             Spacer(
-                modifier = Modifier.height(12.dp)
+                modifier = Modifier.height(8.dp)
             )
 
 
@@ -298,17 +346,19 @@ fun TripDetailsScreen(
 
 
         Spacer(
-            modifier = Modifier.height(16.dp)
+            modifier = Modifier.height(8.dp)
         )
 
 
 
         Row(
+
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(top = 8.dp),
 
             horizontalArrangement = Arrangement.SpaceEvenly
+
         ) {
 
 
@@ -345,7 +395,7 @@ fun TripDetailsScreen(
             ) {
 
                 Text(
-                    "Delete"
+                    "Delete Trip"
                 )
 
             }

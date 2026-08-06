@@ -51,6 +51,13 @@ fun EditExpenseScreen(
     }
 
 
+    var numberOfNights by remember {
+        mutableStateOf(
+            expense.numberOfNights?.toString() ?: ""
+        )
+    }
+
+
     var expenseDate by remember {
         mutableStateOf(expense.date)
     }
@@ -163,6 +170,29 @@ fun EditExpenseScreen(
 
 
 
+        if (category == "Accommodation") {
+
+            OutlinedTextField(
+
+                value = numberOfNights,
+
+                onValueChange = {
+
+                    numberOfNights = it
+
+                },
+
+                label = {
+
+                    Text("Number of nights")
+
+                }
+
+            )
+        }
+
+
+
         DatePickerButton(
 
             selectedDate = expenseDate,
@@ -210,7 +240,13 @@ fun EditExpenseScreen(
 
                     exchangeRate = exchangeRate,
 
-                    convertedAmount = convertedAmount
+                    convertedAmount = convertedAmount,
+
+                    numberOfNights = if (category == "Accommodation") {
+                        numberOfNights.toIntOrNull()
+                    } else {
+                        null
+                    }
 
                 )
 

@@ -11,7 +11,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         TripEntity::class,
         ExpenseEntity::class
     ],
-    version = 2,
+    version = 3,
     exportSchema = false
 )
 @TypeConverters(DateConverter::class)
@@ -41,6 +41,22 @@ abstract class AppDatabase : RoomDatabase() {
                     """
                     ALTER TABLE expenses
                     ADD COLUMN convertedAmount REAL NOT NULL DEFAULT 0.0
+                    """.trimIndent()
+                )
+            }
+        }
+
+
+        val MIGRATION_2_3 = object : Migration(2, 3) {
+
+            override fun migrate(
+                database: SupportSQLiteDatabase
+            ) {
+
+                database.execSQL(
+                    """
+                    ALTER TABLE expenses
+                    ADD COLUMN numberOfNights INTEGER
                     """.trimIndent()
                 )
             }

@@ -143,12 +143,17 @@ fun CategoryBreakdownScreen(
 
 
 
-                val expenseCount =
-                    expenses.count {
+                val categoryExpenses =
+                    expenses.filter {
 
                         it.category == categoryName
 
                     }
+
+
+
+                val expenseCount =
+                    categoryExpenses.size
 
 
 
@@ -161,6 +166,38 @@ fun CategoryBreakdownScreen(
                     } else {
 
                         0.0
+
+                    }
+
+
+
+                val accommodationNights =
+
+                    if (categoryName == "Accommodation") {
+
+                        categoryExpenses.sumOf {
+
+                            it.numberOfNights ?: 0
+
+                        }
+
+                    } else {
+
+                        0
+
+                    }
+
+
+
+                val averageNightlyRate =
+
+                    if (accommodationNights > 0) {
+
+                        categoryAmount / accommodationNights
+
+                    } else {
+
+                        null
 
                     }
 
@@ -220,6 +257,39 @@ fun CategoryBreakdownScreen(
                             style = MaterialTheme.typography.bodyMedium
 
                         )
+
+
+
+                        if (averageNightlyRate != null) {
+
+
+                            Text(
+
+                                text =
+                                    "$accommodationNights nights",
+
+                                style = MaterialTheme.typography.bodyMedium,
+
+                                modifier = Modifier.padding(
+                                    top = 8.dp
+                                )
+
+                            )
+
+
+                            Text(
+
+                                text =
+                                    "Average: NZ$ %.2f/night"
+                                        .format(
+                                            averageNightlyRate
+                                        ),
+
+                                style = MaterialTheme.typography.bodyMedium
+
+                            )
+
+                        }
 
 
 

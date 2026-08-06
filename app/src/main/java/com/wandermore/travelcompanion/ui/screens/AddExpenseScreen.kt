@@ -48,6 +48,11 @@ fun AddExpenseScreen(
     }
 
 
+    var numberOfNights by remember {
+        mutableStateOf("")
+    }
+
+
     var currency by remember {
         mutableStateOf(
             trip.homeCurrency
@@ -163,6 +168,25 @@ fun AddExpenseScreen(
 
 
 
+        if (category == "Accommodation") {
+
+            OutlinedTextField(
+
+                value = numberOfNights,
+
+                onValueChange = {
+                    numberOfNights = it
+                },
+
+                label = {
+                    Text("Number of nights")
+                }
+
+            )
+        }
+
+
+
         DatePickerButton(
 
             selectedDate = expenseDate,
@@ -214,7 +238,13 @@ fun AddExpenseScreen(
 
                     exchangeRate = exchangeRate,
 
-                    convertedAmount = convertedAmount
+                    convertedAmount = convertedAmount,
+
+                    numberOfNights = if (category == "Accommodation") {
+                        numberOfNights.toIntOrNull()
+                    } else {
+                        null
+                    }
 
                 )
 
