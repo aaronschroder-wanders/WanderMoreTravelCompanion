@@ -18,7 +18,7 @@ import com.wandermore.travelcompanion.data.model.Trip
 import com.wandermore.travelcompanion.ui.components.CategoryDropdown
 import com.wandermore.travelcompanion.ui.components.CurrencyDropdown
 import com.wandermore.travelcompanion.ui.components.DatePickerButton
-import com.wandermore.travelcompanion.util.ExchangeRates
+import com.wandermore.travelcompanion.viewmodel.ExchangeRateViewModel
 import com.wandermore.travelcompanion.util.ExpenseCategories
 import com.wandermore.travelcompanion.viewmodel.TripViewModel
 import java.time.LocalDate
@@ -28,6 +28,7 @@ import java.time.LocalDate
 fun AddExpenseScreen(
     trip: Trip,
     tripViewModel: TripViewModel,
+    exchangeRateViewModel: ExchangeRateViewModel,
     onExpenseAdded: () -> Unit
 ) {
 
@@ -140,7 +141,7 @@ fun AddExpenseScreen(
         if (previewAmount != null) {
 
             val previewRate =
-                ExchangeRates.getRate(currency)
+                exchangeRateViewModel.getRate(currency)
 
 
             val previewNZD =
@@ -213,7 +214,7 @@ fun AddExpenseScreen(
 
 
                 val exchangeRate =
-                    ExchangeRates.getRate(currency)
+                    exchangeRateViewModel.getRate(currency)
 
 
 

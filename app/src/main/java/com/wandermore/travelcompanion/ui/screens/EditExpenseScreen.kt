@@ -18,7 +18,7 @@ import com.wandermore.travelcompanion.database.ExpenseEntity
 import com.wandermore.travelcompanion.ui.components.CategoryDropdown
 import com.wandermore.travelcompanion.ui.components.CurrencyDropdown
 import com.wandermore.travelcompanion.ui.components.DatePickerButton
-import com.wandermore.travelcompanion.util.ExchangeRates
+import com.wandermore.travelcompanion.viewmodel.ExchangeRateViewModel
 import com.wandermore.travelcompanion.viewmodel.TripViewModel
 
 
@@ -26,6 +26,7 @@ import com.wandermore.travelcompanion.viewmodel.TripViewModel
 fun EditExpenseScreen(
     expense: ExpenseEntity,
     tripViewModel: TripViewModel,
+    exchangeRateViewModel: ExchangeRateViewModel,
     onExpenseUpdated: () -> Unit,
     onDeleteExpense: () -> Unit
 ) {
@@ -141,7 +142,7 @@ fun EditExpenseScreen(
         if (previewAmount != null) {
 
             val previewRate =
-                ExchangeRates.getRate(currency)
+                exchangeRateViewModel.getRate(currency)
 
 
             val previewNZD =
@@ -218,7 +219,7 @@ fun EditExpenseScreen(
 
 
                 val exchangeRate =
-                    ExchangeRates.getRate(currency)
+                    exchangeRateViewModel.getRate(currency)
 
 
                 val convertedAmount =

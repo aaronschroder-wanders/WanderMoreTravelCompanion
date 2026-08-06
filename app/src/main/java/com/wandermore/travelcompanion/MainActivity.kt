@@ -353,6 +353,8 @@ class MainActivity : ComponentActivity() {
 
                                     tripViewModel = tripViewModel,
 
+                                    exchangeRateViewModel = exchangeRateViewModel,
+
                                     onExpenseAdded = {
 
                                         navController.popBackStack()
@@ -412,6 +414,8 @@ class MainActivity : ComponentActivity() {
                                     expense = it,
 
                                     tripViewModel = tripViewModel,
+
+                                    exchangeRateViewModel = exchangeRateViewModel,
 
                                     onExpenseUpdated = {
 

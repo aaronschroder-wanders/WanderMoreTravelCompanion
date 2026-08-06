@@ -14,20 +14,23 @@ class ExchangeRateRepository(
 
     suspend fun getRate(
         currency: String
-    ): Double {
+    ): Double? {
 
         return exchangeRateDao
             .getRate(currency)
             ?.rateToNZD
-            ?: 1.0
 
     }
+
+
 
     suspend fun getAllRates(): List<ExchangeRateEntity> {
 
         return exchangeRateDao.getAllRates()
 
     }
+
+
 
     suspend fun insertInitialRates() {
 
@@ -39,59 +42,37 @@ class ExchangeRateRepository(
 
         val rates = listOf(
 
-            ExchangeRateEntity(
-                "NZD",
-                1.0,
-                today
-            ),
+            ExchangeRateEntity("NZD", 1.0, today),
 
-            ExchangeRateEntity(
-                "AUD",
-                0.92,
-                today
-            ),
+            ExchangeRateEntity("AUD", 0.92, today),
 
-            ExchangeRateEntity(
-                "USD",
-                1.70,
-                today
-            ),
+            ExchangeRateEntity("USD", 1.70, today),
 
-            ExchangeRateEntity(
-                "EUR",
-                1.95,
-                today
-            ),
+            ExchangeRateEntity("EUR", 1.95, today),
 
-            ExchangeRateEntity(
-                "GBP",
-                2.25,
-                today
-            ),
+            ExchangeRateEntity("GBP", 2.25, today),
 
-            ExchangeRateEntity(
-                "THB",
-                0.048,
-                today
-            ),
+            ExchangeRateEntity("THB", 0.048, today),
 
-            ExchangeRateEntity(
-                "VND",
-                0.000056,
-                today
-            ),
+            ExchangeRateEntity("VND", 0.000056, today),
 
-            ExchangeRateEntity(
-                "LAK",
-                0.000080,
-                today
-            ),
+            ExchangeRateEntity("LAK", 0.000080, today),
 
-            ExchangeRateEntity(
-                "CNY",
-                0.24,
-                today
-            )
+            ExchangeRateEntity("CNY", 0.24, today),
+
+            ExchangeRateEntity("JPY", 0.011, today),
+
+            ExchangeRateEntity("KRW", 0.0012, today),
+
+            ExchangeRateEntity("MYR", 0.39, today),
+
+            ExchangeRateEntity("SGD", 1.32, today),
+
+            ExchangeRateEntity("IDR", 0.00010, today),
+
+            ExchangeRateEntity("PHP", 0.030, today),
+
+            ExchangeRateEntity("INR", 0.019, today)
 
         )
 
