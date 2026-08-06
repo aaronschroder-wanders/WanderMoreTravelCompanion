@@ -87,7 +87,7 @@ fun TripDetailsScreen(
 
 
     val total = expenses.sumOf {
-        it.amount
+        it.convertedAmount
     }
 
     val plannedDays =
