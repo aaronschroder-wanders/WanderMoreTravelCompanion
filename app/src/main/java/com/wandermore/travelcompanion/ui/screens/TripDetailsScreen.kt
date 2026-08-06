@@ -10,6 +10,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -23,11 +24,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.wandermore.travelcompanion.data.model.Trip
 import com.wandermore.travelcompanion.ui.components.ExpenseCard
+import com.wandermore.travelcompanion.ui.components.TripSummaryCard
 import com.wandermore.travelcompanion.util.formatDate
 import com.wandermore.travelcompanion.viewmodel.TripViewModel
-import com.wandermore.travelcompanion.ui.components.TripSummaryCard
 import java.time.temporal.ChronoUnit
-
 
 
 @Composable
@@ -51,6 +51,7 @@ fun TripDetailsScreen(
     }
 
 
+
     LaunchedEffect(tripId) {
 
         trip = tripViewModel.getTripById(tripId)
@@ -58,7 +59,9 @@ fun TripDetailsScreen(
     }
 
 
+
     val currentTrip = trip
+
 
 
     if (currentTrip == null) {
@@ -79,6 +82,7 @@ fun TripDetailsScreen(
     }
 
 
+
     val expenses by tripViewModel
         .getExpensesForTrip(currentTrip.id)
         .collectAsState(
@@ -86,9 +90,14 @@ fun TripDetailsScreen(
         )
 
 
+
     val total = expenses.sumOf {
+
         it.convertedAmount
+
     }
+
+
 
     val plannedDays =
         ChronoUnit.DAYS.between(
@@ -98,10 +107,13 @@ fun TripDetailsScreen(
 
 
 
+
     Column(
+
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp)
+
     ) {
 
 
@@ -124,6 +136,8 @@ fun TripDetailsScreen(
             text = "💰 Home currency: ${currentTrip.homeCurrency}"
         )
 
+
+
         TripSummaryCard(
 
             plannedDays = plannedDays,
@@ -137,9 +151,11 @@ fun TripDetailsScreen(
         )
 
 
+
         Spacer(
             modifier = Modifier.height(16.dp)
         )
+
 
 
         Text(
@@ -147,9 +163,11 @@ fun TripDetailsScreen(
         )
 
 
+
         Spacer(
             modifier = Modifier.height(8.dp)
         )
+
 
 
         if (expenses.isEmpty()) {
@@ -163,25 +181,74 @@ fun TripDetailsScreen(
         } else {
 
 
+
             LazyColumn(
+
                 modifier = Modifier.weight(1f)
+
             ) {
 
 
-                items(expenses) { expense ->
+
+                val groupedExpenses =
+                    expenses.groupBy {
+                        it.date
+                    }
 
 
-                    ExpenseCard(
-                        expense = expense,
-                        onClick = {
-                            onEditExpense(expense.id.toLong())
-                        }
-                    )
+
+                groupedExpenses.forEach { (date, dailyExpenses) ->
 
 
-                    Spacer(
-                        modifier = Modifier.height(4.dp)
-                    )
+
+                    item {
+
+
+                        Text(
+
+                            text = formatDate(date),
+
+                            style = MaterialTheme.typography.titleMedium,
+
+                            modifier = Modifier.padding(
+                                vertical = 8.dp
+                            )
+
+                        )
+
+
+                    }
+
+
+
+                    items(dailyExpenses) { expense ->
+
+
+
+                        ExpenseCard(
+
+                            expense = expense,
+
+                            onClick = {
+
+                                onEditExpense(
+                                    expense.id
+                                )
+
+                            }
+
+                        )
+
+
+
+                        Spacer(
+
+                            modifier = Modifier.height(4.dp)
+
+                        )
+
+
+                    }
 
 
                 }
@@ -190,17 +257,21 @@ fun TripDetailsScreen(
             }
 
 
+
             Spacer(
                 modifier = Modifier.height(12.dp)
             )
 
 
-            }
+        }
+
+
 
 
         Spacer(
             modifier = Modifier.height(16.dp)
         )
+
 
 
         Button(
@@ -214,6 +285,7 @@ fun TripDetailsScreen(
         }
 
 
+
         Button(
             onClick = onAddExpense
         ) {
@@ -225,12 +297,14 @@ fun TripDetailsScreen(
         }
 
 
+
         Button(
             onClick = {
 
                 showDeleteDialog = true
 
             }
+
         ) {
 
             Text(
@@ -244,16 +318,20 @@ fun TripDetailsScreen(
 
 
 
+
     if (showDeleteDialog) {
 
 
+
         AlertDialog(
+
 
             onDismissRequest = {
 
                 showDeleteDialog = false
 
             },
+
 
 
             title = {
@@ -265,6 +343,7 @@ fun TripDetailsScreen(
             },
 
 
+
             text = {
 
                 Text(
@@ -272,6 +351,7 @@ fun TripDetailsScreen(
                 )
 
             },
+
 
 
             confirmButton = {
@@ -295,6 +375,7 @@ fun TripDetailsScreen(
 
 
             },
+
 
 
             dismissButton = {
