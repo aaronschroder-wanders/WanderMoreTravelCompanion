@@ -17,6 +17,7 @@ import androidx.compose.ui.Modifier
 import com.wandermore.travelcompanion.database.ExpenseEntity
 import com.wandermore.travelcompanion.ui.components.CategoryDropdown
 import com.wandermore.travelcompanion.ui.components.CurrencyDropdown
+import com.wandermore.travelcompanion.util.ExchangeRates
 import com.wandermore.travelcompanion.viewmodel.TripViewModel
 
 
@@ -120,6 +121,27 @@ fun EditExpenseScreen(
 
 
 
+        val previewAmount =
+            amount.toDoubleOrNull()
+
+
+        if (previewAmount != null) {
+
+            val previewRate =
+                ExchangeRates.getRate(currency)
+
+
+            val previewNZD =
+                previewAmount * previewRate
+
+
+            Text(
+                text = "≈ NZ$ %.2f".format(previewNZD)
+            )
+        }
+
+
+
         CategoryDropdown(
 
             selectedCategory = category,
@@ -139,16 +161,33 @@ fun EditExpenseScreen(
             onClick = {
 
 
+                val enteredAmount =
+                    amount.toDoubleOrNull()
+                        ?: 0.0
+
+
+                val exchangeRate =
+                    ExchangeRates.getRate(currency)
+
+
+                val convertedAmount =
+                    enteredAmount * exchangeRate
+
+
+
                 val updatedExpense = expense.copy(
 
                     description = description,
 
-                    amount = amount.toDoubleOrNull()
-                        ?: 0.0,
+                    amount = enteredAmount,
 
                     currency = currency,
 
-                    category = category
+                    category = category,
+
+                    exchangeRate = exchangeRate,
+
+                    convertedAmount = convertedAmount
 
                 )
 
@@ -159,7 +198,6 @@ fun EditExpenseScreen(
 
 
                 onExpenseUpdated()
-
 
             }
 

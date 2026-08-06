@@ -17,6 +17,7 @@ import com.wandermore.travelcompanion.database.ExpenseEntity
 import com.wandermore.travelcompanion.data.model.Trip
 import com.wandermore.travelcompanion.ui.components.CategoryDropdown
 import com.wandermore.travelcompanion.ui.components.CurrencyDropdown
+import com.wandermore.travelcompanion.util.ExchangeRates
 import com.wandermore.travelcompanion.util.ExpenseCategories
 import com.wandermore.travelcompanion.viewmodel.TripViewModel
 import java.time.LocalDate
@@ -28,7 +29,6 @@ fun AddExpenseScreen(
     tripViewModel: TripViewModel,
     onExpenseAdded: () -> Unit
 ) {
-
 
     var description by remember {
         mutableStateOf("")
@@ -72,35 +72,74 @@ fun AddExpenseScreen(
         )
 
 
+
         OutlinedTextField(
+
             value = description,
+
             onValueChange = {
                 description = it
             },
+
             label = {
                 Text("Description")
             }
+
         )
+
 
 
         OutlinedTextField(
+
             value = amount,
+
             onValueChange = {
                 amount = it
             },
+
             label = {
                 Text("Amount")
             }
+
         )
+
 
 
         CurrencyDropdown(
+
             selectedCurrency = currency,
+
             onCurrencySelected = {
                 currency = it
             },
+
             label = "Expense Currency"
+
         )
+
+
+
+        // Live NZD conversion preview
+
+        val previewAmount =
+            amount.toDoubleOrNull()
+
+
+        if (previewAmount != null) {
+
+            val previewRate =
+                ExchangeRates.getRate(currency)
+
+
+            val previewNZD =
+                previewAmount * previewRate
+
+
+            Text(
+                text = "≈ NZ$ %.2f".format(previewNZD)
+            )
+        }
+
 
 
         CategoryDropdown(
@@ -118,7 +157,24 @@ fun AddExpenseScreen(
 
 
         Button(
+
             onClick = {
+
+
+                val enteredAmount =
+                    amount.toDoubleOrNull()
+                        ?: 0.0
+
+
+
+                val exchangeRate =
+                    ExchangeRates.getRate(currency)
+
+
+
+                val convertedAmount =
+                    enteredAmount * exchangeRate
+
 
 
                 val expense = ExpenseEntity(
@@ -127,16 +183,20 @@ fun AddExpenseScreen(
 
                     description = description,
 
-                    amount = amount.toDoubleOrNull()
-                        ?: 0.0,
+                    amount = enteredAmount,
 
                     currency = currency,
 
+                    category = category,
+
                     date = LocalDate.now(),
 
-                    category = category
+                    exchangeRate = exchangeRate,
+
+                    convertedAmount = convertedAmount
 
                 )
+
 
 
                 tripViewModel.addExpense(
@@ -148,6 +208,7 @@ fun AddExpenseScreen(
 
 
             }
+
         ) {
 
 
@@ -160,6 +221,5 @@ fun AddExpenseScreen(
 
 
     }
-
 
 }

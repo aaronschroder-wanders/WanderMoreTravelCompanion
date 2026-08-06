@@ -6,6 +6,7 @@ import androidx.room.Index
 import androidx.room.PrimaryKey
 import java.time.LocalDate
 
+
 @Entity(
     tableName = "expenses",
     foreignKeys = [
@@ -16,7 +17,9 @@ import java.time.LocalDate
             onDelete = ForeignKey.CASCADE
         )
     ],
-    indices = [Index(value = ["tripId"])]
+    indices = [
+        Index(value = ["tripId"])
+    ]
 )
 data class ExpenseEntity(
 
@@ -33,5 +36,12 @@ data class ExpenseEntity(
 
     val category: String,
 
-    val date: LocalDate
+    val date: LocalDate,
+
+    // Exchange rate used when this expense was entered
+    val exchangeRate: Double = 1.0,
+
+    // Converted value stored for historical accuracy
+    val convertedAmount: Double = 0.0
+
 )

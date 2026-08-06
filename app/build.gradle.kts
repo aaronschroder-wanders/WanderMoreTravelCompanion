@@ -55,5 +55,6 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.tooling)
     implementation("androidx.room:room-runtime:2.7.2")
     implementation("androidx.room:room-ktx:2.7.2")
+    implementation("androidx.room:room-common:2.7.2")
     ksp("androidx.room:room-compiler:2.7.2")
 }

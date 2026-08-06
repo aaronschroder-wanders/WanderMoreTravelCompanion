@@ -1,18 +1,17 @@
 package com.wandermore.travelcompanion.database
 
-import android.content.Context
 import androidx.room.Database
-import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
-
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 
 @Database(
     entities = [
         TripEntity::class,
         ExpenseEntity::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 @TypeConverters(DateConverter::class)
@@ -25,32 +24,26 @@ abstract class AppDatabase : RoomDatabase() {
 
     companion object {
 
-        @Volatile
-        private var INSTANCE: AppDatabase? = null
+        val MIGRATION_1_2 = object : Migration(1, 2) {
 
+            override fun migrate(
+                database: SupportSQLiteDatabase
+            ) {
 
-        fun getDatabase(
-            context: Context
-        ): AppDatabase {
-
-            return INSTANCE ?: synchronized(this) {
-
-                val instance = Room.databaseBuilder(
-                    context.applicationContext,
-                    AppDatabase::class.java,
-                    "wander_more_database"
+                database.execSQL(
+                    """
+                    ALTER TABLE expenses
+                    ADD COLUMN exchangeRate REAL NOT NULL DEFAULT 1.0
+                    """.trimIndent()
                 )
-                    .build()
 
-
-                INSTANCE = instance
-
-                instance
-
+                database.execSQL(
+                    """
+                    ALTER TABLE expenses
+                    ADD COLUMN convertedAmount REAL NOT NULL DEFAULT 0.0
+                    """.trimIndent()
+                )
             }
-
         }
-
     }
-
 }
