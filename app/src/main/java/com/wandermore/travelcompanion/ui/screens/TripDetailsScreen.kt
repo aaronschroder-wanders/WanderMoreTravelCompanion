@@ -25,6 +25,7 @@ import com.wandermore.travelcompanion.data.model.Trip
 import com.wandermore.travelcompanion.ui.components.ExpenseCard
 import com.wandermore.travelcompanion.util.formatDate
 import com.wandermore.travelcompanion.viewmodel.TripViewModel
+import com.wandermore.travelcompanion.ui.components.ExpenseSummaryCard
 
 
 @Composable
@@ -174,8 +175,14 @@ fun TripDetailsScreen(
             )
 
 
-            Text(
-                text = "Total: $total ${currentTrip.homeCurrency}"
+            ExpenseSummaryCard(
+
+                total = total,
+
+                currency = currentTrip.homeCurrency,
+
+                expenseCount = expenses.size
+
             )
 
         }
