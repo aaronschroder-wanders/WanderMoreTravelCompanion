@@ -9,6 +9,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -128,7 +129,26 @@ fun CategoryBreakdownScreen(
         ) {
 
 
+
             items(categoryTotals) { categoryTotal ->
+
+
+
+                val categoryName =
+                    categoryTotal.first
+
+
+                val categoryAmount =
+                    categoryTotal.second
+
+
+
+                val expenseCount =
+                    expenses.count {
+
+                        it.category == categoryName
+
+                    }
 
 
 
@@ -136,7 +156,7 @@ fun CategoryBreakdownScreen(
 
                     if (totalSpent > 0) {
 
-                        (categoryTotal.second / totalSpent * 100)
+                        categoryAmount / totalSpent
 
                     } else {
 
@@ -169,8 +189,8 @@ fun CategoryBreakdownScreen(
 
                             text =
                                 "${ExpenseCategoryIcons.getIcon(
-                                    categoryTotal.first
-                                )} ${categoryTotal.first}",
+                                    categoryName
+                                )} $categoryName",
 
                             style = MaterialTheme.typography.titleMedium
 
@@ -182,7 +202,7 @@ fun CategoryBreakdownScreen(
 
                             text =
                                 formatMoney(
-                                    categoryTotal.second,
+                                    categoryAmount,
                                     currency
                                 ),
 
@@ -195,9 +215,38 @@ fun CategoryBreakdownScreen(
                         Text(
 
                             text =
+                                "$expenseCount expenses",
+
+                            style = MaterialTheme.typography.bodyMedium
+
+                        )
+
+
+
+                        LinearProgressIndicator(
+
+                            progress = {
+
+                                percentage.toFloat()
+
+                            },
+
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(
+                                    vertical = 8.dp
+                                )
+
+                        )
+
+
+
+                        Text(
+
+                            text =
                                 "%.1f%% of trip spending"
                                     .format(
-                                        percentage
+                                        percentage * 100
                                     ),
 
                             style = MaterialTheme.typography.bodySmall

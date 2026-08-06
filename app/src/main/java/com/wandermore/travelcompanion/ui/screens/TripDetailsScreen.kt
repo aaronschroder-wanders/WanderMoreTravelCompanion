@@ -28,6 +28,8 @@ import com.wandermore.travelcompanion.ui.components.TripSummaryCard
 import com.wandermore.travelcompanion.util.formatDate
 import com.wandermore.travelcompanion.viewmodel.TripViewModel
 import java.time.temporal.ChronoUnit
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 
 
 @Composable
@@ -301,42 +303,53 @@ fun TripDetailsScreen(
 
 
 
-        Button(
-            onClick = onEditTrip
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 8.dp),
+
+            horizontalArrangement = Arrangement.SpaceEvenly
         ) {
 
-            Text(
-                "Edit Trip"
-            )
 
-        }
+            Button(
+                onClick = onEditTrip
+            ) {
 
-
-
-        Button(
-            onClick = onAddExpense
-        ) {
-
-            Text(
-                "Add Expense"
-            )
-
-        }
-
-
-
-        Button(
-            onClick = {
-
-                showDeleteDialog = true
+                Text(
+                    "Edit Trip"
+                )
 
             }
 
-        ) {
 
-            Text(
-                "Delete Trip"
-            )
+
+            Button(
+                onClick = onAddExpense
+            ) {
+
+                Text(
+                    "Add Expense"
+                )
+
+            }
+
+
+
+            Button(
+                onClick = {
+
+                    showDeleteDialog = true
+
+                }
+            ) {
+
+                Text(
+                    "Delete"
+                )
+
+            }
+
 
         }
 
@@ -395,7 +408,7 @@ fun TripDetailsScreen(
                 ) {
 
                     Text(
-                        "Delete"
+                        "Delete Trip"
                     )
 
                 }
