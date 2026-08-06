@@ -15,6 +15,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.wandermore.travelcompanion.database.ExpenseEntity
+import com.wandermore.travelcompanion.ui.components.CategoryDropdown
 import com.wandermore.travelcompanion.viewmodel.TripViewModel
 
 
@@ -97,16 +98,14 @@ fun EditExpenseScreen(
 
 
 
-        OutlinedTextField(
+        CategoryDropdown(
 
-            value = category,
+            selectedCategory = category,
 
-            onValueChange = {
+            onCategorySelected = {
+
                 category = it
-            },
 
-            label = {
-                Text("Category")
             }
 
         )
