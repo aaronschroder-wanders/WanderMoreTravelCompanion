@@ -28,6 +28,7 @@ import com.wandermore.travelcompanion.ui.screens.ArchivedTripsScreen
 import com.wandermore.travelcompanion.ui.screens.CategoryBreakdownScreen
 import com.wandermore.travelcompanion.ui.screens.CategoryExpensesScreen
 import com.wandermore.travelcompanion.ui.screens.CreateTripScreen
+import com.wandermore.travelcompanion.ui.screens.ExchangeRateSettingsScreen
 import com.wandermore.travelcompanion.ui.screens.EditExpenseScreen
 import com.wandermore.travelcompanion.ui.screens.EditTripScreen
 import com.wandermore.travelcompanion.ui.screens.HomeScreen
@@ -163,6 +164,13 @@ class MainActivity : ComponentActivity() {
 
                                 },
 
+                                onSettings = {
+
+                                    navController.navigate(
+                                        "exchangeRates"
+                                    )
+
+                                },
 
                                 onTripSelected = { trip ->
 
@@ -233,6 +241,26 @@ class MainActivity : ComponentActivity() {
                             )
 
                         }
+
+                        composable("exchangeRates") {
+
+
+                            ExchangeRateSettingsScreen(
+
+                                exchangeRateViewModel = exchangeRateViewModel,
+
+                                onBack = {
+
+                                    navController.popBackStack()
+
+                                }
+
+                            )
+
+
+                        }
+
+
                         composable(
                             "tripDetails/{tripId}"
                         ) { entry ->

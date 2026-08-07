@@ -31,6 +31,8 @@ fun HomeScreen(
 
     onArchivedTrips: () -> Unit,
 
+    onSettings: () -> Unit,
+
     onTripSelected: (Trip) -> Unit
 
 ) {
@@ -292,33 +294,23 @@ fun HomeScreen(
 
 
             Button(
-
                 onClick = onCreateTrip
-
             ) {
-
-
-                Text(
-                    "Create Trip"
-                )
-
-
+                Text("Create Trip")
             }
 
 
+            Button(
+                onClick = onArchivedTrips
+            ) {
+                Text("Archived Trips")
+            }
+
 
             Button(
-
-                onClick = onArchivedTrips
-
+                onClick = onSettings
             ) {
-
-
-                Text(
-                    "Archived Trips"
-                )
-
-
+                Text("Settings")
             }
 
 
