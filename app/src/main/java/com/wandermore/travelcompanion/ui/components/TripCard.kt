@@ -10,6 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.wandermore.travelcompanion.model.Trip
 import com.wandermore.travelcompanion.util.formatDate
+import androidx.compose.foundation.layout.fillMaxWidth
 
 
 @Composable
@@ -20,6 +21,7 @@ fun TripCard(
 
     Card(
         modifier = Modifier
+            .fillMaxWidth()
             .padding(8.dp)
             .clickable {
                 onClick()

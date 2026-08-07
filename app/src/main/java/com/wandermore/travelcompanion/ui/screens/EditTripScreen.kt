@@ -1,9 +1,11 @@
 package com.wandermore.travelcompanion.ui.screens
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
@@ -31,7 +33,6 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditTripScreen(
@@ -41,35 +42,27 @@ fun EditTripScreen(
 ) {
 
     var name by remember { mutableStateOf(trip.name) }
-
     var startDate by remember { mutableStateOf<LocalDate?>(trip.startDate) }
-
     var endDate by remember { mutableStateOf<LocalDate?>(trip.endDate) }
-
     var currency by remember { mutableStateOf(trip.homeCurrency) }
-
     var status by remember { mutableStateOf(trip.status) }
 
     var errorMessage by remember { mutableStateOf("") }
 
-
     var showStartPicker by remember { mutableStateOf(false) }
-
     var showEndPicker by remember { mutableStateOf(false) }
 
     var statusExpanded by remember { mutableStateOf(false) }
 
 
-
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .imePadding()
             .padding(16.dp),
 
-        horizontalAlignment = Alignment.CenterHorizontally,
-
-        verticalArrangement = Arrangement.Top
-
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
 
 
@@ -78,21 +71,15 @@ fun EditTripScreen(
         )
 
 
-
         OutlinedTextField(
-
             value = name,
-
             onValueChange = {
                 name = it
             },
-
             label = {
                 Text("Trip name")
             }
-
         )
-
 
 
         Button(
@@ -110,7 +97,6 @@ fun EditTripScreen(
         }
 
 
-
         Button(
             onClick = {
                 showEndPicker = true
@@ -126,22 +112,14 @@ fun EditTripScreen(
         }
 
 
-
         CurrencyDropdown(
-
             selectedCurrency = currency,
-
             onCurrencySelected = {
                 currency = it
             },
-
             label = "Home Currency"
-
         )
 
-
-
-        // Trip status selector
 
         Text(
             text = "Trip Status"
@@ -165,20 +143,14 @@ fun EditTripScreen(
         }
 
 
-
         DropdownMenu(
-
             expanded = statusExpanded,
-
             onDismissRequest = {
                 statusExpanded = false
             }
-
         ) {
 
-
             TripStatus.values().forEach { option ->
-
 
                 DropdownMenuItem(
 
@@ -194,34 +166,25 @@ fun EditTripScreen(
 
                     },
 
-
                     onClick = {
 
                         status = option
-
                         statusExpanded = false
 
                     }
 
                 )
 
-
             }
 
-
         }
-
-
-
 
 
         Button(
 
             onClick = {
 
-
                 errorMessage = ""
-
 
                 if (
                     name.isBlank()
@@ -230,53 +193,35 @@ fun EditTripScreen(
 
                 ) {
 
-
                     errorMessage =
                         "Please complete all fields"
 
-
                 } else if (endDate!! < startDate!!) {
-
 
                     errorMessage =
                         "End date cannot be before start date"
 
-
                 } else {
-
 
                     val updatedTrip = trip.copy(
 
                         name = name,
-
                         startDate = startDate!!,
-
                         endDate = endDate!!,
-
                         homeCurrency = currency,
-
                         status = status
 
                     )
 
-
-
-                    tripViewModel.updateTrip(
-                        updatedTrip
-                    )
-
-
+                    tripViewModel.updateTrip(updatedTrip)
 
                     onTripUpdated()
 
-
                 }
-
 
             }
 
         ) {
-
 
             Text(
                 text = "Save Changes"
@@ -285,30 +230,21 @@ fun EditTripScreen(
         }
 
 
-
-
         if (errorMessage.isNotBlank()) {
-
 
             Text(
                 text = errorMessage
             )
 
-
         }
-
 
     }
 
 
 
-
     if (showStartPicker) {
 
-
-        val datePickerState =
-            rememberDatePickerState()
-
+        val datePickerState = rememberDatePickerState()
 
 
         DatePickerDialog(
@@ -317,14 +253,11 @@ fun EditTripScreen(
                 showStartPicker = false
             },
 
-
             confirmButton = {
-
 
                 Button(
 
                     onClick = {
-
 
                         startDate =
                             datePickerState.selectedDateMillis?.let {
@@ -339,43 +272,33 @@ fun EditTripScreen(
 
 
                         showStartPicker = false
-
+                        showEndPicker = true
 
                     }
 
                 ) {
 
-
                     Text("OK")
 
-
                 }
-
 
             }
 
         ) {
 
-
             DatePicker(
                 state = datePickerState
             )
 
-
         }
-
 
     }
 
 
 
-
     if (showEndPicker) {
 
-
-        val datePickerState =
-            rememberDatePickerState()
-
+        val datePickerState = rememberDatePickerState()
 
 
         DatePickerDialog(
@@ -384,14 +307,11 @@ fun EditTripScreen(
                 showEndPicker = false
             },
 
-
             confirmButton = {
-
 
                 Button(
 
                     onClick = {
-
 
                         endDate =
                             datePickerState.selectedDateMillis?.let {
@@ -407,30 +327,23 @@ fun EditTripScreen(
 
                         showEndPicker = false
 
-
                     }
 
                 ) {
 
-
                     Text("OK")
 
-
                 }
-
 
             }
 
         ) {
 
-
             DatePicker(
                 state = datePickerState
             )
 
-
         }
-
 
     }
 

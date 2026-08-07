@@ -1,8 +1,10 @@
 package com.wandermore.travelcompanion.ui.screens
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
@@ -17,13 +19,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import com.wandermore.travelcompanion.ui.components.CurrencyDropdown
+import com.wandermore.travelcompanion.util.formatDate
 import com.wandermore.travelcompanion.viewmodel.TripViewModel
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
-import com.wandermore.travelcompanion.util.formatDate
-import com.wandermore.travelcompanion.ui.components.CurrencyDropdown
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -44,9 +45,12 @@ fun CreateTripScreen(
 
 
     Column(
-        modifier = Modifier.fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .imePadding(),
+
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
 
         Text(
@@ -104,20 +108,17 @@ fun CreateTripScreen(
 
                 errorMessage = ""
 
-
                 if (
                     name.isBlank()
                     || startDate == null
                     || endDate == null
                 ) {
 
-                    errorMessage =
-                        "Please complete all fields"
+                    errorMessage = "Please complete all fields"
 
                 } else if (endDate!! < startDate!!) {
 
-                    errorMessage =
-                        "End date cannot be before start date"
+                    errorMessage = "End date cannot be before start date"
 
                 } else {
 
@@ -155,7 +156,6 @@ fun CreateTripScreen(
 
         val datePickerState = rememberDatePickerState()
 
-
         DatePickerDialog(
             onDismissRequest = {
                 showStartPicker = false
@@ -174,6 +174,7 @@ fun CreateTripScreen(
                             }
 
                         showStartPicker = false
+                        showEndPicker = true
 
                     }
                 ) {
@@ -197,7 +198,6 @@ fun CreateTripScreen(
     if (showEndPicker) {
 
         val datePickerState = rememberDatePickerState()
-
 
         DatePickerDialog(
             onDismissRequest = {
