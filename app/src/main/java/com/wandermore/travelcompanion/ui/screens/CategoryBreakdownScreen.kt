@@ -1,5 +1,6 @@
 package com.wandermore.travelcompanion.ui.screens
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -22,7 +23,6 @@ import com.wandermore.travelcompanion.util.ExpenseCategoryIcons
 import com.wandermore.travelcompanion.util.formatMoney
 import com.wandermore.travelcompanion.viewmodel.TripViewModel
 
-
 @Composable
 fun CategoryBreakdownScreen(
 
@@ -31,6 +31,8 @@ fun CategoryBreakdownScreen(
     currency: String,
 
     tripViewModel: TripViewModel,
+
+    onCategorySelected: (String) -> Unit,
 
     onBack: () -> Unit
 
@@ -105,12 +107,13 @@ fun CategoryBreakdownScreen(
 
         Text(
 
-            text = "Total spent: ${
-                formatMoney(
-                    totalSpent,
-                    currency
-                )
-            }",
+            text =
+                "Total spent: ${
+                    formatMoney(
+                        totalSpent,
+                        currency
+                    )
+                }",
 
             style = MaterialTheme.typography.titleMedium,
 
@@ -136,6 +139,7 @@ fun CategoryBreakdownScreen(
 
                 val categoryName =
                     categoryTotal.first
+
 
 
                 val categoryAmount =
@@ -210,8 +214,16 @@ fun CategoryBreakdownScreen(
                         .padding(
                             vertical = 6.dp
                         )
+                        .clickable {
+
+                            onCategorySelected(
+                                categoryName
+                            )
+
+                        }
 
                 ) {
+
 
 
                     Column(
@@ -263,6 +275,7 @@ fun CategoryBreakdownScreen(
                         if (averageNightlyRate != null) {
 
 
+
                             Text(
 
                                 text =
@@ -275,6 +288,7 @@ fun CategoryBreakdownScreen(
                                 )
 
                             )
+
 
 
                             Text(
