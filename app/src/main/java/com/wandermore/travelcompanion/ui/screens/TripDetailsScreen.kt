@@ -14,6 +14,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -29,7 +30,6 @@ import com.wandermore.travelcompanion.ui.components.TripSummaryCard
 import com.wandermore.travelcompanion.util.formatDate
 import com.wandermore.travelcompanion.viewmodel.TripViewModel
 import java.time.temporal.ChronoUnit
-
 
 @Composable
 fun TripDetailsScreen(
@@ -55,7 +55,6 @@ fun TripDetailsScreen(
     onCategoryBreakdown: () -> Unit
 
 ) {
-
 
     var showDeleteDialog by remember {
         mutableStateOf(false)
@@ -152,13 +151,39 @@ fun TripDetailsScreen(
 
 
         Text(
-            text = "Status: ${currentTrip.status.name.lowercase()
-                .replaceFirstChar { it.uppercase() }}",
+            text = "Status: ${
+                currentTrip.status.name
+                    .lowercase()
+                    .replaceFirstChar { it.uppercase() }
+            }",
             style = MaterialTheme.typography.bodyMedium,
             modifier = Modifier.align(
                 Alignment.CenterHorizontally
             )
         )
+
+
+        if (currentTrip.status == TripStatus.ARCHIVED) {
+
+            TextButton(
+                onClick = {
+                    showDeleteDialog = true
+                },
+
+                modifier = Modifier.align(
+                    Alignment.CenterHorizontally
+                )
+
+            ) {
+
+                Text(
+                    text = "Delete Trip"
+                )
+
+            }
+
+        }
+
 
 
         Spacer(
@@ -201,11 +226,9 @@ fun TripDetailsScreen(
 
         if (expenses.isEmpty()) {
 
-
             Text(
                 text = "No expenses recorded yet."
             )
-
 
         } else {
 
@@ -273,167 +296,114 @@ fun TripDetailsScreen(
 
             }
 
-
-            Spacer(
-                modifier = Modifier.height(8.dp)
-            )
-
         }
+
+
         Spacer(
             modifier = Modifier.height(8.dp)
         )
 
 
-        Column(
+
+        Row(
 
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 8.dp),
+                .fillMaxWidth(),
 
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.SpaceEvenly,
+
+            verticalAlignment = Alignment.CenterVertically
 
         ) {
 
 
-            Row(
-
-                modifier = Modifier.fillMaxWidth(),
-
-                horizontalArrangement = Arrangement.SpaceEvenly
-
+            Button(
+                onClick = onEditTrip
             ) {
 
-
-                Button(
-                    onClick = onEditTrip
-                ) {
-
-                    Text(
-                        "Edit Trip"
-                    )
-
-                }
-
-
-
-                Button(
-                    onClick = onAddExpense
-                ) {
-
-                    Text(
-                        "Add Expense"
-                    )
-
-                }
-
+                Text(
+                    "Edit Trip"
+                )
 
             }
 
 
 
-            Row(
-
-                modifier = Modifier.fillMaxWidth(),
-
-                horizontalArrangement = Arrangement.SpaceEvenly
-
+            Button(
+                onClick = onAddExpense
             ) {
 
+                Text(
+                    "Add Expense"
+                )
 
-                when (currentTrip.status) {
-
-
-                    TripStatus.PLANNED -> {
-
-
-                        Button(
-                            onClick = onStartTrip
-                        ) {
-
-                            Text(
-                                "Start Trip"
-                            )
-
-                        }
-
-
-                    }
+            }
 
 
 
-                    TripStatus.CURRENT -> {
+            when (currentTrip.status) {
 
 
-                        Button(
-                            onClick = onArchiveTrip
-                        ) {
+                TripStatus.PLANNED -> {
 
-                            Text(
-                                "Archive Trip"
-                            )
+                    Button(
+                        onClick = onStartTrip
+                    ) {
 
-                        }
-
+                        Text(
+                            "Start Trip"
+                        )
 
                     }
-
-
-
-                    TripStatus.ARCHIVED -> {
-
-
-                        Button(
-                            onClick = {
-
-                                showRestoreDialog = true
-
-                            }
-
-                        ) {
-
-                            Text(
-                                "Restore"
-                            )
-
-                        }
-
-
-
-                        Button(
-                            onClick = {
-
-                                showDeleteDialog = true
-
-                            }
-
-                        ) {
-
-                            Text(
-                                "Delete"
-
-                            )
-
-                        }
-
-
-                    }
-
 
                 }
 
 
-            }
 
+                TripStatus.CURRENT -> {
+
+                    Button(
+                        onClick = onArchiveTrip
+                    ) {
+
+                        Text(
+                            "Archive Trip"
+                        )
+
+                    }
+
+                }
+
+
+
+                TripStatus.ARCHIVED -> {
+
+                    Button(
+                        onClick = {
+
+                            showRestoreDialog = true
+
+                        }
+
+                    ) {
+
+                        Text(
+                            "Restore"
+                        )
+
+                    }
+
+                }
+
+            }
 
         }
-
 
     }
 
 
 
     if (showRestoreDialog) {
-
 
         AlertDialog(
 
@@ -443,25 +413,18 @@ fun TripDetailsScreen(
 
 
             title = {
-
-                Text(
-                    "Restore Trip?"
-                )
-
+                Text("Restore Trip?")
             },
 
 
             text = {
-
                 Text(
                     "Where should ${currentTrip.name} be moved?"
                 )
-
             },
 
 
             confirmButton = {
-
 
                 Button(
 
@@ -487,7 +450,6 @@ fun TripDetailsScreen(
 
 
             dismissButton = {
-
 
                 Button(
 
@@ -517,9 +479,7 @@ fun TripDetailsScreen(
 
 
 
-
     if (showDeleteDialog) {
-
 
         AlertDialog(
 
@@ -529,11 +489,7 @@ fun TripDetailsScreen(
 
 
             title = {
-
-                Text(
-                    "Delete Trip?"
-                )
-
+                Text("Delete Trip?")
             },
 
 
@@ -547,7 +503,6 @@ fun TripDetailsScreen(
 
 
             confirmButton = {
-
 
                 Button(
 
@@ -569,7 +524,6 @@ fun TripDetailsScreen(
 
 
             dismissButton = {
-
 
                 Button(
 
