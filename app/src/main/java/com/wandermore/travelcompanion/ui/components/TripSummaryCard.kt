@@ -12,130 +12,95 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.wandermore.travelcompanion.util.formatMoney
 
-
 @Composable
 fun TripSummaryCard(
-
     plannedDays: Long,
-
     expenseCount: Int,
-
     totalSpent: Double,
-
+    airfareTotal: Double,
     currency: String,
-
     onClick: () -> Unit
-
 ) {
-
 
     val averagePerDay =
         if (plannedDays > 0) {
-
             totalSpent / plannedDays
-
         } else {
-
             0.0
-
         }
 
+    val spendingExcludingFlights =
+        totalSpent - airfareTotal
 
+    val averageExcludingFlights =
+        if (plannedDays > 0) {
+            spendingExcludingFlights / plannedDays
+        } else {
+            0.0
+        }
 
     Card(
-
         modifier = Modifier
-
             .fillMaxWidth()
-
             .padding(vertical = 8.dp)
-
             .clickable {
-
                 onClick()
-
             }
-
     ) {
 
-
         Column(
-
             modifier = Modifier.padding(16.dp)
-
         ) {
 
-
             Text(
-
                 text = "🌏 Trip Summary",
-
                 style = MaterialTheme.typography.titleMedium
-
             )
 
-
-
             Text(
-
                 text = "📅 Planned duration: $plannedDays days",
-
                 style = MaterialTheme.typography.bodyMedium
-
             )
 
-
-
             Text(
-
                 text = "💳 Expenses: $expenseCount",
-
                 style = MaterialTheme.typography.bodyMedium
-
             )
 
-
-
             Text(
-
                 text = "💰 Total spent: ${
                     formatMoney(
                         totalSpent,
                         currency
                     )
                 }",
-
                 style = MaterialTheme.typography.bodyMedium
-
             )
 
-
-
             Text(
-
                 text = "📊 Average per day: ${
                     formatMoney(
                         averagePerDay,
                         currency
                     )
                 }",
-
                 style = MaterialTheme.typography.bodyMedium
-
             )
-
 
             Text(
-
-                text = "Tap for spending breakdown",
-
-                style = MaterialTheme.typography.bodySmall
-
+                text = "✈️ Average excl. flights per day: ${
+                    formatMoney(
+                        averageExcludingFlights,
+                        currency
+                    )
+                }",
+                style = MaterialTheme.typography.bodyMedium
             )
 
-
+            Text(
+                text = "Tap for spending breakdown",
+                style = MaterialTheme.typography.bodySmall
+            )
         }
-
     }
-
 }

@@ -19,25 +19,22 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.wandermore.travelcompanion.model.TripStatus
 import com.wandermore.travelcompanion.util.ExpenseCategoryIcons
 import com.wandermore.travelcompanion.util.formatMoney
 import com.wandermore.travelcompanion.viewmodel.TripViewModel
+import java.time.LocalDate
+import java.time.temporal.ChronoUnit
+import java.util.Locale
 
 @Composable
 fun CategoryBreakdownScreen(
-
     tripId: Long,
-
     currency: String,
-
     tripViewModel: TripViewModel,
-
     onCategorySelected: (String) -> Unit,
-
     onBack: () -> Unit
-
 ) {
-
 
     val expenses by tripViewModel
         .getExpensesForTrip(tripId)
@@ -45,330 +42,278 @@ fun CategoryBreakdownScreen(
             initial = emptyList()
         )
 
+    val tripState by tripViewModel
+        .getTripByIdFlow(tripId)
+        .collectAsState(
+            initial = null
+        )
 
+    val trip = tripState
 
     val totalSpent =
         expenses.sumOf {
-
             it.convertedAmount
-
         }
-
-
 
     val categoryTotals =
         expenses
             .groupBy {
-
                 it.category
-
             }
             .mapValues { entry ->
-
                 entry.value.sumOf {
-
                     it.convertedAmount
-
                 }
-
             }
             .toList()
             .sortedByDescending {
-
                 it.second
-
             }
 
-
-
     Column(
-
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp),
-
         horizontalAlignment = Alignment.CenterHorizontally,
-
         verticalArrangement = Arrangement.Top
-
     ) {
 
-
-
         Text(
-
             text = "📊 Spending Breakdown",
-
             style = MaterialTheme.typography.titleLarge
-
         )
 
-
-
         Text(
-
-            text =
-                "Total spent: ${
-                    formatMoney(
-                        totalSpent,
-                        currency
-                    )
-                }",
-
+            text = "Total spent: ${
+                formatMoney(
+                    totalSpent,
+                    currency
+                )
+            }",
             style = MaterialTheme.typography.titleMedium,
-
             modifier = Modifier.padding(
                 vertical = 16.dp
             )
-
         )
 
-
-
         LazyColumn(
-
             modifier = Modifier.weight(1f)
-
         ) {
 
-
-
             items(categoryTotals) { categoryTotal ->
-
-
 
                 val categoryName =
                     categoryTotal.first
 
-
-
                 val categoryAmount =
                     categoryTotal.second
 
-
-
                 val categoryExpenses =
                     expenses.filter {
-
                         it.category == categoryName
-
                     }
-
-
 
                 val expenseCount =
                     categoryExpenses.size
 
-
-
                 val percentage =
-
                     if (totalSpent > 0) {
-
                         categoryAmount / totalSpent
-
                     } else {
-
                         0.0
-
                     }
 
-
-
                 val accommodationNights =
-
                     if (categoryName == "Accommodation") {
-
                         categoryExpenses.sumOf {
-
                             it.numberOfNights ?: 0
+                        }
+                    } else {
+                        0
+                    }
 
+                val averageNightlyRate =
+                    if (accommodationNights > 0) {
+                        categoryAmount / accommodationNights
+                    } else {
+                        null
+                    }
+
+                val foodDays =
+                    if (
+                        categoryName == "Food & Drink" &&
+                        trip != null
+                    ) {
+
+                        when (trip.status) {
+
+                            TripStatus.ARCHIVED -> {
+
+                                ChronoUnit.DAYS.between(
+                                    trip.startDate,
+                                    trip.endDate
+                                ) + 1
+                            }
+
+                            TripStatus.CURRENT -> {
+
+                                val today =
+                                    LocalDate.now()
+
+                                if (today >= trip.startDate) {
+
+                                    val endDate =
+                                        if (
+                                            today < trip.endDate
+                                        ) {
+                                            today
+                                        } else {
+                                            trip.endDate
+                                        }
+
+                                    ChronoUnit.DAYS.between(
+                                        trip.startDate,
+                                        endDate
+                                    ) + 1
+
+                                } else {
+                                    0L
+                                }
+                            }
+
+                            TripStatus.PLANNED -> {
+                                0L
+                            }
                         }
 
                     } else {
-
-                        0
-
+                        0L
                     }
 
-
-
-                val averageNightlyRate =
-
-                    if (accommodationNights > 0) {
-
-                        categoryAmount / accommodationNights
-
+                val foodPerDay =
+                    if (
+                        categoryName == "Food & Drink" &&
+                        foodDays > 0
+                    ) {
+                        categoryAmount / foodDays
                     } else {
-
                         null
-
                     }
-
-
 
                 Card(
-
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(
                             vertical = 6.dp
                         )
                         .clickable {
-
                             onCategorySelected(
                                 categoryName
                             )
-
                         }
-
                 ) {
 
-
-
                     Column(
-
                         modifier = Modifier.padding(16.dp)
-
                     ) {
 
-
-
                         Text(
-
                             text =
                                 "${ExpenseCategoryIcons.getIcon(
                                     categoryName
                                 )} $categoryName",
-
                             style = MaterialTheme.typography.titleMedium
-
                         )
 
-
-
                         Text(
-
                             text =
                                 formatMoney(
                                     categoryAmount,
                                     currency
                                 ),
-
                             style = MaterialTheme.typography.bodyLarge
-
                         )
-
-
 
                         Text(
-
                             text =
                                 "$expenseCount expenses",
-
                             style = MaterialTheme.typography.bodyMedium
-
                         )
-
-
 
                         if (averageNightlyRate != null) {
 
-
-
                             Text(
-
                                 text =
                                     "$accommodationNights nights",
-
                                 style = MaterialTheme.typography.bodyMedium,
-
                                 modifier = Modifier.padding(
                                     top = 8.dp
                                 )
-
                             )
-
-
 
                             Text(
-
                                 text =
-                                    "Average: NZ$ %.2f/night"
-                                        .format(
+                                    "Average: NZ$ ${
+                                        String.format(
+                                            Locale.US,
+                                            "%,.2f",
                                             averageNightlyRate
-                                        ),
-
+                                        )
+                                    }/night",
                                 style = MaterialTheme.typography.bodyMedium
-
                             )
-
                         }
 
+                        if (foodPerDay != null) {
 
+                            Text(
+                                text =
+                                    "Average: ${
+                                        formatMoney(
+                                            foodPerDay,
+                                            currency
+                                        )
+                                    }/day",
+                                style = MaterialTheme.typography.bodyMedium,
+                                modifier = Modifier.padding(
+                                    top = 8.dp
+                                )
+                            )
+                        }
 
                         LinearProgressIndicator(
-
                             progress = {
-
                                 percentage.toFloat()
-
                             },
-
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(
                                     vertical = 8.dp
                                 )
-
                         )
 
-
-
                         Text(
-
                             text =
                                 "%.1f%% of trip spending"
                                     .format(
                                         percentage * 100
                                     ),
-
                             style = MaterialTheme.typography.bodySmall
-
                         )
-
-
                     }
-
-
                 }
-
-
             }
-
-
         }
 
-
-
         Button(
-
             onClick = {
-
                 onBack()
-
             }
-
         ) {
 
             Text(
                 text = "Back to Trip"
             )
-
         }
-
-
     }
-
-
 }

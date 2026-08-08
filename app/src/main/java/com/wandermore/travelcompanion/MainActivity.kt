@@ -146,6 +146,7 @@ class MainActivity : ComponentActivity() {
 
                                 trips = trips,
 
+                                tripViewModel = tripViewModel,
 
                                 onCreateTrip = {
 
@@ -201,6 +202,7 @@ class MainActivity : ComponentActivity() {
 
                                 trips = trips,
 
+                                tripViewModel = tripViewModel,
 
                                 onTripSelected = { trip ->
 

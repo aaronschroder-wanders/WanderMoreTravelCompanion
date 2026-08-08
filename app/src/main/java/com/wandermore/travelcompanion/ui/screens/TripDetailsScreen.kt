@@ -29,43 +29,30 @@ import com.wandermore.travelcompanion.ui.components.ExpenseCard
 import com.wandermore.travelcompanion.ui.components.TripSummaryCard
 import com.wandermore.travelcompanion.util.formatDate
 import com.wandermore.travelcompanion.viewmodel.TripViewModel
+import java.time.LocalDate
 import java.time.temporal.ChronoUnit
 
 @Composable
 fun TripDetailsScreen(
-
     tripId: Long,
-
     tripViewModel: TripViewModel,
-
     onEditTrip: () -> Unit,
-
     onAddExpense: () -> Unit,
-
     onDeleteTrip: () -> Unit,
-
     onStartTrip: () -> Unit,
-
     onArchiveTrip: () -> Unit,
-
     onRestoreTrip: (TripStatus) -> Unit,
-
     onEditExpense: (Long) -> Unit,
-
     onCategoryBreakdown: () -> Unit
-
 ) {
 
     var showDeleteDialog by remember {
         mutableStateOf(false)
     }
 
-
     var showRestoreDialog by remember {
         mutableStateOf(false)
     }
-
-
 
     val tripState by tripViewModel
         .getTripByIdFlow(tripId)
@@ -73,10 +60,7 @@ fun TripDetailsScreen(
             initial = null
         )
 
-
     val currentTrip = tripState ?: return
-
-
 
     val expenses by tripViewModel
         .getExpensesForTrip(currentTrip.id)
@@ -84,13 +68,17 @@ fun TripDetailsScreen(
             initial = emptyList()
         )
 
-
-
     val total = expenses.sumOf {
         it.convertedAmount
     }
 
-
+    val airfareTotal = expenses
+        .filter {
+            it.category == "Airfares"
+        }
+        .sumOf {
+            it.convertedAmount
+        }
 
     val plannedDays =
         ChronoUnit.DAYS.between(
@@ -98,16 +86,41 @@ fun TripDetailsScreen(
             currentTrip.endDate
         ) + 1
 
+    val daysForAverages =
+        when (currentTrip.status) {
 
+            TripStatus.CURRENT -> {
+
+                val today = LocalDate.now()
+
+                if (today >= currentTrip.startDate) {
+
+                    val endDate =
+                        if (today < currentTrip.endDate) {
+                            today
+                        } else {
+                            currentTrip.endDate
+                        }
+
+                    ChronoUnit.DAYS.between(
+                        currentTrip.startDate,
+                        endDate
+                    ) + 1
+
+                } else {
+                    0L
+                }
+            }
+
+            TripStatus.PLANNED,
+            TripStatus.ARCHIVED -> plannedDays
+        }
 
     Column(
-
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp)
-
     ) {
-
 
         Text(
             text = "🌏",
@@ -117,7 +130,6 @@ fun TripDetailsScreen(
             )
         )
 
-
         Text(
             text = currentTrip.name,
             style = MaterialTheme.typography.headlineMedium,
@@ -126,11 +138,9 @@ fun TripDetailsScreen(
                 .padding(top = 4.dp)
         )
 
-
         Spacer(
             modifier = Modifier.height(8.dp)
         )
-
 
         Text(
             text = "📅 ${formatDate(currentTrip.startDate)} - ${formatDate(currentTrip.endDate)}",
@@ -140,7 +150,6 @@ fun TripDetailsScreen(
             )
         )
 
-
         Text(
             text = "💰 Home currency: ${currentTrip.homeCurrency}",
             style = MaterialTheme.typography.bodyMedium,
@@ -148,7 +157,6 @@ fun TripDetailsScreen(
                 Alignment.CenterHorizontally
             )
         )
-
 
         Text(
             text = "Status: ${
@@ -162,67 +170,50 @@ fun TripDetailsScreen(
             )
         )
 
-
         if (currentTrip.status == TripStatus.ARCHIVED) {
 
             TextButton(
                 onClick = {
                     showDeleteDialog = true
                 },
-
                 modifier = Modifier.align(
                     Alignment.CenterHorizontally
                 )
-
             ) {
 
                 Text(
                     text = "Delete Trip"
                 )
-
             }
-
         }
-
-
 
         Spacer(
             modifier = Modifier.height(16.dp)
         )
 
-
         TripSummaryCard(
-
-            plannedDays = plannedDays,
-
+            plannedDays = daysForAverages,
             expenseCount = expenses.size,
-
             totalSpent = total,
-
+            airfareTotal = airfareTotal,
             currency = currentTrip.homeCurrency,
-
             onClick = {
                 onCategoryBreakdown()
             }
-
         )
-
 
         Spacer(
             modifier = Modifier.height(8.dp)
         )
-
 
         Text(
             text = "Expenses",
             style = MaterialTheme.typography.titleMedium
         )
 
-
         Spacer(
             modifier = Modifier.height(4.dp)
         )
-
 
         if (expenses.isEmpty()) {
 
@@ -232,13 +223,9 @@ fun TripDetailsScreen(
 
         } else {
 
-
             LazyColumn(
-
                 modifier = Modifier.weight(1f)
-
             ) {
-
 
                 val groupedExpenses =
                     expenses
@@ -249,185 +236,125 @@ fun TripDetailsScreen(
                             compareByDescending { it }
                         )
 
-
                 groupedExpenses.forEach { (date, dailyExpenses) ->
-
 
                     item {
 
                         Text(
-
                             text = formatDate(date),
-
                             style = MaterialTheme.typography.bodyMedium,
-
                             modifier = Modifier.padding(
                                 top = 6.dp,
                                 bottom = 2.dp
                             )
-
                         )
-
                     }
 
-
-
-                    items(dailyExpenses) { expense ->
-
+                    items(
+                        dailyExpenses.sortedByDescending {
+                            it.id
+                        }
+                    ) { expense ->
 
                         ExpenseCard(
-
                             expense = expense,
-
                             onClick = {
                                 onEditExpense(expense.id)
                             }
-
                         )
-
 
                         Spacer(
                             modifier = Modifier.height(2.dp)
                         )
-
                     }
-
                 }
-
             }
-
         }
-
 
         Spacer(
             modifier = Modifier.height(8.dp)
         )
 
-
-
         Row(
-
             modifier = Modifier
                 .fillMaxWidth(),
-
             horizontalArrangement = Arrangement.SpaceEvenly,
-
             verticalAlignment = Alignment.CenterVertically
-
         ) {
-
 
             Button(
                 onClick = onEditTrip
             ) {
-
                 Text(
                     "Edit Trip"
                 )
-
             }
-
-
 
             Button(
                 onClick = onAddExpense
             ) {
-
                 Text(
                     "Add Expense"
                 )
-
             }
 
-
-
             when (currentTrip.status) {
-
 
                 TripStatus.PLANNED -> {
 
                     Button(
                         onClick = onStartTrip
                     ) {
-
                         Text(
                             "Start Trip"
                         )
-
                     }
-
                 }
-
-
 
                 TripStatus.CURRENT -> {
 
                     Button(
                         onClick = onArchiveTrip
                     ) {
-
                         Text(
                             "Archive Trip"
                         )
-
                     }
-
                 }
-
-
 
                 TripStatus.ARCHIVED -> {
 
                     Button(
                         onClick = {
-
                             showRestoreDialog = true
-
                         }
-
                     ) {
-
                         Text(
                             "Restore"
                         )
-
                     }
-
                 }
-
             }
-
         }
-
     }
-
-
 
     if (showRestoreDialog) {
 
         AlertDialog(
-
             onDismissRequest = {
                 showRestoreDialog = false
             },
-
-
             title = {
                 Text("Restore Trip?")
             },
-
-
             text = {
                 Text(
                     "Where should ${currentTrip.name} be moved?"
                 )
             },
-
-
             confirmButton = {
 
                 Button(
-
                     onClick = {
 
                         onRestoreTrip(
@@ -435,24 +362,16 @@ fun TripDetailsScreen(
                         )
 
                         showRestoreDialog = false
-
                     }
-
                 ) {
-
                     Text(
                         "Restore as Planned"
                     )
-
                 }
-
             },
-
-
             dismissButton = {
 
                 Button(
-
                     onClick = {
 
                         onRestoreTrip(
@@ -460,91 +379,54 @@ fun TripDetailsScreen(
                         )
 
                         showRestoreDialog = false
-
                     }
-
                 ) {
-
                     Text(
                         "Restore as Current"
                     )
-
                 }
-
             }
-
         )
-
     }
-
-
 
     if (showDeleteDialog) {
 
         AlertDialog(
-
             onDismissRequest = {
                 showDeleteDialog = false
             },
-
-
             title = {
                 Text("Delete Trip?")
             },
-
-
             text = {
-
                 Text(
                     "Are you sure you want to permanently delete ${currentTrip.name}?"
                 )
-
             },
-
-
             confirmButton = {
 
                 Button(
-
                     onClick = {
-
                         onDeleteTrip()
-
                     }
-
                 ) {
-
                     Text(
                         "Delete Permanently"
                     )
-
                 }
-
             },
-
-
             dismissButton = {
 
                 Button(
-
                     onClick = {
-
                         showDeleteDialog = false
-
                     }
-
                 ) {
-
                     Text(
                         "Cancel"
                     )
-
                 }
-
             }
-
         )
-
     }
-
 }
