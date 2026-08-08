@@ -3,6 +3,7 @@ package com.wandermore.travelcompanion
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -25,10 +26,12 @@ import com.wandermore.travelcompanion.ui.screens.EditTripScreen
 import com.wandermore.travelcompanion.ui.screens.ExchangeRateSettingsScreen
 import com.wandermore.travelcompanion.ui.screens.HomeScreen
 import com.wandermore.travelcompanion.ui.screens.TripDetailsScreen
+import com.wandermore.travelcompanion.ui.screens.TripExpensesScreen
+import com.wandermore.travelcompanion.ui.screens.TripHubScreen
 import com.wandermore.travelcompanion.viewmodel.ExchangeRateViewModel
 import com.wandermore.travelcompanion.viewmodel.TripViewModel
 
-@androidx.compose.runtime.Composable
+@Composable
 fun AppNavigation(
     navController: NavHostController,
     tripViewModel: TripViewModel,
@@ -45,6 +48,10 @@ fun AppNavigation(
             modifier = Modifier.padding(innerPadding)
         ) {
 
+            // ---------------------------------------------------------
+            // HOME
+            // ---------------------------------------------------------
+
             composable("home") {
 
                 val trips by tripViewModel
@@ -58,25 +65,36 @@ fun AppNavigation(
                     tripViewModel = tripViewModel,
 
                     onCreateTrip = {
-                        navController.navigate("createTrip")
+                        navController.navigate(
+                            "createTrip"
+                        )
                     },
 
                     onArchivedTrips = {
-                        navController.navigate("archivedTrips")
+                        navController.navigate(
+                            "archivedTrips"
+                        )
                     },
 
                     onSettings = {
-                        navController.navigate("exchangeRates")
+                        navController.navigate(
+                            "exchangeRates"
+                        )
                     },
 
                     onTripSelected = { trip ->
+
                         navController.navigate(
-                            "tripDetails/${trip.id}"
+                            "tripHub/${trip.id}"
                         )
                     }
                 )
             }
 
+
+            // ---------------------------------------------------------
+            // ARCHIVED TRIPS
+            // ---------------------------------------------------------
 
             composable("archivedTrips") {
 
@@ -91,8 +109,9 @@ fun AppNavigation(
                     tripViewModel = tripViewModel,
 
                     onTripSelected = { trip ->
+
                         navController.navigate(
-                            "tripDetails/${trip.id}"
+                            "tripHub/${trip.id}"
                         )
                     },
 
@@ -102,6 +121,10 @@ fun AppNavigation(
                 )
             }
 
+
+            // ---------------------------------------------------------
+            // CREATE TRIP
+            // ---------------------------------------------------------
 
             composable("createTrip") {
 
@@ -115,10 +138,15 @@ fun AppNavigation(
             }
 
 
+            // ---------------------------------------------------------
+            // EXCHANGE RATE SETTINGS
+            // ---------------------------------------------------------
+
             composable("exchangeRates") {
 
                 ExchangeRateSettingsScreen(
-                    exchangeRateViewModel = exchangeRateViewModel,
+                    exchangeRateViewModel =
+                        exchangeRateViewModel,
 
                     onBack = {
                         navController.popBackStack()
@@ -126,6 +154,144 @@ fun AppNavigation(
                 )
             }
 
+
+            // ---------------------------------------------------------
+            // TRIP HUB
+            // ---------------------------------------------------------
+
+            composable(
+                "tripHub/{tripId}"
+            ) { entry ->
+
+                val tripId =
+                    entry.arguments
+                        ?.getString("tripId")
+                        ?.toLongOrNull()
+
+                if (tripId != null) {
+
+                    TripHubScreen(
+
+                        tripId = tripId,
+
+                        tripViewModel = tripViewModel,
+
+                        onItinerary = {
+                            // Coming next
+                        },
+
+                        onActivities = {
+                            // Coming next
+                        },
+
+                        onToDo = {
+                            // Coming next
+                        },
+
+                        onExpenses = {
+
+                            navController.navigate(
+                                "tripExpenses/$tripId"
+                            )
+                        },
+
+                        onEditTrip = {
+
+                            navController.navigate(
+                                "editTrip/$tripId"
+                            )
+                        },
+
+                        onStartTrip = {
+
+                            tripViewModel.startTrip(
+                                tripId
+                            )
+                        },
+
+                        onArchiveTrip = {
+
+                            tripViewModel.archiveTrip(
+                                tripId
+                            )
+                        },
+
+                        onRestoreTrip = {
+
+                            tripViewModel.restoreTrip(
+                                tripId,
+                                it
+                            )
+                        },
+
+                        onDeleteTrip = {
+
+                            tripViewModel.deleteTrip(
+                                tripId
+                            )
+
+                            navController.popBackStack()
+                        }
+                    )
+                }
+            }
+
+
+            // ---------------------------------------------------------
+            // TRIP EXPENSES
+            // ---------------------------------------------------------
+
+            composable(
+                "tripExpenses/{tripId}"
+            ) { entry ->
+
+                val tripId =
+                    entry.arguments
+                        ?.getString("tripId")
+                        ?.toLongOrNull()
+
+                if (tripId != null) {
+
+                    TripExpensesScreen(
+
+                        tripId = tripId,
+
+                        tripViewModel = tripViewModel,
+
+                        onAddExpense = {
+
+                            navController.navigate(
+                                "addExpense/$tripId"
+                            )
+                        },
+
+                        onEditExpense = { expenseId ->
+
+                            navController.navigate(
+                                "editExpense/$expenseId"
+                            )
+                        },
+
+                        onCategoryBreakdown = {
+
+                            navController.navigate(
+                                "categoryBreakdown/$tripId"
+                            )
+                        },
+
+                        onBack = {
+
+                            navController.popBackStack()
+                        }
+                    )
+                }
+            }
+
+
+            // ---------------------------------------------------------
+            // OLD TRIP DETAILS
+            // ---------------------------------------------------------
+            // Kept temporarily while the Trip Hub replaces it.
 
             composable(
                 "tripDetails/{tripId}"
@@ -139,16 +305,20 @@ fun AppNavigation(
                 if (tripId != null) {
 
                     TripDetailsScreen(
+
                         tripId = tripId,
+
                         tripViewModel = tripViewModel,
 
                         onEditTrip = {
+
                             navController.navigate(
                                 "editTrip/$tripId"
                             )
                         },
 
                         onAddExpense = {
+
                             navController.navigate(
                                 "addExpense/$tripId"
                             )
@@ -203,6 +373,10 @@ fun AppNavigation(
             }
 
 
+            // ---------------------------------------------------------
+            // CATEGORY BREAKDOWN
+            // ---------------------------------------------------------
+
             composable(
                 "categoryBreakdown/{tripId}"
             ) { entry ->
@@ -231,8 +405,11 @@ fun AppNavigation(
                 trip?.let {
 
                     CategoryBreakdownScreen(
+
                         tripId = it.id,
+
                         currency = it.homeCurrency,
+
                         tripViewModel = tripViewModel,
 
                         onCategorySelected = { category ->
@@ -243,12 +420,17 @@ fun AppNavigation(
                         },
 
                         onBack = {
+
                             navController.popBackStack()
                         }
                     )
                 }
             }
 
+
+            // ---------------------------------------------------------
+            // CATEGORY EXPENSES
+            // ---------------------------------------------------------
 
             composable(
                 "categoryExpenses/{tripId}/{category}"
@@ -286,9 +468,14 @@ fun AppNavigation(
                 ) {
 
                     CategoryExpensesScreen(
+
                         tripId = tripId,
+
                         category = category,
-                        currency = trip!!.homeCurrency,
+
+                        currency =
+                            trip!!.homeCurrency,
+
                         tripViewModel = tripViewModel,
 
                         onEditExpense = { expenseId ->
@@ -299,12 +486,17 @@ fun AppNavigation(
                         },
 
                         onBack = {
+
                             navController.popBackStack()
                         }
                     )
                 }
             }
 
+
+            // ---------------------------------------------------------
+            // ADD EXPENSE
+            // ---------------------------------------------------------
 
             composable(
                 "addExpense/{tripId}"
@@ -334,17 +526,28 @@ fun AppNavigation(
                 trip?.let {
 
                     AddExpenseScreen(
+
                         trip = it,
-                        tripViewModel = tripViewModel,
-                        exchangeRateViewModel = exchangeRateViewModel,
+
+                        tripViewModel =
+                            tripViewModel,
+
+                        exchangeRateViewModel =
+                            exchangeRateViewModel,
 
                         onExpenseAdded = {
-                            navController.popBackStack()
+
+                            navController
+                                .popBackStack()
                         }
                     )
                 }
             }
 
+
+            // ---------------------------------------------------------
+            // EDIT EXPENSE
+            // ---------------------------------------------------------
 
             composable(
                 "editExpense/{expenseId}"
@@ -374,12 +577,19 @@ fun AppNavigation(
                 expense?.let {
 
                     EditExpenseScreen(
+
                         expense = it,
-                        tripViewModel = tripViewModel,
-                        exchangeRateViewModel = exchangeRateViewModel,
+
+                        tripViewModel =
+                            tripViewModel,
+
+                        exchangeRateViewModel =
+                            exchangeRateViewModel,
 
                         onExpenseUpdated = {
-                            navController.popBackStack()
+
+                            navController
+                                .popBackStack()
                         },
 
                         onDeleteExpense = {
@@ -396,6 +606,10 @@ fun AppNavigation(
                 }
             }
 
+
+            // ---------------------------------------------------------
+            // EDIT TRIP
+            // ---------------------------------------------------------
 
             composable(
                 "editTrip/{tripId}"
@@ -425,10 +639,14 @@ fun AppNavigation(
                 trip?.let {
 
                     EditTripScreen(
+
                         trip = it,
-                        tripViewModel = tripViewModel,
+
+                        tripViewModel =
+                            tripViewModel,
 
                         onTripUpdated = {
+
                             navController
                                 .popBackStack()
                         }
