@@ -3,6 +3,8 @@ package com.wandermore.travelcompanion.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.wandermore.travelcompanion.data.repository.TripRepository
+import com.wandermore.travelcompanion.database.ActivityDao
+import com.wandermore.travelcompanion.database.ActivityEntity
 import com.wandermore.travelcompanion.database.ExpenseDao
 import com.wandermore.travelcompanion.database.ExpenseEntity
 import com.wandermore.travelcompanion.database.TodoDao
@@ -17,13 +19,18 @@ import java.time.LocalDate
 class TripViewModel(
     tripDao: TripDao,
     private val expenseDao: ExpenseDao,
-    private val todoDao: TodoDao
+    private val todoDao: TodoDao,
+    private val activityDao: ActivityDao
 ) : ViewModel() {
 
     private val repository = TripRepository(
         tripDao
     )
 
+
+    // -------------------------
+    // Trip functions
+    // -------------------------
 
     fun getTrips(): Flow<List<Trip>> {
 
@@ -272,6 +279,69 @@ class TripViewModel(
 
             todoDao.deleteTodo(
                 todo
+            )
+        }
+    }
+
+
+    // -------------------------
+    // Activity functions
+    // -------------------------
+
+    fun addActivity(
+        activity: ActivityEntity
+    ) {
+
+        viewModelScope.launch {
+
+            activityDao.insertActivity(
+                activity
+            )
+        }
+    }
+
+
+    fun getActivitiesForTrip(
+        tripId: Long
+    ): Flow<List<ActivityEntity>> {
+
+        return activityDao.getActivitiesForTrip(
+            tripId
+        )
+    }
+
+
+    suspend fun getActivityById(
+        activityId: Long
+    ): ActivityEntity? {
+
+        return activityDao.getActivityById(
+            activityId
+        )
+    }
+
+
+    fun updateActivity(
+        activity: ActivityEntity
+    ) {
+
+        viewModelScope.launch {
+
+            activityDao.updateActivity(
+                activity
+            )
+        }
+    }
+
+
+    fun deleteActivity(
+        activity: ActivityEntity
+    ) {
+
+        viewModelScope.launch {
+
+            activityDao.deleteActivity(
+                activity
             )
         }
     }

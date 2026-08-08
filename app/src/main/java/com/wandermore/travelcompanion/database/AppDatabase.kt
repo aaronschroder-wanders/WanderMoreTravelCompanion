@@ -11,9 +11,10 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         TripEntity::class,
         ExpenseEntity::class,
         ExchangeRateEntity::class,
-        TodoEntity::class
+        TodoEntity::class,
+        ActivityEntity::class
     ],
-    version = 6,
+    version = 7,
     exportSchema = false
 )
 @TypeConverters(DateConverter::class)
@@ -26,6 +27,8 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun exchangeRateDao(): ExchangeRateDao
 
     abstract fun todoDao(): TodoDao
+
+    abstract fun activityDao(): ActivityDao
 
     companion object {
 
@@ -127,7 +130,9 @@ abstract class AppDatabase : RoomDatabase() {
                         assignedTo TEXT NOT NULL,
                         completed INTEGER NOT NULL DEFAULT 0,
                         notes TEXT,
-                        FOREIGN KEY(tripId) REFERENCES trips(id) ON DELETE CASCADE
+                        FOREIGN KEY(tripId)
+                            REFERENCES trips(id)
+                            ON DELETE CASCADE
                     )
                     """.trimIndent()
                 )
@@ -136,6 +141,45 @@ abstract class AppDatabase : RoomDatabase() {
                     """
                     CREATE INDEX IF NOT EXISTS index_todos_tripId
                     ON todos(tripId)
+                    """.trimIndent()
+                )
+            }
+        }
+
+
+        val MIGRATION_6_7 = object : Migration(6, 7) {
+
+            override fun migrate(
+                database: SupportSQLiteDatabase
+            ) {
+
+                database.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS activities (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        tripId INTEGER NOT NULL,
+                        name TEXT NOT NULL,
+                        type TEXT NOT NULL,
+                        location TEXT,
+                        estimatedCost REAL,
+                        currency TEXT,
+                        convertedAmount REAL,
+                        booked INTEGER NOT NULL DEFAULT 0,
+                        website TEXT,
+                        notes TEXT,
+                        date TEXT,
+                        startTime TEXT,
+                        FOREIGN KEY(tripId)
+                            REFERENCES trips(id)
+                            ON DELETE CASCADE
+                    )
+                    """.trimIndent()
+                )
+
+                database.execSQL(
+                    """
+                    CREATE INDEX IF NOT EXISTS index_activities_tripId
+                    ON activities(tripId)
                     """.trimIndent()
                 )
             }

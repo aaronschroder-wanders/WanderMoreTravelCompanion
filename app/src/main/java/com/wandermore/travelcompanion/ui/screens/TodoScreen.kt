@@ -46,6 +46,11 @@ fun TodoScreen(
             initial = emptyList()
         )
 
+    // Put incomplete items first and completed items at the bottom.
+    val sortedTodos = todos.sortedBy {
+        it.completed
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -89,7 +94,7 @@ fun TodoScreen(
             ) {
 
                 items(
-                    items = todos,
+                    items = sortedTodos,
                     key = { it.id }
                 ) { todo ->
 
@@ -132,7 +137,6 @@ fun TodoScreen(
         }
     }
 }
-
 
 @Composable
 private fun TodoRow(

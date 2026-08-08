@@ -14,15 +14,19 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import com.wandermore.travelcompanion.database.ActivityEntity
 import com.wandermore.travelcompanion.database.ExpenseEntity
 import com.wandermore.travelcompanion.database.TodoEntity
 import com.wandermore.travelcompanion.model.Trip
+import com.wandermore.travelcompanion.ui.screens.ActivitiesScreen
+import com.wandermore.travelcompanion.ui.screens.AddActivityScreen
 import com.wandermore.travelcompanion.ui.screens.AddExpenseScreen
 import com.wandermore.travelcompanion.ui.screens.AddTodoScreen
 import com.wandermore.travelcompanion.ui.screens.ArchivedTripsScreen
 import com.wandermore.travelcompanion.ui.screens.CategoryBreakdownScreen
 import com.wandermore.travelcompanion.ui.screens.CategoryExpensesScreen
 import com.wandermore.travelcompanion.ui.screens.CreateTripScreen
+import com.wandermore.travelcompanion.ui.screens.EditActivityScreen
 import com.wandermore.travelcompanion.ui.screens.EditExpenseScreen
 import com.wandermore.travelcompanion.ui.screens.EditTodoScreen
 import com.wandermore.travelcompanion.ui.screens.EditTripScreen
@@ -181,11 +185,14 @@ fun AppNavigation(
                         tripViewModel = tripViewModel,
 
                         onItinerary = {
-                            // Coming next
+                            // Coming later
                         },
 
                         onActivities = {
-                            // Coming next
+
+                            navController.navigate(
+                                "activities/$tripId"
+                            )
                         },
 
                         onToDo = {
@@ -236,6 +243,153 @@ fun AppNavigation(
                             tripViewModel.deleteTrip(
                                 tripId
                             )
+
+                            navController.popBackStack()
+                        }
+                    )
+                }
+            }
+
+
+            // ---------------------------------------------------------
+            // ACTIVITIES & ATTRACTIONS
+            // ---------------------------------------------------------
+
+            composable(
+                "activities/{tripId}"
+            ) { entry ->
+
+                val tripId =
+                    entry.arguments
+                        ?.getString("tripId")
+                        ?.toLongOrNull()
+
+                if (tripId != null) {
+
+                    ActivitiesScreen(
+
+                        tripId = tripId,
+
+                        tripViewModel =
+                            tripViewModel,
+
+                        onAddActivity = {
+
+                            navController.navigate(
+                                "addActivity/$tripId"
+                            )
+                        },
+
+                        onEditActivity = { activityId ->
+
+                            navController.navigate(
+                                "editActivity/$activityId"
+                            )
+                        },
+
+                        onBack = {
+
+                            navController.popBackStack()
+                        }
+                    )
+                }
+            }
+
+
+            // ---------------------------------------------------------
+            // ADD ACTIVITY
+            // ---------------------------------------------------------
+
+            composable(
+                "addActivity/{tripId}"
+            ) { entry ->
+
+                val tripId =
+                    entry.arguments
+                        ?.getString("tripId")
+                        ?.toLongOrNull()
+
+                if (tripId != null) {
+
+                    AddActivityScreen(
+
+                        tripId = tripId,
+
+                        tripViewModel =
+                            tripViewModel,
+
+                        exchangeRateViewModel =
+                            exchangeRateViewModel,
+
+                        onActivityAdded = {
+
+                            navController.popBackStack()
+                        },
+
+                        onBack = {
+
+                            navController.popBackStack()
+                        }
+                    )
+                }
+            }
+
+
+            // ---------------------------------------------------------
+            // EDIT ACTIVITY
+            // ---------------------------------------------------------
+
+            composable(
+                "editActivity/{activityId}"
+            ) { entry ->
+
+                val activityId =
+                    entry.arguments
+                        ?.getString("activityId")
+                        ?.toLongOrNull()
+
+                var activity by remember {
+                    mutableStateOf<ActivityEntity?>(null)
+                }
+
+                LaunchedEffect(activityId) {
+
+                    if (activityId != null) {
+
+                        activity =
+                            tripViewModel.getActivityById(
+                                activityId
+                            )
+                    }
+                }
+
+                activity?.let {
+
+                    EditActivityScreen(
+
+                        activity = it,
+
+                        tripViewModel =
+                            tripViewModel,
+
+                        exchangeRateViewModel =
+                            exchangeRateViewModel,
+
+                        onActivityUpdated = {
+
+                            navController.popBackStack()
+                        },
+
+                        onDeleteActivity = {
+
+                            tripViewModel.deleteActivity(
+                                it
+                            )
+
+                            navController.popBackStack()
+                        },
+
+                        onBack = {
 
                             navController.popBackStack()
                         }
