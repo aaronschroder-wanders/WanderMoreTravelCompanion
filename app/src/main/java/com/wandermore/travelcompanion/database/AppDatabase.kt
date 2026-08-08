@@ -10,9 +10,10 @@ import androidx.sqlite.db.SupportSQLiteDatabase
     entities = [
         TripEntity::class,
         ExpenseEntity::class,
-        ExchangeRateEntity::class
+        ExchangeRateEntity::class,
+        TodoEntity::class
     ],
-    version = 5,
+    version = 6,
     exportSchema = false
 )
 @TypeConverters(DateConverter::class)
@@ -24,6 +25,7 @@ abstract class AppDatabase : RoomDatabase() {
 
     abstract fun exchangeRateDao(): ExchangeRateDao
 
+    abstract fun todoDao(): TodoDao
 
     companion object {
 
@@ -103,6 +105,37 @@ abstract class AppDatabase : RoomDatabase() {
                     """
                     UPDATE trips
                     SET status = 'CURRENT'
+                    """.trimIndent()
+                )
+            }
+        }
+
+
+        val MIGRATION_5_6 = object : Migration(5, 6) {
+
+            override fun migrate(
+                database: SupportSQLiteDatabase
+            ) {
+
+                database.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS todos (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        tripId INTEGER NOT NULL,
+                        task TEXT NOT NULL,
+                        dueDate TEXT,
+                        assignedTo TEXT NOT NULL,
+                        completed INTEGER NOT NULL DEFAULT 0,
+                        notes TEXT,
+                        FOREIGN KEY(tripId) REFERENCES trips(id) ON DELETE CASCADE
+                    )
+                    """.trimIndent()
+                )
+
+                database.execSQL(
+                    """
+                    CREATE INDEX IF NOT EXISTS index_todos_tripId
+                    ON todos(tripId)
                     """.trimIndent()
                 )
             }

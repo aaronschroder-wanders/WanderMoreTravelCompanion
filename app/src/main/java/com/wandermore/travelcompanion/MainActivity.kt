@@ -40,7 +40,8 @@ class MainActivity : ComponentActivity() {
                     viewModel(
                         factory = TripViewModelFactory(
                             database.tripDao(),
-                            database.expenseDao()
+                            database.expenseDao(),
+                            database.todoDao()
                         )
                     )
 

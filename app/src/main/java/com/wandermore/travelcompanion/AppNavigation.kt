@@ -15,16 +15,20 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.wandermore.travelcompanion.database.ExpenseEntity
+import com.wandermore.travelcompanion.database.TodoEntity
 import com.wandermore.travelcompanion.model.Trip
 import com.wandermore.travelcompanion.ui.screens.AddExpenseScreen
+import com.wandermore.travelcompanion.ui.screens.AddTodoScreen
 import com.wandermore.travelcompanion.ui.screens.ArchivedTripsScreen
 import com.wandermore.travelcompanion.ui.screens.CategoryBreakdownScreen
 import com.wandermore.travelcompanion.ui.screens.CategoryExpensesScreen
 import com.wandermore.travelcompanion.ui.screens.CreateTripScreen
 import com.wandermore.travelcompanion.ui.screens.EditExpenseScreen
+import com.wandermore.travelcompanion.ui.screens.EditTodoScreen
 import com.wandermore.travelcompanion.ui.screens.EditTripScreen
 import com.wandermore.travelcompanion.ui.screens.ExchangeRateSettingsScreen
 import com.wandermore.travelcompanion.ui.screens.HomeScreen
+import com.wandermore.travelcompanion.ui.screens.TodoScreen
 import com.wandermore.travelcompanion.ui.screens.TripDetailsScreen
 import com.wandermore.travelcompanion.ui.screens.TripExpensesScreen
 import com.wandermore.travelcompanion.ui.screens.TripHubScreen
@@ -185,7 +189,10 @@ fun AppNavigation(
                         },
 
                         onToDo = {
-                            // Coming next
+
+                            navController.navigate(
+                                "todo/$tripId"
+                            )
                         },
 
                         onExpenses = {
@@ -228,6 +235,137 @@ fun AppNavigation(
 
                             tripViewModel.deleteTrip(
                                 tripId
+                            )
+
+                            navController.popBackStack()
+                        }
+                    )
+                }
+            }
+
+
+            // ---------------------------------------------------------
+            // TO DO
+            // ---------------------------------------------------------
+
+            composable(
+                "todo/{tripId}"
+            ) { entry ->
+
+                val tripId =
+                    entry.arguments
+                        ?.getString("tripId")
+                        ?.toLongOrNull()
+
+                if (tripId != null) {
+
+                    TodoScreen(
+
+                        tripId = tripId,
+
+                        tripViewModel =
+                            tripViewModel,
+
+                        onAddTodo = {
+
+                            navController.navigate(
+                                "addTodo/$tripId"
+                            )
+                        },
+
+                        onEditTodo = { todoId ->
+
+                            navController.navigate(
+                                "editTodo/$todoId"
+                            )
+                        },
+
+                        onBack = {
+
+                            navController.popBackStack()
+                        }
+                    )
+                }
+            }
+
+
+            // ---------------------------------------------------------
+            // ADD TO DO
+            // ---------------------------------------------------------
+
+            composable(
+                "addTodo/{tripId}"
+            ) { entry ->
+
+                val tripId =
+                    entry.arguments
+                        ?.getString("tripId")
+                        ?.toLongOrNull()
+
+                if (tripId != null) {
+
+                    AddTodoScreen(
+
+                        tripId = tripId,
+
+                        tripViewModel =
+                            tripViewModel,
+
+                        onTodoAdded = {
+
+                            navController.popBackStack()
+                        }
+                    )
+                }
+            }
+
+
+            // ---------------------------------------------------------
+            // EDIT TO DO
+            // ---------------------------------------------------------
+
+            composable(
+                "editTodo/{todoId}"
+            ) { entry ->
+
+                val todoId =
+                    entry.arguments
+                        ?.getString("todoId")
+                        ?.toLongOrNull()
+
+                var todo by remember {
+                    mutableStateOf<TodoEntity?>(null)
+                }
+
+                LaunchedEffect(todoId) {
+
+                    if (todoId != null) {
+
+                        todo =
+                            tripViewModel.getTodoById(
+                                todoId
+                            )
+                    }
+                }
+
+                todo?.let {
+
+                    EditTodoScreen(
+
+                        todo = it,
+
+                        tripViewModel =
+                            tripViewModel,
+
+                        onTodoUpdated = {
+
+                            navController.popBackStack()
+                        },
+
+                        onDeleteTodo = {
+
+                            tripViewModel.deleteTodo(
+                                it
                             )
 
                             navController.popBackStack()
@@ -395,10 +533,9 @@ fun AppNavigation(
                     if (tripId != null) {
 
                         trip =
-                            tripViewModel
-                                .getTripById(
-                                    tripId
-                                )
+                            tripViewModel.getTripById(
+                                tripId
+                            )
                     }
                 }
 
@@ -454,10 +591,9 @@ fun AppNavigation(
                     if (tripId != null) {
 
                         trip =
-                            tripViewModel
-                                .getTripById(
-                                    tripId
-                                )
+                            tripViewModel.getTripById(
+                                tripId
+                            )
                     }
                 }
 
@@ -516,10 +652,9 @@ fun AppNavigation(
                     if (tripId != null) {
 
                         trip =
-                            tripViewModel
-                                .getTripById(
-                                    tripId
-                                )
+                            tripViewModel.getTripById(
+                                tripId
+                            )
                     }
                 }
 
@@ -537,8 +672,7 @@ fun AppNavigation(
 
                         onExpenseAdded = {
 
-                            navController
-                                .popBackStack()
+                            navController.popBackStack()
                         }
                     )
                 }
@@ -567,10 +701,9 @@ fun AppNavigation(
                     if (expenseId != null) {
 
                         expense =
-                            tripViewModel
-                                .getExpenseById(
-                                    expenseId
-                                )
+                            tripViewModel.getExpenseById(
+                                expenseId
+                            )
                     }
                 }
 
@@ -588,19 +721,16 @@ fun AppNavigation(
 
                         onExpenseUpdated = {
 
-                            navController
-                                .popBackStack()
+                            navController.popBackStack()
                         },
 
                         onDeleteExpense = {
 
-                            tripViewModel
-                                .deleteExpense(
-                                    it
-                                )
+                            tripViewModel.deleteExpense(
+                                it
+                            )
 
-                            navController
-                                .popBackStack()
+                            navController.popBackStack()
                         }
                     )
                 }
@@ -629,10 +759,9 @@ fun AppNavigation(
                     if (tripId != null) {
 
                         trip =
-                            tripViewModel
-                                .getTripById(
-                                    tripId
-                                )
+                            tripViewModel.getTripById(
+                                tripId
+                            )
                     }
                 }
 
@@ -647,8 +776,7 @@ fun AppNavigation(
 
                         onTripUpdated = {
 
-                            navController
-                                .popBackStack()
+                            navController.popBackStack()
                         }
                     )
                 }

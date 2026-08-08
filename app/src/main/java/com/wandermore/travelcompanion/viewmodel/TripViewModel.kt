@@ -2,35 +2,33 @@ package com.wandermore.travelcompanion.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.wandermore.travelcompanion.model.Trip
-import com.wandermore.travelcompanion.model.TripStatus
 import com.wandermore.travelcompanion.data.repository.TripRepository
 import com.wandermore.travelcompanion.database.ExpenseDao
 import com.wandermore.travelcompanion.database.ExpenseEntity
+import com.wandermore.travelcompanion.database.TodoDao
+import com.wandermore.travelcompanion.database.TodoEntity
 import com.wandermore.travelcompanion.database.TripDao
+import com.wandermore.travelcompanion.model.Trip
+import com.wandermore.travelcompanion.model.TripStatus
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 
-
 class TripViewModel(
     tripDao: TripDao,
-    private val expenseDao: ExpenseDao
+    private val expenseDao: ExpenseDao,
+    private val todoDao: TodoDao
 ) : ViewModel() {
-
 
     private val repository = TripRepository(
         tripDao
     )
 
 
-
     fun getTrips(): Flow<List<Trip>> {
 
         return repository.getTrips()
-
     }
-
 
 
     fun getTripByIdFlow(
@@ -40,9 +38,7 @@ class TripViewModel(
         return repository.getTripByIdFlow(
             id
         )
-
     }
-
 
 
     suspend fun getTripById(
@@ -52,9 +48,7 @@ class TripViewModel(
         return repository.getTripById(
             id
         )
-
     }
-
 
 
     fun addTrip(
@@ -72,11 +66,8 @@ class TripViewModel(
                 endDate,
                 homeCurrency
             )
-
         }
-
     }
-
 
 
     fun updateTrip(
@@ -88,17 +79,13 @@ class TripViewModel(
             repository.updateTrip(
                 trip
             )
-
         }
-
     }
-
 
 
     // -------------------------
     // Trip status functions
     // -------------------------
-
 
     fun startTrip(
         tripId: Long
@@ -110,11 +97,8 @@ class TripViewModel(
                 tripId,
                 TripStatus.CURRENT
             )
-
         }
-
     }
-
 
 
     fun archiveTrip(
@@ -127,11 +111,8 @@ class TripViewModel(
                 tripId,
                 TripStatus.ARCHIVED
             )
-
         }
-
     }
-
 
 
     fun restoreTrip(
@@ -145,11 +126,8 @@ class TripViewModel(
                 tripId,
                 status
             )
-
         }
-
     }
-
 
 
     fun deleteTrip(
@@ -168,19 +146,14 @@ class TripViewModel(
                 repository.deleteTrip(
                     trip
                 )
-
             }
-
         }
-
     }
-
 
 
     // -------------------------
     // Expense functions
     // -------------------------
-
 
     fun addExpense(
         expense: ExpenseEntity
@@ -191,11 +164,8 @@ class TripViewModel(
             expenseDao.insertExpense(
                 expense
             )
-
         }
-
     }
-
 
 
     fun getExpensesForTrip(
@@ -205,9 +175,7 @@ class TripViewModel(
         return expenseDao.getExpensesForTrip(
             tripId
         )
-
     }
-
 
 
     suspend fun getExpenseById(
@@ -217,9 +185,7 @@ class TripViewModel(
         return expenseDao.getExpenseById(
             expenseId
         )
-
     }
-
 
 
     fun deleteExpense(
@@ -231,11 +197,8 @@ class TripViewModel(
             expenseDao.deleteExpense(
                 expense
             )
-
         }
-
     }
-
 
 
     fun updateExpense(
@@ -247,9 +210,69 @@ class TripViewModel(
             expenseDao.updateExpense(
                 expense
             )
-
         }
-
     }
 
+
+    // -------------------------
+    // To Do functions
+    // -------------------------
+
+    fun addTodo(
+        todo: TodoEntity
+    ) {
+
+        viewModelScope.launch {
+
+            todoDao.insertTodo(
+                todo
+            )
+        }
+    }
+
+
+    fun getTodosForTrip(
+        tripId: Long
+    ): Flow<List<TodoEntity>> {
+
+        return todoDao.getTodosForTrip(
+            tripId
+        )
+    }
+
+
+    suspend fun getTodoById(
+        todoId: Long
+    ): TodoEntity? {
+
+        return todoDao.getTodoById(
+            todoId
+        )
+    }
+
+
+    fun updateTodo(
+        todo: TodoEntity
+    ) {
+
+        viewModelScope.launch {
+
+            todoDao.updateTodo(
+                todo
+            )
+        }
+    }
+
+
+    fun deleteTodo(
+        todo: TodoEntity
+    ) {
+
+        viewModelScope.launch {
+
+            todoDao.deleteTodo(
+                todo
+            )
+        }
+    }
 }
