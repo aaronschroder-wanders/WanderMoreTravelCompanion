@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import com.wandermore.travelcompanion.database.ActivityEntity
 import com.wandermore.travelcompanion.util.formatDate
 import com.wandermore.travelcompanion.viewmodel.TripViewModel
+import java.util.Locale
 
 @Composable
 fun ActivitiesScreen(
@@ -437,13 +438,15 @@ private fun ActivityCard(
                     horizontalArrangement =
                         Arrangement.SpaceBetween,
                     verticalAlignment =
-                        Alignment.CenterVertically
+                        Alignment.Top
                 ) {
 
                     Text(
                         text = "Estimated cost",
                         style =
-                            MaterialTheme.typography.bodyMedium,
+                            MaterialTheme.typography.titleMedium,
+                        fontWeight =
+                            FontWeight.SemiBold,
                         color =
                             MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -452,6 +455,13 @@ private fun ActivityCard(
                         horizontalAlignment =
                             Alignment.End
                     ) {
+
+                        // -------------------------------------------------
+                        // FOREIGN CURRENCY AMOUNT
+                        //
+                        // Amount and currency now use the same
+                        // font size and appear together on one line.
+                        // -------------------------------------------------
 
                         Text(
                             text = buildString {
@@ -479,6 +489,12 @@ private fun ActivityCard(
                                 FontWeight.SemiBold
                         )
 
+                        // -------------------------------------------------
+                        // NZD CONVERSION
+                        //
+                        // Kept underneath the foreign currency value.
+                        // -------------------------------------------------
+
                         if (
                             activity.convertedAmount != null
                         ) {
@@ -486,7 +502,7 @@ private fun ActivityCard(
                             Text(
                                 text =
                                     "≈ NZD ${
-                                        "%.2f".format(
+                                        formatNzdAmount(
                                             activity.convertedAmount
                                         )
                                     }",
@@ -545,14 +561,34 @@ private fun formatActivityCost(
         currency in noDecimalCurrencies
     ) {
 
-        "%.0f".format(
+        String.format(
+            Locale.US,
+            "%,.0f",
             amount
         )
 
     } else {
 
-        "%.2f".format(
+        String.format(
+            Locale.US,
+            "%,.2f",
             amount
         )
     }
+}
+
+
+// =================================================================
+// NZD DISPLAY FORMATTING
+// =================================================================
+
+private fun formatNzdAmount(
+    amount: Double
+): String {
+
+    return String.format(
+        Locale.US,
+        "%,.2f",
+        amount
+    )
 }

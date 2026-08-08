@@ -95,7 +95,13 @@ fun EditActivityScreen(
 
     var startTime by remember {
         mutableStateOf(
-            activity.startTime?.toString() ?: ""
+            activity.startTime?.let {
+                String.format(
+                    "%02d:%02d",
+                    it.hour,
+                    it.minute
+                )
+            } ?: ""
         )
     }
 
@@ -143,21 +149,6 @@ fun EditActivityScreen(
     val parsedCost =
         estimatedCost.toDoubleOrNull()
 
-    val exchangeRate =
-        exchangeRateViewModel.getRate(
-            currency
-        )
-
-    val calculatedNZD =
-        if (
-            parsedCost != null &&
-            exchangeRate > 0
-        ) {
-            parsedCost * exchangeRate
-        } else {
-            null
-        }
-
     val parsedDate =
         try {
             if (date.isBlank()) {
@@ -169,16 +160,144 @@ fun EditActivityScreen(
             null
         }
 
-    val parsedStartTime =
-        try {
-            if (startTime.isBlank()) {
-                null
+    /*
+     * Accept flexible 24-hour time input:
+     *
+     * 9     -> 09:00
+     * 900   -> 09:00
+     * 0900  -> 09:00
+     * 09:00 -> 09:00
+     * 930   -> 09:30
+     * 23:45 -> 23:45
+     */
+    fun parseFlexibleTime(
+        input: String
+    ): LocalTime? {
+
+        val value =
+            input.trim()
+
+        if (value.isBlank()) {
+            return null
+        }
+
+        return try {
+
+            if (value.contains(":")) {
+
+                val parts =
+                    value.split(":")
+
+                if (parts.size != 2) {
+                    null
+                } else {
+
+                    val hour =
+                        parts[0].toInt()
+
+                    val minute =
+                        parts[1].toInt()
+
+                    if (
+                        hour in 0..23 &&
+                        minute in 0..59
+                    ) {
+                        LocalTime.of(
+                            hour,
+                            minute
+                        )
+                    } else {
+                        null
+                    }
+                }
+
             } else {
-                LocalTime.parse(startTime)
+
+                when (value.length) {
+
+                    1,
+                    2 -> {
+
+                        val hour =
+                            value.toInt()
+
+                        if (hour in 0..23) {
+                            LocalTime.of(
+                                hour,
+                                0
+                            )
+                        } else {
+                            null
+                        }
+                    }
+
+                    3 -> {
+
+                        val hour =
+                            value.substring(
+                                0,
+                                1
+                            ).toInt()
+
+                        val minute =
+                            value.substring(
+                                1,
+                                3
+                            ).toInt()
+
+                        if (
+                            hour in 0..23 &&
+                            minute in 0..59
+                        ) {
+                            LocalTime.of(
+                                hour,
+                                minute
+                            )
+                        } else {
+                            null
+                        }
+                    }
+
+                    4 -> {
+
+                        val hour =
+                            value.substring(
+                                0,
+                                2
+                            ).toInt()
+
+                        val minute =
+                            value.substring(
+                                2,
+                                4
+                            ).toInt()
+
+                        if (
+                            hour in 0..23 &&
+                            minute in 0..59
+                        ) {
+                            LocalTime.of(
+                                hour,
+                                minute
+                            )
+                        } else {
+                            null
+                        }
+                    }
+
+                    else -> null
+                }
             }
+
         } catch (_: Exception) {
             null
         }
+    }
+
+    val parsedStartTime =
+        parseFlexibleTime(
+            startTime
+        )
 
     Column(
         modifier = Modifier
@@ -236,189 +355,186 @@ fun EditActivityScreen(
             )
 
             Spacer(
-                modifier = Modifier.height(12.dp)
+                modifier = Modifier.height(10.dp)
             )
 
             // -----------------------------------------------------
-            // TYPE
+            // TYPE + LOCATION
             // -----------------------------------------------------
 
-            ExposedDropdownMenuBox(
-                expanded = typeExpanded,
-                onExpandedChange = {
-                    typeExpanded = !typeExpanded
-                }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement =
+                    Arrangement.spacedBy(8.dp)
             ) {
 
-                OutlinedTextField(
-                    value = type,
-                    onValueChange = {},
-                    readOnly = true,
-                    label = {
-                        Text("Type")
-                    },
-                    trailingIcon = {
-                        ExposedDropdownMenuDefaults.TrailingIcon(
-                            expanded = typeExpanded
-                        )
-                    },
-                    modifier = Modifier
-                        .menuAnchor()
-                        .fillMaxWidth()
-                )
-
-                ExposedDropdownMenu(
+                ExposedDropdownMenuBox(
                     expanded = typeExpanded,
-                    onDismissRequest = {
-                        typeExpanded = false
-                    }
+                    onExpandedChange = {
+                        typeExpanded =
+                            !typeExpanded
+                    },
+                    modifier = Modifier.weight(1f)
                 ) {
 
-                    activityTypes.forEach { activityType ->
+                    OutlinedTextField(
+                        value = type,
+                        onValueChange = {},
+                        readOnly = true,
+                        label = {
+                            Text("Type")
+                        },
+                        trailingIcon = {
+                            ExposedDropdownMenuDefaults
+                                .TrailingIcon(
+                                    expanded =
+                                        typeExpanded
+                                )
+                        },
+                        modifier = Modifier
+                            .menuAnchor()
+                            .fillMaxWidth()
+                    )
 
-                        DropdownMenuItem(
-                            text = {
-                                Text(activityType)
-                            },
-                            onClick = {
+                    ExposedDropdownMenu(
+                        expanded = typeExpanded,
+                        onDismissRequest = {
+                            typeExpanded = false
+                        }
+                    ) {
 
-                                type =
-                                    activityType
+                        activityTypes.forEach {
+                                activityType ->
 
-                                typeExpanded = false
-                            }
-                        )
+                            DropdownMenuItem(
+                                text = {
+                                    Text(
+                                        activityType
+                                    )
+                                },
+                                onClick = {
+
+                                    type =
+                                        activityType
+
+                                    typeExpanded =
+                                        false
+                                }
+                            )
+                        }
                     }
                 }
-            }
 
-            Spacer(
-                modifier = Modifier.height(12.dp)
-            )
-
-            // -----------------------------------------------------
-            // LOCATION
-            // -----------------------------------------------------
-
-            OutlinedTextField(
-                value = location,
-                onValueChange = {
-                    location = it
-                },
-                label = {
-                    Text("Location")
-                },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true
-            )
-
-            Spacer(
-                modifier = Modifier.height(12.dp)
-            )
-
-            // -----------------------------------------------------
-            // ESTIMATED COST
-            // -----------------------------------------------------
-
-            OutlinedTextField(
-                value = estimatedCost,
-                onValueChange = {
-                    estimatedCost = it
-                },
-                label = {
-                    Text("Estimated Cost")
-                },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(
-                    keyboardType =
-                        KeyboardType.Decimal
-                )
-            )
-
-            // -----------------------------------------------------
-            // NZD CONVERSION
-            // -----------------------------------------------------
-
-            if (calculatedNZD != null) {
-
-                Text(
-                    text =
-                        "≈ NZD %.2f".format(
-                            calculatedNZD
-                        ),
-                    style =
-                        MaterialTheme.typography.bodyMedium,
+                OutlinedTextField(
+                    value = location,
+                    onValueChange = {
+                        location = it
+                    },
+                    label = {
+                        Text("Location")
+                    },
                     modifier =
-                        Modifier.padding(
-                            start = 4.dp,
-                            top = 4.dp
-                        )
+                        Modifier.weight(1f),
+                    singleLine = true
                 )
             }
 
             Spacer(
-                modifier = Modifier.height(12.dp)
+                modifier = Modifier.height(10.dp)
             )
 
             // -----------------------------------------------------
-            // CURRENCY
+            // ESTIMATED COST + CURRENCY
             // -----------------------------------------------------
 
-            ExposedDropdownMenuBox(
-                expanded = currencyExpanded,
-                onExpandedChange = {
-                    currencyExpanded =
-                        !currencyExpanded
-                }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement =
+                    Arrangement.spacedBy(8.dp)
             ) {
 
                 OutlinedTextField(
-                    value = currency,
-                    onValueChange = {},
-                    readOnly = true,
+                    value = estimatedCost,
+                    onValueChange = {
+                        estimatedCost = it
+                    },
                     label = {
-                        Text("Currency")
+                        Text("Estimated Cost")
                     },
-                    trailingIcon = {
-                        ExposedDropdownMenuDefaults.TrailingIcon(
-                            expanded =
-                                currencyExpanded
+                    modifier =
+                        Modifier.weight(1f),
+                    singleLine = true,
+                    keyboardOptions =
+                        KeyboardOptions(
+                            keyboardType =
+                                KeyboardType.Decimal
                         )
-                    },
-                    modifier = Modifier
-                        .menuAnchor()
-                        .fillMaxWidth()
                 )
 
-                ExposedDropdownMenu(
-                    expanded = currencyExpanded,
-                    onDismissRequest = {
-                        currencyExpanded = false
-                    }
+                ExposedDropdownMenuBox(
+                    expanded =
+                        currencyExpanded,
+                    onExpandedChange = {
+                        currencyExpanded =
+                            !currencyExpanded
+                    },
+                    modifier =
+                        Modifier.weight(1f)
                 ) {
 
-                    currencies.forEach { currencyCode ->
+                    OutlinedTextField(
+                        value = currency,
+                        onValueChange = {},
+                        readOnly = true,
+                        label = {
+                            Text("Currency")
+                        },
+                        trailingIcon = {
+                            ExposedDropdownMenuDefaults
+                                .TrailingIcon(
+                                    expanded =
+                                        currencyExpanded
+                                )
+                        },
+                        modifier = Modifier
+                            .menuAnchor()
+                            .fillMaxWidth()
+                    )
 
-                        DropdownMenuItem(
-                            text = {
-                                Text(currencyCode)
-                            },
-                            onClick = {
+                    ExposedDropdownMenu(
+                        expanded =
+                            currencyExpanded,
+                        onDismissRequest = {
+                            currencyExpanded =
+                                false
+                        }
+                    ) {
 
-                                currency =
-                                    currencyCode
+                        currencies.forEach {
+                                currencyCode ->
 
-                                currencyExpanded =
-                                    false
-                            }
-                        )
+                            DropdownMenuItem(
+                                text = {
+                                    Text(
+                                        currencyCode
+                                    )
+                                },
+                                onClick = {
+
+                                    currency =
+                                        currencyCode
+
+                                    currencyExpanded =
+                                        false
+                                }
+                            )
+                        }
                     }
                 }
             }
 
             Spacer(
-                modifier = Modifier.height(12.dp)
+                modifier = Modifier.height(8.dp)
             )
 
             // -----------------------------------------------------
@@ -446,7 +562,7 @@ fun EditActivityScreen(
             }
 
             Spacer(
-                modifier = Modifier.height(12.dp)
+                modifier = Modifier.height(8.dp)
             )
 
             // -----------------------------------------------------
@@ -466,65 +582,76 @@ fun EditActivityScreen(
             )
 
             Spacer(
-                modifier = Modifier.height(12.dp)
+                modifier = Modifier.height(10.dp)
             )
 
             // -----------------------------------------------------
-            // DATE
+            // DATE + START TIME
             // -----------------------------------------------------
 
-            OutlinedTextField(
-                value = date,
-                onValueChange = {},
-                readOnly = true,
-                label = {
-                    Text("Date")
-                },
-                placeholder = {
-                    Text("Select date")
-                },
-                trailingIcon = {
-
-                    TextButton(
-                        onClick = {
-                            showDatePicker = true
-                        }
-                    ) {
-
-                        Text(
-                            if (date.isBlank()) {
-                                "Select"
-                            } else {
-                                "Change"
-                            }
-                        )
-                    }
-                },
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Spacer(
-                modifier = Modifier.height(12.dp)
-            )
-
-            // -----------------------------------------------------
-            // START TIME
-            // -----------------------------------------------------
-
-            OutlinedTextField(
-                value = startTime,
-                onValueChange = {
-                    startTime = it
-                },
-                label = {
-                    Text("Start Time (HH:MM)")
-                },
+            Row(
                 modifier = Modifier.fillMaxWidth(),
-                singleLine = true
-            )
+                horizontalArrangement =
+                    Arrangement.spacedBy(8.dp)
+            ) {
+
+                OutlinedTextField(
+                    value = date,
+                    onValueChange = {},
+                    readOnly = true,
+                    label = {
+                        Text("Date")
+                    },
+                    placeholder = {
+                        Text("Select")
+                    },
+                    trailingIcon = {
+
+                        TextButton(
+                            onClick = {
+                                showDatePicker = true
+                            }
+                        ) {
+
+                            Text(
+                                if (
+                                    date.isBlank()
+                                ) {
+                                    "Select"
+                                } else {
+                                    "Change"
+                                }
+                            )
+                        }
+                    },
+                    modifier =
+                        Modifier.weight(1f)
+                )
+
+                OutlinedTextField(
+                    value = startTime,
+                    onValueChange = {
+                        startTime = it
+                    },
+                    label = {
+                        Text("Start Time")
+                    },
+                    placeholder = {
+                        Text("HH:MM")
+                    },
+                    modifier =
+                        Modifier.weight(1f),
+                    singleLine = true,
+                    keyboardOptions =
+                        KeyboardOptions(
+                            keyboardType =
+                                KeyboardType.Number
+                        )
+                )
+            }
 
             Spacer(
-                modifier = Modifier.height(12.dp)
+                modifier = Modifier.height(10.dp)
             )
 
             // -----------------------------------------------------
@@ -540,11 +667,12 @@ fun EditActivityScreen(
                     Text("Notes")
                 },
                 modifier = Modifier.fillMaxWidth(),
-                minLines = 4
+                minLines = 3,
+                maxLines = 3
             )
 
             Spacer(
-                modifier = Modifier.height(24.dp)
+                modifier = Modifier.height(20.dp)
             )
 
             // -----------------------------------------------------
@@ -591,6 +719,49 @@ fun EditActivityScreen(
 
                     if (name.isNotBlank()) {
 
+                        /*
+                         * Calculate the NZD value at save time.
+                         *
+                         * The database stores:
+                         *
+                         * 1 foreign currency = X NZD
+                         *
+                         * So:
+                         *
+                         * foreign amount × rateToNZD = NZD amount
+                         */
+
+                        val convertedAmount =
+                            if (parsedCost != null) {
+
+                                if (
+                                    currency == "NZD"
+                                ) {
+
+                                    parsedCost
+
+                                } else {
+
+                                    val rate =
+                                        exchangeRateViewModel
+                                            .getRate(
+                                                currency
+                                            )
+
+                                    if (rate > 0.0) {
+
+                                        parsedCost * rate
+
+                                    } else {
+
+                                        null
+                                    }
+                                }
+
+                            } else {
+                                null
+                            }
+
                         val updatedActivity =
                             activity.copy(
 
@@ -620,7 +791,7 @@ fun EditActivityScreen(
                                     },
 
                                 convertedAmount =
-                                    calculatedNZD,
+                                    convertedAmount,
 
                                 booked =
                                     booked,

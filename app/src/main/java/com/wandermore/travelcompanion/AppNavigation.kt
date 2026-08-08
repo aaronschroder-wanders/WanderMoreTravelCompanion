@@ -182,7 +182,8 @@ fun AppNavigation(
 
                         tripId = tripId,
 
-                        tripViewModel = tripViewModel,
+                        tripViewModel =
+                            tripViewModel,
 
                         onItinerary = {
                             // Coming later
@@ -548,7 +549,8 @@ fun AppNavigation(
 
                         tripId = tripId,
 
-                        tripViewModel = tripViewModel,
+                        tripViewModel =
+                            tripViewModel,
 
                         onAddExpense = {
 
@@ -583,7 +585,6 @@ fun AppNavigation(
             // ---------------------------------------------------------
             // OLD TRIP DETAILS
             // ---------------------------------------------------------
-            // Kept temporarily while the Trip Hub replaces it.
 
             composable(
                 "tripDetails/{tripId}"
@@ -600,7 +601,8 @@ fun AppNavigation(
 
                         tripId = tripId,
 
-                        tripViewModel = tripViewModel,
+                        tripViewModel =
+                            tripViewModel,
 
                         onEditTrip = {
 
@@ -699,9 +701,11 @@ fun AppNavigation(
 
                         tripId = it.id,
 
-                        currency = it.homeCurrency,
+                        currency =
+                            it.homeCurrency,
 
-                        tripViewModel = tripViewModel,
+                        tripViewModel =
+                            tripViewModel,
 
                         onCategorySelected = { category ->
 
@@ -766,7 +770,8 @@ fun AppNavigation(
                         currency =
                             trip!!.homeCurrency,
 
-                        tripViewModel = tripViewModel,
+                        tripViewModel =
+                            tripViewModel,
 
                         onEditExpense = { expenseId ->
 
