@@ -9,13 +9,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -37,15 +37,50 @@ fun ItineraryScreen(
     onBack: () -> Unit
 ) {
 
+    // ---------------------------------------------------------
+    // LOAD TRIP
+    // ---------------------------------------------------------
+
     val tripState by tripViewModel
         .getTripByIdFlow(tripId)
         .collectAsState(initial = null)
 
-    val currentTrip = tripState ?: return
+    val currentTrip =
+        tripState ?: return
+
+    // ---------------------------------------------------------
+    // LOAD ITINERARY
+    // ---------------------------------------------------------
 
     val itinerary by tripViewModel
         .getItineraryForTrip(currentTrip.id)
         .collectAsState(initial = emptyList())
+
+    // ---------------------------------------------------------
+    // SORT
+    // ---------------------------------------------------------
+
+    val sortedItinerary =
+        itinerary.sortedWith(
+            compareBy<ItineraryEntity> {
+                it.date
+            }.thenBy {
+                it.time
+            }
+        )
+
+    // ---------------------------------------------------------
+    // GROUP BY DATE
+    // ---------------------------------------------------------
+
+    val itineraryByDate =
+        sortedItinerary.groupBy {
+            it.date
+        }
+
+    // ---------------------------------------------------------
+    // SCREEN
+    // ---------------------------------------------------------
 
     Column(
         modifier = Modifier
@@ -53,9 +88,9 @@ fun ItineraryScreen(
             .padding(16.dp)
     ) {
 
-        // ---------------------------------------------------------
+        // -----------------------------------------------------
         // HEADER
-        // ---------------------------------------------------------
+        // -----------------------------------------------------
 
         Text(
             text = "Itinerary",
@@ -77,23 +112,26 @@ fun ItineraryScreen(
             modifier = Modifier.height(16.dp)
         )
 
-        // ---------------------------------------------------------
+        // -----------------------------------------------------
         // ITINERARY LIST
-        // ---------------------------------------------------------
+        // -----------------------------------------------------
 
-        if (itinerary.isEmpty()) {
+        if (sortedItinerary.isEmpty()) {
 
             Column(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth(),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally
+                verticalArrangement =
+                    Arrangement.Center,
+                horizontalAlignment =
+                    Alignment.CenterHorizontally
             ) {
 
                 Text(
                     text = "No itinerary items yet.",
-                    style = MaterialTheme.typography.titleMedium
+                    style =
+                        MaterialTheme.typography.titleMedium
                 )
 
                 Spacer(
@@ -101,9 +139,13 @@ fun ItineraryScreen(
                 )
 
                 Text(
-                    text = "Add your travel plans, accommodation and other key events.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    text =
+                        "Add your travel plans, accommodation and other key events.",
+                    style =
+                        MaterialTheme.typography.bodyMedium,
+                    color =
+                        MaterialTheme.colorScheme
+                            .onSurfaceVariant
                 )
             }
 
@@ -111,20 +153,58 @@ fun ItineraryScreen(
 
             LazyColumn(
                 modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
+                verticalArrangement =
+                    Arrangement.spacedBy(10.dp)
             ) {
 
-                items(
-                    items = itinerary,
-                    key = { it.id }
-                ) { item ->
+                itineraryByDate.forEach {
+                        (date, itemsForDate) ->
 
-                    ItineraryCard(
-                        item = item,
-                        onClick = {
-                            onItinerarySelected(item.id)
+                    // -------------------------------------------------
+                    // DATE HEADING
+                    // -------------------------------------------------
+
+                    item(
+                        key = "date_$date"
+                    ) {
+
+                        Text(
+                            text =
+                                formatItineraryDate(date),
+                            style =
+                                MaterialTheme.typography.titleMedium,
+                            fontWeight =
+                                FontWeight.SemiBold,
+                            color =
+                                MaterialTheme.colorScheme.primary,
+                            modifier =
+                                Modifier.padding(
+                                    top = 4.dp,
+                                    bottom = 2.dp
+                                )
+                        )
+                    }
+
+                    // -------------------------------------------------
+                    // ITEMS FOR DATE
+                    // -------------------------------------------------
+
+                    items(
+                        items = itemsForDate,
+                        key = {
+                            it.id
                         }
-                    )
+                    ) { item ->
+
+                        ItineraryCard(
+                            item = item,
+                            onClick = {
+                                onItinerarySelected(
+                                    item.id
+                                )
+                            }
+                        )
+                    }
                 }
             }
         }
@@ -139,10 +219,11 @@ fun ItineraryScreen(
 
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            horizontalArrangement =
+                Arrangement.spacedBy(12.dp)
         ) {
 
-            OutlinedButton(
+            Button(
                 onClick = onBack,
                 modifier = Modifier.weight(1f)
             ) {
@@ -159,7 +240,6 @@ fun ItineraryScreen(
     }
 }
 
-
 // =================================================================
 // ITINERARY CARD
 // =================================================================
@@ -173,119 +253,233 @@ private fun ItineraryCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = 2.dp
-        ),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainer
-        )
+            .clickable(
+                onClick = onClick
+            ),
+        elevation =
+            CardDefaults.cardElevation(
+                defaultElevation = 2.dp
+            ),
+        colors =
+            CardDefaults.cardColors(
+                containerColor =
+                    MaterialTheme.colorScheme.surfaceContainer
+            )
     ) {
 
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(14.dp)
+                .padding(
+                    horizontal = 14.dp,
+                    vertical = 12.dp
+                )
         ) {
 
             // -----------------------------------------------------
-            // DATE
+            // TITLE ROW
             // -----------------------------------------------------
 
-            Text(
-                text = formatItineraryDate(item.date),
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.primary,
-                fontWeight = FontWeight.SemiBold
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment =
+                    Alignment.CenterVertically
+            ) {
 
-            Spacer(
-                modifier = Modifier.height(3.dp)
-            )
-
-            // -----------------------------------------------------
-            // TIME
-            // -----------------------------------------------------
-
-            if (item.time != null) {
+                // Small type symbol
 
                 Text(
-                    text = item.time.format(
-                        DateTimeFormatter.ofPattern("HH:mm")
-                    ),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    text =
+                        itinerarySymbol(item.type),
+                    style =
+                        MaterialTheme.typography.titleMedium,
+                    modifier =
+                        Modifier.size(26.dp)
                 )
+
+                Spacer(
+                    modifier =
+                        Modifier.size(8.dp)
+                )
+
+                // Title
+
+                Text(
+                    text = item.title,
+                    style =
+                        MaterialTheme.typography.titleMedium,
+                    fontWeight =
+                        FontWeight.SemiBold,
+                    modifier =
+                        Modifier.weight(1f)
+                )
+
+                // Type — top right
+
+                if (item.type.isNotBlank()) {
+
+                    Text(
+                        text = item.type,
+                        style =
+                            MaterialTheme.typography.labelSmall,
+                        color =
+                            MaterialTheme.colorScheme.primary,
+                        fontWeight =
+                            FontWeight.Medium
+                    )
+                }
             }
 
             // -----------------------------------------------------
-            // TITLE
+            // TIME / NIGHTS / DEPARTURE
             // -----------------------------------------------------
 
-            Text(
-                text = item.title,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold
-            )
+            val hasTime =
+                item.time != null
 
-            // -----------------------------------------------------
-            // TYPE
-            // -----------------------------------------------------
+            val hasNights =
+                item.nights != null &&
+                        item.nights > 0
 
-            if (item.type.isNotBlank()) {
+            if (hasTime || hasNights) {
 
                 Spacer(
-                    modifier = Modifier.height(2.dp)
+                    modifier =
+                        Modifier.height(4.dp)
                 )
 
-                Text(
-                    text = item.type,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
+                Row(
+                    verticalAlignment =
+                        Alignment.CenterVertically
+                ) {
 
-            // -----------------------------------------------------
-            // LOCATION
-            // -----------------------------------------------------
+                    // TIME
 
-            if (!item.location.isNullOrBlank()) {
+                    if (hasTime) {
 
-                Spacer(
-                    modifier = Modifier.height(2.dp)
-                )
+                        Text(
+                            text =
+                                "🕐 " +
+                                        item.time!!.format(
+                                            DateTimeFormatter.ofPattern(
+                                                "HH:mm"
+                                            )
+                                        ),
+                            style =
+                                MaterialTheme.typography.bodySmall,
+                            color =
+                                MaterialTheme.colorScheme
+                                    .onSurfaceVariant,
+                            fontWeight =
+                                FontWeight.Medium
+                        )
+                    }
 
-                Text(
-                    text = item.location,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
+                    // SPACE BETWEEN TIME AND NIGHTS
 
-            // -----------------------------------------------------
-            // NIGHTS
-            // -----------------------------------------------------
+                    if (hasTime && hasNights) {
 
-            if (item.nights != null && item.nights > 0) {
+                        Spacer(
+                            modifier =
+                                Modifier.size(16.dp)
+                        )
+                    }
 
-                Spacer(
-                    modifier = Modifier.height(4.dp)
-                )
+                    // NIGHTS
 
-                Text(
-                    text = if (item.nights == 1) {
-                        "1 night"
-                    } else {
-                        "${item.nights} nights"
-                    },
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                    if (hasNights) {
+
+                        Text(
+                            text =
+                                if (item.nights == 1) {
+                                    "🛏 1 night"
+                                } else {
+                                    "🛏 ${item.nights} nights"
+                                },
+                            style =
+                                MaterialTheme.typography.bodySmall,
+                            color =
+                                MaterialTheme.colorScheme
+                                    .onSurfaceVariant
+                        )
+                    }
+
+                    // SPACE BEFORE DEPARTURE
+
+                    if (hasNights) {
+
+                        Spacer(
+                            modifier =
+                                Modifier.size(16.dp)
+                        )
+
+                        // DEPARTURE DATE
+
+                        Text(
+                            text =
+                                "→ " +
+                                        item.date
+                                            .plusDays(
+                                                item.nights!!
+                                                    .toLong()
+                                            )
+                                            .format(
+                                                DateTimeFormatter.ofPattern(
+                                                    "dd MMM"
+                                                )
+                                            ),
+                            style =
+                                MaterialTheme.typography.bodySmall,
+                            color =
+                                MaterialTheme.colorScheme
+                                    .onSurfaceVariant,
+                            fontWeight =
+                                FontWeight.Medium
+                        )
+                    }
+                }
             }
         }
     }
 }
 
+// =================================================================
+// ITINERARY TYPE SYMBOL
+// =================================================================
+
+private fun itinerarySymbol(
+    type: String
+): String {
+
+    return when (
+        type.trim().lowercase()
+    ) {
+
+        "travel" ->
+            "🚆"
+
+        "accommodation" ->
+            "🏨"
+
+        "activity" ->
+            "🎯"
+
+        "attraction" ->
+            "📸"
+
+        "arrival" ->
+            "🛬"
+
+        "departure" ->
+            "🛫"
+
+        "other" ->
+            "📌"
+
+        else ->
+            "📅"
+    }
+}
 
 // =================================================================
 // DATE FORMATTING
@@ -301,7 +495,7 @@ private fun formatItineraryDate(
 
     return date.format(
         DateTimeFormatter.ofPattern(
-            "dd MMM yyyy"
+            "EEEE, dd MMM yyyy"
         )
     )
 }

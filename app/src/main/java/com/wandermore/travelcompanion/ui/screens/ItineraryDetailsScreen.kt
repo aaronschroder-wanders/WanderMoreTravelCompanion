@@ -8,15 +8,16 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -32,44 +33,26 @@ fun ItineraryDetailsScreen(
 ) {
 
     val dateFormatter =
-        DateTimeFormatter.ofPattern("dd MMM yyyy")
+        DateTimeFormatter.ofPattern(
+            "EEEE, dd MMM yyyy"
+        )
 
     val timeFormatter =
-        DateTimeFormatter.ofPattern("HH:mm")
+        DateTimeFormatter.ofPattern(
+            "HH:mm"
+        )
+
+    // =========================================================
+    // SCREEN
+    // =========================================================
 
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
+        modifier = Modifier.fillMaxSize()
     ) {
 
-        // -----------------------------------------------------
-        // HEADER
-        // -----------------------------------------------------
-
-        Text(
-            text = "Itinerary Item",
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.SemiBold
-        )
-
-        Spacer(
-            modifier = Modifier.height(4.dp)
-        )
-
-        Text(
-            text = itinerary.title,
-            style = MaterialTheme.typography.titleLarge,
-            color = MaterialTheme.colorScheme.primary
-        )
-
-        Spacer(
-            modifier = Modifier.height(16.dp)
-        )
-
-        // -----------------------------------------------------
-        // DETAILS
-        // -----------------------------------------------------
+        // =====================================================
+        // SCROLLABLE CONTENT
+        // =====================================================
 
         Column(
             modifier = Modifier
@@ -78,17 +61,133 @@ fun ItineraryDetailsScreen(
                 .verticalScroll(
                     rememberScrollState()
                 )
+                .padding(16.dp)
         ) {
 
+            // -------------------------------------------------
+            // HEADER
+            // -------------------------------------------------
+
+            Text(
+                text = "Itinerary Item",
+                style =
+                    MaterialTheme.typography.headlineMedium,
+                fontWeight =
+                    FontWeight.SemiBold
+            )
+
+            Spacer(
+                modifier = Modifier.height(16.dp)
+            )
+
+            // -------------------------------------------------
+            // MAIN TITLE CARD
+            // -------------------------------------------------
+
             Card(
-                modifier = Modifier.fillMaxWidth(),
-                elevation = CardDefaults.cardElevation(
-                    defaultElevation = 2.dp
-                ),
-                colors = CardDefaults.cardColors(
-                    containerColor =
-                        MaterialTheme.colorScheme.surfaceContainer
-                )
+                modifier =
+                    Modifier.fillMaxWidth(),
+                elevation =
+                    CardDefaults.cardElevation(
+                        defaultElevation = 2.dp
+                    ),
+                colors =
+                    CardDefaults.cardColors(
+                        containerColor =
+                            MaterialTheme.colorScheme
+                                .surfaceContainer
+                    )
+            ) {
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    verticalAlignment =
+                        Alignment.CenterVertically
+                ) {
+
+                    // -----------------------------------------
+                    // TYPE SYMBOL
+                    // -----------------------------------------
+
+                    Text(
+                        text =
+                            itinerarySymbol(
+                                itinerary.type
+                            ),
+                        style =
+                            MaterialTheme.typography
+                                .headlineMedium,
+                        modifier =
+                            Modifier.size(42.dp)
+                    )
+
+                    Spacer(
+                        modifier =
+                            Modifier.size(12.dp)
+                    )
+
+                    // -----------------------------------------
+                    // TITLE + TYPE
+                    // -----------------------------------------
+
+                    Column(
+                        modifier =
+                            Modifier.weight(1f)
+                    ) {
+
+                        Text(
+                            text =
+                                itinerary.title,
+                            style =
+                                MaterialTheme.typography
+                                    .titleLarge,
+                            fontWeight =
+                                FontWeight.Bold
+                        )
+
+                        if (
+                            itinerary.type.isNotBlank()
+                        ) {
+
+                            Spacer(
+                                modifier =
+                                    Modifier.height(3.dp)
+                            )
+
+                            Text(
+                                text =
+                                    itinerary.type,
+                                style =
+                                    MaterialTheme.typography
+                                        .bodyMedium,
+                                color =
+                                    MaterialTheme.colorScheme
+                                        .primary,
+                                fontWeight =
+                                    FontWeight.Medium
+                            )
+                        }
+                    }
+                }
+            }
+
+            Spacer(
+                modifier = Modifier.height(14.dp)
+            )
+
+            // -------------------------------------------------
+            // DATE & TIME CARD
+            // -------------------------------------------------
+
+            Card(
+                modifier =
+                    Modifier.fillMaxWidth(),
+                elevation =
+                    CardDefaults.cardElevation(
+                        defaultElevation = 1.dp
+                    )
             ) {
 
                 Column(
@@ -96,186 +195,396 @@ fun ItineraryDetailsScreen(
                         .fillMaxWidth()
                         .padding(16.dp),
                     verticalArrangement =
-                        Arrangement.spacedBy(12.dp)
+                        Arrangement.spacedBy(14.dp)
                 ) {
 
-                    // -------------------------------------------------
+                    // -----------------------------------------
                     // DATE
-                    // -------------------------------------------------
+                    // -----------------------------------------
 
-                    DetailRow(
+                    DetailLine(
+                        icon = "📅",
                         label = "Date",
-                        value = itinerary.date.format(
-                            dateFormatter
-                        )
+                        value =
+                            itinerary.date.format(
+                                dateFormatter
+                            )
                     )
 
-                    // -------------------------------------------------
+                    // -----------------------------------------
                     // TIME
-                    // -------------------------------------------------
+                    // -----------------------------------------
 
                     itinerary.time?.let { time ->
 
-                        DetailRow(
+                        DetailLine(
+                            icon = "🕐",
                             label = "Time",
-                            value = time.format(
-                                timeFormatter
-                            )
+                            value =
+                                time.format(
+                                    timeFormatter
+                                )
                         )
                     }
 
-                    // -------------------------------------------------
-                    // TYPE
-                    // -------------------------------------------------
-
-                    if (itinerary.type.isNotBlank()) {
-
-                        DetailRow(
-                            label = "Type",
-                            value = itinerary.type
-                        )
-                    }
-
-                    // -------------------------------------------------
-                    // NIGHTS
-                    // -------------------------------------------------
+                    // -----------------------------------------
+                    // DEPARTURE
+                    // Calculated from Date + Nights
+                    // -----------------------------------------
 
                     itinerary.nights?.let { nights ->
 
                         if (nights > 0) {
 
-                            DetailRow(
-                                label = "Nights",
+                            val departureDate =
+                                itinerary.date.plusDays(
+                                    nights.toLong()
+                                )
+
+                            DetailLine(
+                                icon = "🚪",
+                                label = "Departure",
                                 value =
-                                    if (nights == 1) {
-                                        "1 night"
-                                    } else {
-                                        "$nights nights"
-                                    }
+                                    departureDate.format(
+                                        dateFormatter
+                                    )
                             )
                         }
                     }
+                }
+            }
 
-                    // -------------------------------------------------
-                    // LOCATION
-                    // -------------------------------------------------
+            // -------------------------------------------------
+            // LOCATION
+            // -------------------------------------------------
 
-                    itinerary.location?.let { location ->
+            if (
+                !itinerary.location
+                    .isNullOrBlank()
+            ) {
 
-                        if (location.isNotBlank()) {
+                Spacer(
+                    modifier =
+                        Modifier.height(14.dp)
+                )
 
-                            DetailRow(
-                                label = "Location",
-                                value = location
-                            )
-                        }
-                    }
+                DetailSectionCard {
 
-                    // -------------------------------------------------
-                    // NOTES
-                    // -------------------------------------------------
+                    DetailLine(
+                        icon = "📍",
+                        label = "Location",
+                        value =
+                            itinerary.location!!
+                    )
+                }
+            }
 
-                    itinerary.notes?.let { notes ->
+            // -------------------------------------------------
+            // NIGHTS
+            // -------------------------------------------------
 
-                        if (notes.isNotBlank()) {
+            itinerary.nights?.let { nights ->
 
-                            DetailRow(
-                                label = "Notes",
-                                value = notes
-                            )
-                        }
-                    }
+                if (nights > 0) {
 
-                    // -------------------------------------------------
-                    // LINKED BOOKING
-                    // -------------------------------------------------
+                    Spacer(
+                        modifier =
+                            Modifier.height(14.dp)
+                    )
 
-                    itinerary.bookingId?.let { bookingId ->
+                    DetailSectionCard {
 
-                        DetailRow(
-                            label = "Booking",
-                            value = "Booking #$bookingId"
+                        DetailLine(
+                            icon = "🛏",
+                            label = "Stay",
+                            value =
+                                if (nights == 1) {
+                                    "1 night"
+                                } else {
+                                    "$nights nights"
+                                }
                         )
                     }
                 }
             }
+
+            // -------------------------------------------------
+            // NOTES
+            // -------------------------------------------------
+
+            if (
+                !itinerary.notes
+                    .isNullOrBlank()
+            ) {
+
+                Spacer(
+                    modifier =
+                        Modifier.height(14.dp)
+                )
+
+                Card(
+                    modifier =
+                        Modifier.fillMaxWidth(),
+                    elevation =
+                        CardDefaults.cardElevation(
+                            defaultElevation = 1.dp
+                        )
+                ) {
+
+                    Column(
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp)
+                    ) {
+
+                        Text(
+                            text = "Notes",
+                            style =
+                                MaterialTheme.typography
+                                    .titleMedium,
+                            fontWeight =
+                                FontWeight.SemiBold,
+                            color =
+                                MaterialTheme.colorScheme
+                                    .primary
+                        )
+
+                        Spacer(
+                            modifier =
+                                Modifier.height(8.dp)
+                        )
+
+                        Text(
+                            text =
+                                itinerary.notes!!,
+                            style =
+                                MaterialTheme.typography
+                                    .bodyLarge
+                        )
+                    }
+                }
+            }
+
+            // -------------------------------------------------
+            // LINKED BOOKING
+            // -------------------------------------------------
+
+            itinerary.bookingId?.let { bookingId ->
+
+                Spacer(
+                    modifier =
+                        Modifier.height(14.dp)
+                )
+
+                DetailSectionCard {
+
+                    DetailLine(
+                        icon = "🎫",
+                        label = "Booking",
+                        value =
+                            "Booking #$bookingId"
+                    )
+                }
+            }
+
+            Spacer(
+                modifier =
+                    Modifier.height(20.dp)
+            )
         }
 
-        Spacer(
-            modifier = Modifier.height(12.dp)
-        )
+        // =====================================================
+        // FIXED ACTION BUTTONS
+        // =====================================================
 
-        // -----------------------------------------------------
-        // ACTION BUTTONS
-        // -----------------------------------------------------
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement =
-                Arrangement.spacedBy(12.dp)
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(
+                    start = 16.dp,
+                    end = 16.dp,
+                    top = 8.dp,
+                    bottom = 10.dp
+                )
         ) {
 
-            OutlinedButton(
-                onClick = onBack,
-                modifier = Modifier.weight(1f)
+            // -------------------------------------------------
+            // BACK + EDIT
+            // -------------------------------------------------
+
+            Row(
+                modifier =
+                    Modifier.fillMaxWidth(),
+                horizontalArrangement =
+                    Arrangement.spacedBy(12.dp)
             ) {
-                Text("Back")
+
+                Button(
+                    onClick = onBack,
+                    modifier =
+                        Modifier.weight(1f)
+                ) {
+                    Text("Back")
+                }
+
+                Button(
+                    onClick = onEdit,
+                    modifier =
+                        Modifier.weight(1f)
+                ) {
+                    Text("Edit")
+                }
             }
+
+            Spacer(
+                modifier =
+                    Modifier.height(10.dp)
+            )
+
+            // -------------------------------------------------
+            // DELETE
+            // -------------------------------------------------
 
             Button(
-                onClick = onEdit,
-                modifier = Modifier.weight(1f)
+                onClick = onDelete,
+                modifier =
+                    Modifier.fillMaxWidth()
             ) {
-                Text("Edit")
+                Text("Delete Itinerary Item")
             }
-        }
-
-        Spacer(
-            modifier = Modifier.height(10.dp)
-        )
-
-        // -----------------------------------------------------
-        // DELETE
-        // -----------------------------------------------------
-
-        OutlinedButton(
-            onClick = onDelete,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text("Delete Itinerary Item")
         }
     }
 }
 
-
 // =============================================================
-// DETAIL ROW
+// DETAIL SECTION CARD
 // =============================================================
 
 @Composable
-private fun DetailRow(
+private fun DetailSectionCard(
+    content: @Composable () -> Unit
+) {
+
+    Card(
+        modifier =
+            Modifier.fillMaxWidth(),
+        elevation =
+            CardDefaults.cardElevation(
+                defaultElevation = 1.dp
+            )
+    ) {
+
+        Column(
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+        ) {
+
+            content()
+        }
+    }
+}
+
+// =============================================================
+// DETAIL LINE
+// =============================================================
+
+@Composable
+private fun DetailLine(
+    icon: String,
     label: String,
     value: String
 ) {
 
-    Column(
-        modifier = Modifier.fillMaxWidth()
+    Row(
+        modifier =
+            Modifier.fillMaxWidth(),
+        verticalAlignment =
+            Alignment.Top
     ) {
 
         Text(
-            text = label,
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            fontWeight = FontWeight.SemiBold
+            text = icon,
+            style =
+                MaterialTheme.typography
+                    .titleMedium,
+            modifier =
+                Modifier.size(30.dp)
         )
 
         Spacer(
-            modifier = Modifier.height(2.dp)
+            modifier =
+                Modifier.size(8.dp)
         )
 
-        Text(
-            text = value,
-            style = MaterialTheme.typography.bodyLarge
-        )
+        Column(
+            modifier =
+                Modifier.weight(1f)
+        ) {
+
+            Text(
+                text = label,
+                style =
+                    MaterialTheme.typography
+                        .labelLarge,
+                color =
+                    MaterialTheme.colorScheme
+                        .onSurfaceVariant,
+                fontWeight =
+                    FontWeight.SemiBold
+            )
+
+            Spacer(
+                modifier =
+                    Modifier.height(2.dp)
+            )
+
+            Text(
+                text = value,
+                style =
+                    MaterialTheme.typography
+                        .bodyLarge
+            )
+        }
+    }
+}
+
+// =============================================================
+// ITINERARY TYPE SYMBOL
+// =============================================================
+
+private fun itinerarySymbol(
+    type: String
+): String {
+
+    return when (
+        type.trim().lowercase()
+    ) {
+
+        "travel" ->
+            "🚆"
+
+        "accommodation" ->
+            "🏨"
+
+        "activity" ->
+            "🎯"
+
+        "attraction" ->
+            "📸"
+
+        "arrival" ->
+            "🛬"
+
+        "departure" ->
+            "🛫"
+
+        "other" ->
+            "📌"
+
+        else ->
+            "📅"
     }
 }

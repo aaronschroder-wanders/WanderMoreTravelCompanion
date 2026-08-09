@@ -14,10 +14,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -51,9 +48,9 @@ fun EditItineraryScreen(
     onBack: () -> Unit
 ) {
 
-// ---------------------------------------------------------
-// FORM STATE
-// ---------------------------------------------------------
+    // ---------------------------------------------------------
+    // FORM STATE
+    // ---------------------------------------------------------
 
     var existingItem by remember {
         mutableStateOf<ItineraryEntity?>(null)
@@ -95,27 +92,9 @@ fun EditItineraryScreen(
         mutableStateOf(false)
     }
 
-    var typeExpanded by remember {
-        mutableStateOf(false)
-    }
-
-// ---------------------------------------------------------
-// ITINERARY TYPES
-// ---------------------------------------------------------
-
-    val itineraryTypes = listOf(
-        "Travel",
-        "Accommodation",
-        "Activity",
-        "Attraction",
-        "Arrival",
-        "Departure",
-        "Other"
-    )
-
-// ---------------------------------------------------------
-// LOAD EXISTING ITINERARY ITEM
-// ---------------------------------------------------------
+    // ---------------------------------------------------------
+    // LOAD EXISTING ITEM
+    // ---------------------------------------------------------
 
     LaunchedEffect(itineraryId) {
 
@@ -141,9 +120,9 @@ fun EditItineraryScreen(
         }
     }
 
-// ---------------------------------------------------------
-// WAIT FOR ITEM TO LOAD
-// ---------------------------------------------------------
+    // ---------------------------------------------------------
+    // WAIT FOR ITEM
+    // ---------------------------------------------------------
 
     if (existingItem == null) {
         return
@@ -162,270 +141,276 @@ fun EditItineraryScreen(
             "HH:mm"
         )
 
+    // =========================================================
+    // SCREEN
+    // =========================================================
+
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .verticalScroll(
-                rememberScrollState()
-            )
             .imePadding()
-            .padding(16.dp)
     ) {
 
-        // -----------------------------------------------------
-        // HEADER
-        // -----------------------------------------------------
+        // =====================================================
+        // SCROLLABLE FORM AREA
+        // =====================================================
 
-        Text(
-            text = "Edit Itinerary Item",
-            style = MaterialTheme.typography.headlineMedium
-        )
-
-        Spacer(
-            modifier = Modifier.height(4.dp)
-        )
-
-        Text(
-            text =
-                "Update this travel plan, stay or event.",
-            style =
-                MaterialTheme.typography.bodyMedium,
-            color =
-                MaterialTheme.colorScheme.onSurfaceVariant
-        )
-
-        Spacer(
-            modifier = Modifier.height(20.dp)
-        )
-
-        // -----------------------------------------------------
-        // DATE
-        // -----------------------------------------------------
-
-        OutlinedButton(
-            onClick = {
-                showDatePicker = true
-            },
-            modifier = Modifier.fillMaxWidth()
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth()
+                .verticalScroll(
+                    rememberScrollState()
+                )
+                .padding(16.dp)
         ) {
+
+            // -------------------------------------------------
+            // HEADER
+            // -------------------------------------------------
 
             Text(
-                text = if (date == null) {
-                    "Select date"
-                } else {
-                    date!!.format(
-                        dateFormatter
-                    )
-                }
+                text = "Edit Itinerary Item",
+                style =
+                    MaterialTheme.typography
+                        .headlineMedium
             )
-        }
 
-        Spacer(
-            modifier = Modifier.height(12.dp)
-        )
-
-        // -----------------------------------------------------
-        // TIME
-        // -----------------------------------------------------
-
-        OutlinedButton(
-            onClick = {
-                showTimePicker = true
-            },
-            modifier = Modifier.fillMaxWidth()
-        ) {
+            Spacer(
+                modifier = Modifier.height(4.dp)
+            )
 
             Text(
-                text = if (time == null) {
-                    "Select time — optional"
-                } else {
-                    time!!.format(
-                        timeFormatter
-                    )
-                }
+                text =
+                    "Update this travel plan, stay or event.",
+                style =
+                    MaterialTheme.typography.bodyMedium,
+                color =
+                    MaterialTheme.colorScheme
+                        .onSurfaceVariant
             )
-        }
 
-        Spacer(
-            modifier = Modifier.height(12.dp)
-        )
+            Spacer(
+                modifier = Modifier.height(20.dp)
+            )
 
-        // -----------------------------------------------------
-        // TITLE
-        // -----------------------------------------------------
+            // -------------------------------------------------
+            // DATE
+            // -------------------------------------------------
 
-        OutlinedTextField(
-            value = title,
-            onValueChange = {
-                title = it
-            },
-            label = {
-                Text("Title")
-            },
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true
-        )
+            OutlinedButton(
+                onClick = {
+                    showDatePicker = true
+                },
+                modifier =
+                    Modifier.fillMaxWidth()
+            ) {
 
-        Spacer(
-            modifier = Modifier.height(12.dp)
-        )
+                Text(
+                    text =
+                        if (date == null) {
+                            "Select date"
+                        } else {
+                            date!!.format(
+                                dateFormatter
+                            )
+                        }
+                )
+            }
 
-        // -----------------------------------------------------
-        // TYPE
-        // -----------------------------------------------------
+            Spacer(
+                modifier = Modifier.height(12.dp)
+            )
 
-        ExposedDropdownMenuBox(
-            expanded = typeExpanded,
-            onExpandedChange = {
-                typeExpanded = !typeExpanded
-            },
-            modifier = Modifier.fillMaxWidth()
-        ) {
+            // -------------------------------------------------
+            // TIME
+            // -------------------------------------------------
+
+            OutlinedButton(
+                onClick = {
+                    showTimePicker = true
+                },
+                modifier =
+                    Modifier.fillMaxWidth()
+            ) {
+
+                Text(
+                    text =
+                        if (time == null) {
+                            "Select time — optional"
+                        } else {
+                            time!!.format(
+                                timeFormatter
+                            )
+                        }
+                )
+            }
+
+            Spacer(
+                modifier = Modifier.height(12.dp)
+            )
+
+            // -------------------------------------------------
+            // TITLE
+            // -------------------------------------------------
 
             OutlinedTextField(
-                value = type,
-                onValueChange = {},
-                readOnly = true,
+                value = title,
+                onValueChange = {
+                    title = it
+                },
                 label = {
-                    Text("Type")
+                    Text("Title")
                 },
-                placeholder = {
-                    Text("Select type")
-                },
-                trailingIcon = {
-                    ExposedDropdownMenuDefaults.TrailingIcon(
-                        expanded = typeExpanded
-                    )
-                },
-                modifier = Modifier
-                    .menuAnchor()
-                    .fillMaxWidth(),
+                modifier =
+                    Modifier.fillMaxWidth(),
                 singleLine = true
             )
 
-            ExposedDropdownMenu(
-                expanded = typeExpanded,
-                onDismissRequest = {
-                    typeExpanded = false
-                }
-            ) {
+            Spacer(
+                modifier = Modifier.height(12.dp)
+            )
 
-                itineraryTypes.forEach { itineraryType ->
+            // -------------------------------------------------
+            // TYPE
+            // -------------------------------------------------
 
-                    DropdownMenuItem(
-                        text = {
-                            Text(itineraryType)
-                        },
-                        onClick = {
+            OutlinedTextField(
+                value = type,
+                onValueChange = {
+                    type = it
+                },
+                label = {
+                    Text("Type")
+                },
+                modifier =
+                    Modifier.fillMaxWidth(),
+                singleLine = true
+            )
 
-                            type = itineraryType
-                            typeExpanded = false
+            Spacer(
+                modifier = Modifier.height(12.dp)
+            )
+
+            // -------------------------------------------------
+            // NIGHTS
+            // -------------------------------------------------
+
+            OutlinedTextField(
+                value = nightsText,
+                onValueChange = {
+
+                    if (
+                        it.all { character ->
+                            character.isDigit()
                         }
+                    ) {
+                        nightsText = it
+                    }
+                },
+                label = {
+                    Text("Nights")
+                },
+                placeholder = {
+                    Text("Optional")
+                },
+                modifier =
+                    Modifier.fillMaxWidth(),
+                singleLine = true
+            )
+
+            Spacer(
+                modifier = Modifier.height(12.dp)
+            )
+
+            // -------------------------------------------------
+            // LOCATION
+            // -------------------------------------------------
+
+            OutlinedTextField(
+                value = location,
+                onValueChange = {
+                    location = it
+                },
+                label = {
+                    Text("Location")
+                },
+                placeholder = {
+                    Text(
+                        "City, address or destination"
                     )
-                }
-            }
+                },
+                modifier =
+                    Modifier.fillMaxWidth(),
+                singleLine = true
+            )
+
+            Spacer(
+                modifier = Modifier.height(12.dp)
+            )
+
+            // -------------------------------------------------
+            // NOTES
+            // -------------------------------------------------
+
+            OutlinedTextField(
+                value = notes,
+                onValueChange = {
+                    notes = it
+                },
+                label = {
+                    Text("Notes")
+                },
+                placeholder = {
+                    Text(
+                        "Transport information, address, reminders, etc."
+                    )
+                },
+                modifier =
+                    Modifier.fillMaxWidth(),
+                minLines = 3
+            )
+
+            // Extra space so the last field can scroll
+            // comfortably above the fixed buttons.
+
+            Spacer(
+                modifier = Modifier.height(24.dp)
+            )
         }
 
-        Spacer(
-            modifier = Modifier.height(12.dp)
-        )
-
-        // -----------------------------------------------------
-        // NIGHTS
-        // -----------------------------------------------------
-
-        OutlinedTextField(
-            value = nightsText,
-            onValueChange = {
-
-                if (
-                    it.all { character ->
-                        character.isDigit()
-                    }
-                ) {
-                    nightsText = it
-                }
-            },
-            label = {
-                Text("Nights")
-            },
-            placeholder = {
-                Text("Optional")
-            },
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true
-        )
-
-        Spacer(
-            modifier = Modifier.height(12.dp)
-        )
-
-        // -----------------------------------------------------
-        // LOCATION
-        // -----------------------------------------------------
-
-        OutlinedTextField(
-            value = location,
-            onValueChange = {
-                location = it
-            },
-            label = {
-                Text("Location")
-            },
-            placeholder = {
-                Text(
-                    "City, address or destination"
-                )
-            },
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true
-        )
-
-        Spacer(
-            modifier = Modifier.height(12.dp)
-        )
-
-        // -----------------------------------------------------
-        // NOTES
-        // -----------------------------------------------------
-
-        OutlinedTextField(
-            value = notes,
-            onValueChange = {
-                notes = it
-            },
-            label = {
-                Text("Notes")
-            },
-            placeholder = {
-                Text(
-                    "Transport information, address, reminders, etc."
-                )
-            },
-            modifier = Modifier.fillMaxWidth(),
-            minLines = 3
-        )
-
-        Spacer(
-            modifier = Modifier.height(24.dp)
-        )
-
-        // -----------------------------------------------------
-        // BUTTONS
-        // -----------------------------------------------------
+        // =====================================================
+        // FIXED ACTION BUTTONS
+        // =====================================================
 
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(
+                    start = 16.dp,
+                    end = 16.dp,
+                    top = 10.dp,
+                    bottom = 10.dp
+                ),
             horizontalArrangement =
                 Arrangement.spacedBy(12.dp)
         ) {
 
-            OutlinedButton(
+            // -------------------------------------------------
+            // CANCEL
+            // -------------------------------------------------
+
+            Button(
                 onClick = onBack,
-                modifier = Modifier.weight(1f)
+                modifier =
+                    Modifier.weight(1f)
             ) {
                 Text("Cancel")
             }
+
+            // -------------------------------------------------
+            // SAVE CHANGES
+            // -------------------------------------------------
 
             Button(
                 onClick = {
@@ -435,19 +420,30 @@ fun EditItineraryScreen(
 
                     val updatedItem =
                         currentItem.copy(
-                            date = selectedDate,
-                            time = time,
-                            title = title.trim(),
-                            type = type,
+
+                            date =
+                                selectedDate,
+
+                            time =
+                                time,
+
+                            title =
+                                title.trim(),
+
+                            type =
+                                type.trim(),
+
                             nights =
                                 nightsText
                                     .toIntOrNull(),
+
                             location =
                                 location
                                     .trim()
                                     .ifBlank {
                                         null
                                     },
+
                             notes =
                                 notes
                                     .trim()
@@ -462,24 +458,23 @@ fun EditItineraryScreen(
 
                     onItineraryUpdated()
                 },
+
                 enabled =
                     date != null &&
                             title.isNotBlank() &&
                             type.isNotBlank(),
-                modifier = Modifier.weight(1.5f)
+
+                modifier =
+                    Modifier.weight(1.5f)
             ) {
                 Text("Save Changes")
             }
         }
-
-        Spacer(
-            modifier = Modifier.height(16.dp)
-        )
     }
 
-// =========================================================
-// DATE PICKER
-// =========================================================
+    // =========================================================
+    // DATE PICKER
+    // =========================================================
 
     if (showDatePicker) {
 
@@ -495,9 +490,11 @@ fun EditItineraryScreen(
             )
 
         DatePickerDialog(
+
             onDismissRequest = {
                 showDatePicker = false
             },
+
             confirmButton = {
 
                 Button(
@@ -513,7 +510,8 @@ fun EditItineraryScreen(
                                             millis
                                         )
                                         .atZone(
-                                            ZoneId.systemDefault()
+                                            ZoneId
+                                                .systemDefault()
                                         )
                                         .toLocalDate()
                             }
@@ -524,6 +522,7 @@ fun EditItineraryScreen(
                     Text("OK")
                 }
             },
+
             dismissButton = {
 
                 OutlinedButton(
@@ -542,9 +541,9 @@ fun EditItineraryScreen(
         }
     }
 
-// =========================================================
-// TIME PICKER
-// =========================================================
+    // =========================================================
+    // TIME PICKER
+    // =========================================================
 
     if (showTimePicker) {
 
@@ -557,9 +556,11 @@ fun EditItineraryScreen(
             )
 
         TimePickerDialog(
+
             onDismissRequest = {
                 showTimePicker = false
             },
+
             confirmButton = {
 
                 Button(
@@ -577,6 +578,7 @@ fun EditItineraryScreen(
                     Text("OK")
                 }
             },
+
             title = {
                 Text("Select time")
             }
@@ -587,5 +589,4 @@ fun EditItineraryScreen(
             )
         }
     }
-
 }
