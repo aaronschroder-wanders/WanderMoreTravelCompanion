@@ -25,6 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.wandermore.travelcompanion.database.ItineraryEntity
+import com.wandermore.travelcompanion.ui.components.TripSectionHeader
 import com.wandermore.travelcompanion.viewmodel.TripViewModel
 import java.time.format.DateTimeFormatter
 
@@ -89,27 +90,15 @@ fun ItineraryScreen(
     ) {
 
         // -----------------------------------------------------
-        // HEADER
+        // SHARED TRIP SECTION HEADER
         // -----------------------------------------------------
 
-        Text(
-            text = "Itinerary",
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.SemiBold
-        )
-
-        Spacer(
-            modifier = Modifier.height(4.dp)
-        )
-
-        Text(
-            text = currentTrip.name,
-            style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.primary
-        )
-
-        Spacer(
-            modifier = Modifier.height(16.dp)
+        TripSectionHeader(
+            title = "Itinerary",
+            tripName = currentTrip.name,
+            startDate = currentTrip.startDate,
+            endDate = currentTrip.endDate,
+            icon = "🗓️"
         )
 
         // -----------------------------------------------------
@@ -240,6 +229,7 @@ fun ItineraryScreen(
     }
 }
 
+
 // =================================================================
 // ITINERARY CARD
 // =================================================================
@@ -263,7 +253,8 @@ private fun ItineraryCard(
         colors =
             CardDefaults.cardColors(
                 containerColor =
-                    MaterialTheme.colorScheme.surfaceContainer
+                    MaterialTheme.colorScheme
+                        .surfaceContainer
             )
     ) {
 
@@ -292,7 +283,8 @@ private fun ItineraryCard(
                     text =
                         itinerarySymbol(item.type),
                     style =
-                        MaterialTheme.typography.titleMedium,
+                        MaterialTheme.typography
+                            .titleMedium,
                     modifier =
                         Modifier.size(26.dp)
                 )
@@ -307,7 +299,8 @@ private fun ItineraryCard(
                 Text(
                     text = item.title,
                     style =
-                        MaterialTheme.typography.titleMedium,
+                        MaterialTheme.typography
+                            .titleMedium,
                     fontWeight =
                         FontWeight.SemiBold,
                     modifier =
@@ -321,9 +314,11 @@ private fun ItineraryCard(
                     Text(
                         text = item.type,
                         style =
-                            MaterialTheme.typography.labelSmall,
+                            MaterialTheme.typography
+                                .labelSmall,
                         color =
-                            MaterialTheme.colorScheme.primary,
+                            MaterialTheme.colorScheme
+                                .primary,
                         fontWeight =
                             FontWeight.Medium
                     )
@@ -366,7 +361,8 @@ private fun ItineraryCard(
                                             )
                                         ),
                             style =
-                                MaterialTheme.typography.bodySmall,
+                                MaterialTheme.typography
+                                    .bodySmall,
                             color =
                                 MaterialTheme.colorScheme
                                     .onSurfaceVariant,
@@ -397,7 +393,8 @@ private fun ItineraryCard(
                                     "🛏 ${item.nights} nights"
                                 },
                             style =
-                                MaterialTheme.typography.bodySmall,
+                                MaterialTheme.typography
+                                    .bodySmall,
                             color =
                                 MaterialTheme.colorScheme
                                     .onSurfaceVariant
@@ -429,7 +426,8 @@ private fun ItineraryCard(
                                                 )
                                             ),
                             style =
-                                MaterialTheme.typography.bodySmall,
+                                MaterialTheme.typography
+                                    .bodySmall,
                             color =
                                 MaterialTheme.colorScheme
                                     .onSurfaceVariant,
@@ -442,6 +440,7 @@ private fun ItineraryCard(
         }
     }
 }
+
 
 // =================================================================
 // ITINERARY TYPE SYMBOL
@@ -480,6 +479,7 @@ private fun itinerarySymbol(
             "📅"
     }
 }
+
 
 // =================================================================
 // DATE FORMATTING

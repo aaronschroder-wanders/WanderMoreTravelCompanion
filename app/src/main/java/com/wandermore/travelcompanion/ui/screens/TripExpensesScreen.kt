@@ -20,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.wandermore.travelcompanion.model.TripStatus
 import com.wandermore.travelcompanion.ui.components.ExpenseCard
+import com.wandermore.travelcompanion.ui.components.TripSectionHeader
 import com.wandermore.travelcompanion.ui.components.TripSummaryCard
 import com.wandermore.travelcompanion.util.formatDate
 import com.wandermore.travelcompanion.viewmodel.TripViewModel
@@ -36,6 +37,10 @@ fun TripExpensesScreen(
     onBack: () -> Unit
 ) {
 
+    // ---------------------------------------------------------
+    // LOAD TRIP
+    // ---------------------------------------------------------
+
     val tripState by tripViewModel
         .getTripByIdFlow(tripId)
         .collectAsState(
@@ -44,11 +49,19 @@ fun TripExpensesScreen(
 
     val currentTrip = tripState ?: return
 
+    // ---------------------------------------------------------
+    // LOAD EXPENSES
+    // ---------------------------------------------------------
+
     val expenses by tripViewModel
         .getExpensesForTrip(currentTrip.id)
         .collectAsState(
             initial = emptyList()
         )
+
+    // ---------------------------------------------------------
+    // TOTALS
+    // ---------------------------------------------------------
 
     val total = expenses.sumOf {
         it.convertedAmount
@@ -61,6 +74,10 @@ fun TripExpensesScreen(
         .sumOf {
             it.convertedAmount
         }
+
+    // ---------------------------------------------------------
+    // TRIP DAYS
+    // ---------------------------------------------------------
 
     val plannedDays =
         ChronoUnit.DAYS.between(
@@ -98,29 +115,31 @@ fun TripExpensesScreen(
             TripStatus.ARCHIVED -> plannedDays
         }
 
+    // ---------------------------------------------------------
+    // SCREEN
+    // ---------------------------------------------------------
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp)
     ) {
 
-        Text(
-            text = "Expenses",
-            style = MaterialTheme.typography.headlineMedium
+        // -----------------------------------------------------
+        // SHARED TRIP SECTION HEADER
+        // -----------------------------------------------------
+
+        TripSectionHeader(
+            title = "Expenses",
+            tripName = currentTrip.name,
+            startDate = currentTrip.startDate,
+            endDate = currentTrip.endDate,
+            icon = "💰"
         )
 
-        Spacer(
-            modifier = Modifier.height(4.dp)
-        )
-
-        Text(
-            text = currentTrip.name,
-            style = MaterialTheme.typography.titleMedium
-        )
-
-        Spacer(
-            modifier = Modifier.height(12.dp)
-        )
+        // -----------------------------------------------------
+        // EXPENSE SUMMARY
+        // -----------------------------------------------------
 
         TripSummaryCard(
             plannedDays = daysForAverages,
@@ -143,6 +162,10 @@ fun TripExpensesScreen(
         Spacer(
             modifier = Modifier.height(4.dp)
         )
+
+        // -----------------------------------------------------
+        // EXPENSE LIST
+        // -----------------------------------------------------
 
         if (expenses.isEmpty()) {
 
@@ -207,6 +230,10 @@ fun TripExpensesScreen(
                 }
             }
         }
+
+        // -----------------------------------------------------
+        // BOTTOM BUTTONS
+        // -----------------------------------------------------
 
         Spacer(
             modifier = Modifier.height(8.dp)

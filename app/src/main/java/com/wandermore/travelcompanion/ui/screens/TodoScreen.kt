@@ -20,6 +20,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.wandermore.travelcompanion.database.TodoEntity
+import com.wandermore.travelcompanion.ui.components.TripSectionHeader
 import com.wandermore.travelcompanion.util.formatDate
 import com.wandermore.travelcompanion.viewmodel.TripViewModel
 
@@ -32,6 +33,10 @@ fun TodoScreen(
     onBack: () -> Unit
 ) {
 
+    // ---------------------------------------------------------
+    // LOAD TRIP
+    // ---------------------------------------------------------
+
     val tripState by tripViewModel
         .getTripByIdFlow(tripId)
         .collectAsState(
@@ -39,6 +44,10 @@ fun TodoScreen(
         )
 
     val currentTrip = tripState ?: return
+
+    // ---------------------------------------------------------
+    // LOAD TO DO ITEMS
+    // ---------------------------------------------------------
 
     val todos by tripViewModel
         .getTodosForTrip(currentTrip.id)
@@ -51,29 +60,31 @@ fun TodoScreen(
         it.completed
     }
 
+    // ---------------------------------------------------------
+    // SCREEN
+    // ---------------------------------------------------------
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp)
     ) {
 
-        Text(
-            text = "To Do",
-            style = MaterialTheme.typography.headlineMedium
+        // -----------------------------------------------------
+        // SHARED TRIP SECTION HEADER
+        // -----------------------------------------------------
+
+        TripSectionHeader(
+            title = "To Do",
+            tripName = currentTrip.name,
+            startDate = currentTrip.startDate,
+            endDate = currentTrip.endDate,
+            icon = "✓"
         )
 
-        Spacer(
-            modifier = Modifier.height(4.dp)
-        )
-
-        Text(
-            text = currentTrip.name,
-            style = MaterialTheme.typography.titleMedium
-        )
-
-        Spacer(
-            modifier = Modifier.height(12.dp)
-        )
+        // -----------------------------------------------------
+        // TO DO LIST
+        // -----------------------------------------------------
 
         if (todos.isEmpty()) {
 
@@ -114,6 +125,10 @@ fun TodoScreen(
             }
         }
 
+        // -----------------------------------------------------
+        // BOTTOM BUTTONS
+        // -----------------------------------------------------
+
         Spacer(
             modifier = Modifier.height(8.dp)
         )
@@ -137,6 +152,10 @@ fun TodoScreen(
         }
     }
 }
+
+// =================================================================
+// TO DO ROW
+// =================================================================
 
 @Composable
 private fun TodoRow(

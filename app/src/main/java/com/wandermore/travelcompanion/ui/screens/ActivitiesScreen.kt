@@ -30,6 +30,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.wandermore.travelcompanion.database.ActivityEntity
+import com.wandermore.travelcompanion.ui.components.TripSectionHeader
 import com.wandermore.travelcompanion.util.formatDate
 import com.wandermore.travelcompanion.viewmodel.TripViewModel
 import java.util.Locale
@@ -53,8 +54,6 @@ fun ActivitiesScreen(
         .getActivitiesForTrip(currentTrip.id)
         .collectAsState(initial = emptyList())
 
-    val bookedCount = activities.count { it.booked }
-
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -62,61 +61,15 @@ fun ActivitiesScreen(
     ) {
 
         // ---------------------------------------------------------
-        // HEADER
+        // SHARED TRIP SECTION HEADER
         // ---------------------------------------------------------
 
-        Text(
-            text = "Activities & Attractions",
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.SemiBold
-        )
-
-        Spacer(
-            modifier = Modifier.height(4.dp)
-        )
-
-        Text(
-            text = currentTrip.name,
-            style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.primary
-        )
-
-        Spacer(
-            modifier = Modifier.height(4.dp)
-        )
-
-        Text(
-            text = buildString {
-
-                append(activities.size)
-
-                append(
-                    if (activities.size == 1) {
-                        " activity"
-                    } else {
-                        " activities"
-                    }
-                )
-
-                if (bookedCount > 0) {
-                    append(" • ")
-                    append(bookedCount)
-
-                    append(
-                        if (bookedCount == 1) {
-                            " booked"
-                        } else {
-                            " booked"
-                        }
-                    )
-                }
-            },
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-
-        Spacer(
-            modifier = Modifier.height(16.dp)
+        TripSectionHeader(
+            title = "Activities & Attractions",
+            tripName = currentTrip.name,
+            startDate = currentTrip.startDate,
+            endDate = currentTrip.endDate,
+            icon = "🎯"
         )
 
         // ---------------------------------------------------------
@@ -199,8 +152,8 @@ fun ActivitiesScreen(
             }
         }
     }
-
 }
+
 
 // =================================================================
 // ACTIVITY CARD
@@ -463,8 +416,8 @@ private fun ActivityCard(
             }
         }
     }
-
 }
+
 
 // =================================================================
 // CURRENCY DISPLAY FORMATTING
@@ -502,8 +455,8 @@ private fun formatActivityCost(
             amount
         )
     }
-
 }
+
 
 // =================================================================
 // NZD DISPLAY FORMATTING
@@ -518,5 +471,4 @@ private fun formatNzdAmount(
         "%,.2f",
         amount
     )
-
 }
