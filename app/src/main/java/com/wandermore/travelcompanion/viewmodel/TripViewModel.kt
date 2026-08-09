@@ -7,6 +7,8 @@ import com.wandermore.travelcompanion.database.ActivityDao
 import com.wandermore.travelcompanion.database.ActivityEntity
 import com.wandermore.travelcompanion.database.ExpenseDao
 import com.wandermore.travelcompanion.database.ExpenseEntity
+import com.wandermore.travelcompanion.database.ItineraryDao
+import com.wandermore.travelcompanion.database.ItineraryEntity
 import com.wandermore.travelcompanion.database.TodoDao
 import com.wandermore.travelcompanion.database.TodoEntity
 import com.wandermore.travelcompanion.database.TripDao
@@ -20,7 +22,8 @@ class TripViewModel(
     tripDao: TripDao,
     private val expenseDao: ExpenseDao,
     private val todoDao: TodoDao,
-    private val activityDao: ActivityDao
+    private val activityDao: ActivityDao,
+    private val itineraryDao: ItineraryDao
 ) : ViewModel() {
 
     private val repository = TripRepository(
@@ -28,9 +31,9 @@ class TripViewModel(
     )
 
 
-    // -------------------------
+    // ---------------------------------------------------------
     // Trip functions
-    // -------------------------
+    // ---------------------------------------------------------
 
     fun getTrips(): Flow<List<Trip>> {
 
@@ -90,9 +93,9 @@ class TripViewModel(
     }
 
 
-    // -------------------------
+    // ---------------------------------------------------------
     // Trip status functions
-    // -------------------------
+    // ---------------------------------------------------------
 
     fun startTrip(
         tripId: Long
@@ -158,9 +161,9 @@ class TripViewModel(
     }
 
 
-    // -------------------------
+    // ---------------------------------------------------------
     // Expense functions
-    // -------------------------
+    // ---------------------------------------------------------
 
     fun addExpense(
         expense: ExpenseEntity
@@ -221,9 +224,9 @@ class TripViewModel(
     }
 
 
-    // -------------------------
+    // ---------------------------------------------------------
     // To Do functions
-    // -------------------------
+    // ---------------------------------------------------------
 
     fun addTodo(
         todo: TodoEntity
@@ -284,9 +287,9 @@ class TripViewModel(
     }
 
 
-    // -------------------------
+    // ---------------------------------------------------------
     // Activity functions
-    // -------------------------
+    // ---------------------------------------------------------
 
     fun addActivity(
         activity: ActivityEntity
@@ -342,6 +345,69 @@ class TripViewModel(
 
             activityDao.deleteActivity(
                 activity
+            )
+        }
+    }
+
+
+    // ---------------------------------------------------------
+    // Itinerary functions
+    // ---------------------------------------------------------
+
+    fun addItinerary(
+        itinerary: ItineraryEntity
+    ) {
+
+        viewModelScope.launch {
+
+            itineraryDao.insertItinerary(
+                itinerary
+            )
+        }
+    }
+
+
+    fun getItineraryForTrip(
+        tripId: Long
+    ): Flow<List<ItineraryEntity>> {
+
+        return itineraryDao.getItineraryForTrip(
+            tripId
+        )
+    }
+
+
+    suspend fun getItineraryById(
+        itineraryId: Long
+    ): ItineraryEntity? {
+
+        return itineraryDao.getItineraryById(
+            itineraryId
+        )
+    }
+
+
+    fun updateItinerary(
+        itinerary: ItineraryEntity
+    ) {
+
+        viewModelScope.launch {
+
+            itineraryDao.updateItinerary(
+                itinerary
+            )
+        }
+    }
+
+
+    fun deleteItinerary(
+        itinerary: ItineraryEntity
+    ) {
+
+        viewModelScope.launch {
+
+            itineraryDao.deleteItinerary(
+                itinerary
             )
         }
     }

@@ -12,9 +12,11 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         ExpenseEntity::class,
         ExchangeRateEntity::class,
         TodoEntity::class,
-        ActivityEntity::class
+        ActivityEntity::class,
+        ItineraryEntity::class,
+        BookingEntity::class
     ],
-    version = 7,
+    version = 8,
     exportSchema = false
 )
 @TypeConverters(DateConverter::class)
@@ -29,6 +31,8 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun todoDao(): TodoDao
 
     abstract fun activityDao(): ActivityDao
+
+    abstract fun itineraryDao(): ItineraryDao
 
     companion object {
 
@@ -180,6 +184,90 @@ abstract class AppDatabase : RoomDatabase() {
                     """
                     CREATE INDEX IF NOT EXISTS index_activities_tripId
                     ON activities(tripId)
+                    """.trimIndent()
+                )
+            }
+        }
+
+
+        // ---------------------------------------------------------
+        // VERSION 7 → 8
+        // ITINERARY + BOOKINGS
+        // ---------------------------------------------------------
+
+        val MIGRATION_7_8 = object : Migration(7, 8) {
+
+            override fun migrate(
+                database: SupportSQLiteDatabase
+            ) {
+
+                // -------------------------------------------------
+                // ITINERARY
+                // -------------------------------------------------
+
+                database.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS itinerary (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        tripId INTEGER NOT NULL,
+                        date TEXT NOT NULL,
+                        time TEXT,
+                        title TEXT NOT NULL,
+                        type TEXT NOT NULL,
+                        nights INTEGER,
+                        location TEXT,
+                        notes TEXT,
+                        bookingId INTEGER,
+                        sortOrder INTEGER NOT NULL DEFAULT 0,
+                        FOREIGN KEY(tripId)
+                            REFERENCES trips(id)
+                            ON DELETE CASCADE
+                    )
+                    """.trimIndent()
+                )
+
+                database.execSQL(
+                    """
+                    CREATE INDEX IF NOT EXISTS index_itinerary_tripId
+                    ON itinerary(tripId)
+                    """.trimIndent()
+                )
+
+
+                // -------------------------------------------------
+                // BOOKINGS
+                // -------------------------------------------------
+
+                database.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS bookings (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        tripId INTEGER NOT NULL,
+                        name TEXT NOT NULL,
+                        type TEXT NOT NULL,
+                        date TEXT,
+                        time TEXT,
+                        provider TEXT,
+                        reference TEXT,
+                        cost REAL,
+                        currency TEXT,
+                        convertedAmount REAL,
+                        cancelFreeBefore TEXT,
+                        address TEXT,
+                        website TEXT,
+                        notes TEXT,
+                        status TEXT NOT NULL DEFAULT 'PLANNED',
+                        FOREIGN KEY(tripId)
+                            REFERENCES trips(id)
+                            ON DELETE CASCADE
+                    )
+                    """.trimIndent()
+                )
+
+                database.execSQL(
+                    """
+                    CREATE INDEX IF NOT EXISTS index_bookings_tripId
+                    ON bookings(tripId)
                     """.trimIndent()
                 )
             }

@@ -16,11 +16,13 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.wandermore.travelcompanion.database.ActivityEntity
 import com.wandermore.travelcompanion.database.ExpenseEntity
+import com.wandermore.travelcompanion.database.ItineraryEntity
 import com.wandermore.travelcompanion.database.TodoEntity
 import com.wandermore.travelcompanion.model.Trip
 import com.wandermore.travelcompanion.ui.screens.ActivitiesScreen
 import com.wandermore.travelcompanion.ui.screens.AddActivityScreen
 import com.wandermore.travelcompanion.ui.screens.AddExpenseScreen
+import com.wandermore.travelcompanion.ui.screens.AddItineraryScreen
 import com.wandermore.travelcompanion.ui.screens.AddTodoScreen
 import com.wandermore.travelcompanion.ui.screens.ArchivedTripsScreen
 import com.wandermore.travelcompanion.ui.screens.CategoryBreakdownScreen
@@ -32,6 +34,8 @@ import com.wandermore.travelcompanion.ui.screens.EditTodoScreen
 import com.wandermore.travelcompanion.ui.screens.EditTripScreen
 import com.wandermore.travelcompanion.ui.screens.ExchangeRateSettingsScreen
 import com.wandermore.travelcompanion.ui.screens.HomeScreen
+import com.wandermore.travelcompanion.ui.screens.ItineraryDetailsScreen
+import com.wandermore.travelcompanion.ui.screens.ItineraryScreen
 import com.wandermore.travelcompanion.ui.screens.TodoScreen
 import com.wandermore.travelcompanion.ui.screens.TripDetailsScreen
 import com.wandermore.travelcompanion.ui.screens.TripExpensesScreen
@@ -56,9 +60,9 @@ fun AppNavigation(
             modifier = Modifier.padding(innerPadding)
         ) {
 
-            // ---------------------------------------------------------
+            // =========================================================
             // HOME
-            // ---------------------------------------------------------
+            // =========================================================
 
             composable("home") {
 
@@ -100,9 +104,9 @@ fun AppNavigation(
             }
 
 
-            // ---------------------------------------------------------
+            // =========================================================
             // ARCHIVED TRIPS
-            // ---------------------------------------------------------
+            // =========================================================
 
             composable("archivedTrips") {
 
@@ -130,9 +134,9 @@ fun AppNavigation(
             }
 
 
-            // ---------------------------------------------------------
+            // =========================================================
             // CREATE TRIP
-            // ---------------------------------------------------------
+            // =========================================================
 
             composable("createTrip") {
 
@@ -146,9 +150,9 @@ fun AppNavigation(
             }
 
 
-            // ---------------------------------------------------------
+            // =========================================================
             // EXCHANGE RATE SETTINGS
-            // ---------------------------------------------------------
+            // =========================================================
 
             composable("exchangeRates") {
 
@@ -163,9 +167,9 @@ fun AppNavigation(
             }
 
 
-            // ---------------------------------------------------------
+            // =========================================================
             // TRIP HUB
-            // ---------------------------------------------------------
+            // =========================================================
 
             composable(
                 "tripHub/{tripId}"
@@ -186,7 +190,10 @@ fun AppNavigation(
                             tripViewModel,
 
                         onItinerary = {
-                            // Coming later
+
+                            navController.navigate(
+                                "itinerary/$tripId"
+                            )
                         },
 
                         onActivities = {
@@ -231,11 +238,11 @@ fun AppNavigation(
                             )
                         },
 
-                        onRestoreTrip = {
+                        onRestoreTrip = { status ->
 
                             tripViewModel.restoreTrip(
                                 tripId,
-                                it
+                                status
                             )
                         },
 
@@ -252,9 +259,148 @@ fun AppNavigation(
             }
 
 
-            // ---------------------------------------------------------
+            // =========================================================
+            // ITINERARY LIST
+            // =========================================================
+
+            composable(
+                "itinerary/{tripId}"
+            ) { entry ->
+
+                val tripId =
+                    entry.arguments
+                        ?.getString("tripId")
+                        ?.toLongOrNull()
+
+                if (tripId != null) {
+
+                    ItineraryScreen(
+
+                        tripId = tripId,
+
+                        tripViewModel =
+                            tripViewModel,
+
+                        onAddItinerary = {
+
+                            navController.navigate(
+                                "addItinerary/$tripId"
+                            )
+                        },
+
+                        onItinerarySelected = { itineraryId ->
+
+                            navController.navigate(
+                                "itineraryDetails/$itineraryId"
+                            )
+                        },
+
+                        onBack = {
+
+                            navController.popBackStack()
+                        }
+                    )
+                }
+            }
+
+
+            // =========================================================
+            // ADD ITINERARY
+            // =========================================================
+
+            composable(
+                "addItinerary/{tripId}"
+            ) { entry ->
+
+                val tripId =
+                    entry.arguments
+                        ?.getString("tripId")
+                        ?.toLongOrNull()
+
+                if (tripId != null) {
+
+                    AddItineraryScreen(
+
+                        tripId = tripId,
+
+                        tripViewModel =
+                            tripViewModel,
+
+                        onItineraryAdded = {
+
+                            navController.popBackStack()
+                        },
+
+                        onBack = {
+
+                            navController.popBackStack()
+                        }
+                    )
+                }
+            }
+
+
+            // =========================================================
+            // ITINERARY DETAILS
+            // =========================================================
+
+            composable(
+                "itineraryDetails/{itineraryId}"
+            ) { entry ->
+
+                val itineraryId =
+                    entry.arguments
+                        ?.getString("itineraryId")
+                        ?.toLongOrNull()
+
+                var itinerary by remember {
+                    mutableStateOf<ItineraryEntity?>(null)
+                }
+
+                LaunchedEffect(itineraryId) {
+
+                    if (itineraryId != null) {
+
+                        itinerary =
+                            tripViewModel.getItineraryById(
+                                itineraryId
+                            )
+                    }
+                }
+
+                itinerary?.let { item ->
+
+                    ItineraryDetailsScreen(
+
+                        itinerary = item,
+
+                        onEdit = {
+
+                            // Edit itinerary screen
+                            // will be added next.
+                        },
+
+                        onDelete = {
+
+                            tripViewModel.deleteItinerary(
+                                item
+                            )
+
+                            navController.popBackStack()
+                        },
+
+                        onBack = {
+
+                            navController.popBackStack()
+                        }
+                    )
+                }
+            }
+
+
+            // =========================================================
             // ACTIVITIES & ATTRACTIONS
-            // ---------------------------------------------------------
+            // =========================================================
 
             composable(
                 "activities/{tripId}"
@@ -297,9 +443,9 @@ fun AppNavigation(
             }
 
 
-            // ---------------------------------------------------------
+            // =========================================================
             // ADD ACTIVITY
-            // ---------------------------------------------------------
+            // =========================================================
 
             composable(
                 "addActivity/{tripId}"
@@ -336,9 +482,9 @@ fun AppNavigation(
             }
 
 
-            // ---------------------------------------------------------
+            // =========================================================
             // EDIT ACTIVITY
-            // ---------------------------------------------------------
+            // =========================================================
 
             composable(
                 "editActivity/{activityId}"
@@ -364,11 +510,11 @@ fun AppNavigation(
                     }
                 }
 
-                activity?.let {
+                activity?.let { item ->
 
                     EditActivityScreen(
 
-                        activity = it,
+                        activity = item,
 
                         tripViewModel =
                             tripViewModel,
@@ -384,7 +530,7 @@ fun AppNavigation(
                         onDeleteActivity = {
 
                             tripViewModel.deleteActivity(
-                                it
+                                item
                             )
 
                             navController.popBackStack()
@@ -399,9 +545,9 @@ fun AppNavigation(
             }
 
 
-            // ---------------------------------------------------------
+            // =========================================================
             // TO DO
-            // ---------------------------------------------------------
+            // =========================================================
 
             composable(
                 "todo/{tripId}"
@@ -444,9 +590,9 @@ fun AppNavigation(
             }
 
 
-            // ---------------------------------------------------------
+            // =========================================================
             // ADD TO DO
-            // ---------------------------------------------------------
+            // =========================================================
 
             composable(
                 "addTodo/{tripId}"
@@ -475,9 +621,9 @@ fun AppNavigation(
             }
 
 
-            // ---------------------------------------------------------
+            // =========================================================
             // EDIT TO DO
-            // ---------------------------------------------------------
+            // =========================================================
 
             composable(
                 "editTodo/{todoId}"
@@ -503,11 +649,11 @@ fun AppNavigation(
                     }
                 }
 
-                todo?.let {
+                todo?.let { item ->
 
                     EditTodoScreen(
 
-                        todo = it,
+                        todo = item,
 
                         tripViewModel =
                             tripViewModel,
@@ -520,7 +666,7 @@ fun AppNavigation(
                         onDeleteTodo = {
 
                             tripViewModel.deleteTodo(
-                                it
+                                item
                             )
 
                             navController.popBackStack()
@@ -530,9 +676,9 @@ fun AppNavigation(
             }
 
 
-            // ---------------------------------------------------------
+            // =========================================================
             // TRIP EXPENSES
-            // ---------------------------------------------------------
+            // =========================================================
 
             composable(
                 "tripExpenses/{tripId}"
@@ -582,9 +728,10 @@ fun AppNavigation(
             }
 
 
-            // ---------------------------------------------------------
+            // =========================================================
             // OLD TRIP DETAILS
-            // ---------------------------------------------------------
+            // =========================================================
+            // Kept temporarily while Trip Hub replaces it.
 
             composable(
                 "tripDetails/{tripId}"
@@ -641,11 +788,11 @@ fun AppNavigation(
                             )
                         },
 
-                        onRestoreTrip = {
+                        onRestoreTrip = { status ->
 
                             tripViewModel.restoreTrip(
                                 tripId,
-                                it
+                                status
                             )
                         },
 
@@ -667,9 +814,9 @@ fun AppNavigation(
             }
 
 
-            // ---------------------------------------------------------
+            // =========================================================
             // CATEGORY BREAKDOWN
-            // ---------------------------------------------------------
+            // =========================================================
 
             composable(
                 "categoryBreakdown/{tripId}"
@@ -695,14 +842,14 @@ fun AppNavigation(
                     }
                 }
 
-                trip?.let {
+                trip?.let { item ->
 
                     CategoryBreakdownScreen(
 
-                        tripId = it.id,
+                        tripId = item.id,
 
                         currency =
-                            it.homeCurrency,
+                            item.homeCurrency,
 
                         tripViewModel =
                             tripViewModel,
@@ -710,7 +857,7 @@ fun AppNavigation(
                         onCategorySelected = { category ->
 
                             navController.navigate(
-                                "categoryExpenses/${it.id}/$category"
+                                "categoryExpenses/${item.id}/$category"
                             )
                         },
 
@@ -723,9 +870,9 @@ fun AppNavigation(
             }
 
 
-            // ---------------------------------------------------------
+            // =========================================================
             // CATEGORY EXPENSES
-            // ---------------------------------------------------------
+            // =========================================================
 
             composable(
                 "categoryExpenses/{tripId}/{category}"
@@ -789,9 +936,9 @@ fun AppNavigation(
             }
 
 
-            // ---------------------------------------------------------
+            // =========================================================
             // ADD EXPENSE
-            // ---------------------------------------------------------
+            // =========================================================
 
             composable(
                 "addExpense/{tripId}"
@@ -817,11 +964,11 @@ fun AppNavigation(
                     }
                 }
 
-                trip?.let {
+                trip?.let { item ->
 
                     AddExpenseScreen(
 
-                        trip = it,
+                        trip = item,
 
                         tripViewModel =
                             tripViewModel,
@@ -838,9 +985,9 @@ fun AppNavigation(
             }
 
 
-            // ---------------------------------------------------------
+            // =========================================================
             // EDIT EXPENSE
-            // ---------------------------------------------------------
+            // =========================================================
 
             composable(
                 "editExpense/{expenseId}"
@@ -866,11 +1013,11 @@ fun AppNavigation(
                     }
                 }
 
-                expense?.let {
+                expense?.let { item ->
 
                     EditExpenseScreen(
 
-                        expense = it,
+                        expense = item,
 
                         tripViewModel =
                             tripViewModel,
@@ -886,7 +1033,7 @@ fun AppNavigation(
                         onDeleteExpense = {
 
                             tripViewModel.deleteExpense(
-                                it
+                                item
                             )
 
                             navController.popBackStack()
@@ -896,9 +1043,9 @@ fun AppNavigation(
             }
 
 
-            // ---------------------------------------------------------
+            // =========================================================
             // EDIT TRIP
-            // ---------------------------------------------------------
+            // =========================================================
 
             composable(
                 "editTrip/{tripId}"
@@ -924,11 +1071,11 @@ fun AppNavigation(
                     }
                 }
 
-                trip?.let {
+                trip?.let { item ->
 
                     EditTripScreen(
 
-                        trip = it,
+                        trip = item,
 
                         tripViewModel =
                             tripViewModel,

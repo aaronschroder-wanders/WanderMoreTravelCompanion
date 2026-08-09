@@ -45,20 +45,15 @@ fun ActivitiesScreen(
 
     val tripState by tripViewModel
         .getTripByIdFlow(tripId)
-        .collectAsState(
-            initial = null
-        )
+        .collectAsState(initial = null)
 
     val currentTrip = tripState ?: return
 
     val activities by tripViewModel
         .getActivitiesForTrip(currentTrip.id)
-        .collectAsState(
-            initial = emptyList()
-        )
+        .collectAsState(initial = emptyList())
 
-    val bookedCount =
-        activities.count { it.booked }
+    val bookedCount = activities.count { it.booked }
 
     Column(
         modifier = Modifier
@@ -93,9 +88,7 @@ fun ActivitiesScreen(
         Text(
             text = buildString {
 
-                append(
-                    activities.size
-                )
+                append(activities.size)
 
                 append(
                     if (activities.size == 1) {
@@ -106,9 +99,7 @@ fun ActivitiesScreen(
                 )
 
                 if (bookedCount > 0) {
-
                     append(" • ")
-
                     append(bookedCount)
 
                     append(
@@ -138,10 +129,8 @@ fun ActivitiesScreen(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth(),
-                verticalArrangement =
-                    Arrangement.Center,
-                horizontalAlignment =
-                    Alignment.CenterHorizontally
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
 
                 Text(
@@ -154,11 +143,9 @@ fun ActivitiesScreen(
                 )
 
                 Text(
-                    text =
-                        "Add places and experiences you may want to visit.",
+                    text = "Add places and experiences you may want to visit.",
                     style = MaterialTheme.typography.bodyMedium,
-                    color =
-                        MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 
@@ -166,8 +153,7 @@ fun ActivitiesScreen(
 
             LazyColumn(
                 modifier = Modifier.weight(1f),
-                verticalArrangement =
-                    Arrangement.spacedBy(10.dp)
+                verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
 
                 items(
@@ -178,9 +164,7 @@ fun ActivitiesScreen(
                     ActivityCard(
                         activity = activity,
                         onClick = {
-                            onEditActivity(
-                                activity.id
-                            )
+                            onEditActivity(activity.id)
                         }
                     )
                 }
@@ -197,8 +181,7 @@ fun ActivitiesScreen(
 
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement =
-                Arrangement.spacedBy(12.dp)
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
 
             OutlinedButton(
@@ -216,8 +199,8 @@ fun ActivitiesScreen(
             }
         }
     }
-}
 
+}
 
 // =================================================================
 // ACTIVITY CARD
@@ -232,16 +215,13 @@ private fun ActivityCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(
-                onClick = onClick
-            ),
+            .clickable(onClick = onClick),
         shape = RoundedCornerShape(12.dp),
         elevation = CardDefaults.cardElevation(
             defaultElevation = 2.dp
         ),
         colors = CardDefaults.cardColors(
-            containerColor =
-                MaterialTheme.colorScheme.surfaceContainer
+            containerColor = MaterialTheme.colorScheme.surfaceContainer
         )
     ) {
 
@@ -257,8 +237,7 @@ private fun ActivityCard(
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                verticalAlignment =
-                    Alignment.Top
+                verticalAlignment = Alignment.Top
             ) {
 
                 Column(
@@ -267,10 +246,8 @@ private fun ActivityCard(
 
                     Text(
                         text = activity.name,
-                        style =
-                            MaterialTheme.typography.titleLarge,
-                        fontWeight =
-                            FontWeight.SemiBold
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.SemiBold
                     )
 
                     Spacer(
@@ -281,10 +258,8 @@ private fun ActivityCard(
 
                         Text(
                             text = activity.type,
-                            style =
-                                MaterialTheme.typography.bodyMedium,
-                            color =
-                                MaterialTheme.colorScheme.primary
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.primary
                         )
                     }
                 }
@@ -294,20 +269,15 @@ private fun ActivityCard(
                     AssistChip(
                         onClick = {},
                         label = {
-
                             Text(
                                 text = "BOOKED",
-                                fontWeight =
-                                    FontWeight.Bold
+                                fontWeight = FontWeight.Bold
                             )
                         },
-                        colors =
-                            AssistChipDefaults.assistChipColors(
-                                containerColor =
-                                    Color(0xFFB6FF00),
-                                labelColor =
-                                    Color.Black
-                            )
+                        colors = AssistChipDefaults.assistChipColors(
+                            containerColor = Color(0xFFB6FF00),
+                            labelColor = Color.Black
+                        )
                     )
                 }
             }
@@ -323,8 +293,7 @@ private fun ActivityCard(
                 )
 
                 Row(
-                    verticalAlignment =
-                        Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
 
                     Text(
@@ -338,8 +307,7 @@ private fun ActivityCard(
 
                     Text(
                         text = activity.location!!,
-                        style =
-                            MaterialTheme.typography.bodyMedium
+                        style = MaterialTheme.typography.bodyMedium
                     )
                 }
             }
@@ -358,8 +326,7 @@ private fun ActivityCard(
                 )
 
                 Row(
-                    verticalAlignment =
-                        Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
 
                     Text(
@@ -374,11 +341,8 @@ private fun ActivityCard(
                     if (activity.date != null) {
 
                         Text(
-                            text = formatDate(
-                                activity.date
-                            ),
-                            style =
-                                MaterialTheme.typography.bodyMedium
+                            text = formatDate(activity.date),
+                            style = MaterialTheme.typography.bodyMedium
                         )
                     }
 
@@ -393,8 +357,7 @@ private fun ActivityCard(
 
                         Text(
                             text = "•",
-                            color =
-                                MaterialTheme.colorScheme.onSurfaceVariant
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
 
                         Spacer(
@@ -414,10 +377,8 @@ private fun ActivityCard(
                         )
 
                         Text(
-                            text =
-                                activity.startTime.toString(),
-                            style =
-                                MaterialTheme.typography.bodyMedium
+                            text = activity.startTime.toString(),
+                            style = MaterialTheme.typography.bodyMedium
                         )
                     }
                 }
@@ -435,33 +396,20 @@ private fun ActivityCard(
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement =
-                        Arrangement.SpaceBetween,
-                    verticalAlignment =
-                        Alignment.Top
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.Top
                 ) {
 
                     Text(
                         text = "Estimated cost",
-                        style =
-                            MaterialTheme.typography.titleMedium,
-                        fontWeight =
-                            FontWeight.SemiBold,
-                        color =
-                            MaterialTheme.colorScheme.onSurfaceVariant
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
 
                     Column(
-                        horizontalAlignment =
-                            Alignment.End
+                        horizontalAlignment = Alignment.End
                     ) {
-
-                        // -------------------------------------------------
-                        // FOREIGN CURRENCY AMOUNT
-                        //
-                        // Amount and currency now use the same
-                        // font size and appear together on one line.
-                        // -------------------------------------------------
 
                         Text(
                             text = buildString {
@@ -473,43 +421,24 @@ private fun ActivityCard(
                                     )
                                 )
 
-                                if (
-                                    !activity.currency
-                                        .isNullOrBlank()
-                                ) {
-
-                                    append(
-                                        " ${activity.currency}"
-                                    )
+                                if (!activity.currency.isNullOrBlank()) {
+                                    append(" ${activity.currency}")
                                 }
                             },
-                            style =
-                                MaterialTheme.typography.titleMedium,
-                            fontWeight =
-                                FontWeight.SemiBold
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold
                         )
 
-                        // -------------------------------------------------
-                        // NZD CONVERSION
-                        //
-                        // Kept underneath the foreign currency value.
-                        // -------------------------------------------------
-
-                        if (
-                            activity.convertedAmount != null
-                        ) {
+                        if (activity.convertedAmount != null) {
 
                             Text(
-                                text =
-                                    "≈ NZD ${
-                                        formatNzdAmount(
-                                            activity.convertedAmount
-                                        )
-                                    }",
-                                style =
-                                    MaterialTheme.typography.bodyMedium,
-                                color =
-                                    MaterialTheme.colorScheme.primary
+                                text = "≈ NZD ${
+                                    formatNzdAmount(
+                                        activity.convertedAmount
+                                    )
+                                }",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.primary
                             )
                         }
                     }
@@ -528,16 +457,14 @@ private fun ActivityCard(
 
                 Text(
                     text = activity.notes!!,
-                    style =
-                        MaterialTheme.typography.bodySmall,
-                    color =
-                        MaterialTheme.colorScheme.onSurfaceVariant
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
     }
-}
 
+}
 
 // =================================================================
 // CURRENCY DISPLAY FORMATTING
@@ -575,8 +502,8 @@ private fun formatActivityCost(
             amount
         )
     }
-}
 
+}
 
 // =================================================================
 // NZD DISPLAY FORMATTING
@@ -591,4 +518,5 @@ private fun formatNzdAmount(
         "%,.2f",
         amount
     )
+
 }

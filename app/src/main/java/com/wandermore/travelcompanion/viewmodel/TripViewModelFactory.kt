@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.wandermore.travelcompanion.database.ActivityDao
 import com.wandermore.travelcompanion.database.ExpenseDao
+import com.wandermore.travelcompanion.database.ItineraryDao
 import com.wandermore.travelcompanion.database.TodoDao
 import com.wandermore.travelcompanion.database.TripDao
 
@@ -11,7 +12,8 @@ class TripViewModelFactory(
     private val tripDao: TripDao,
     private val expenseDao: ExpenseDao,
     private val todoDao: TodoDao,
-    private val activityDao: ActivityDao
+    private val activityDao: ActivityDao,
+    private val itineraryDao: ItineraryDao
 ) : ViewModelProvider.Factory {
 
     override fun <T : ViewModel> create(
@@ -26,7 +28,8 @@ class TripViewModelFactory(
                 tripDao,
                 expenseDao,
                 todoDao,
-                activityDao
+                activityDao,
+                itineraryDao
             ) as T
         }
 

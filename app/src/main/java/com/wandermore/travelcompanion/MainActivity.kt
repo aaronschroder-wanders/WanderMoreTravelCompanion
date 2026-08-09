@@ -18,7 +18,9 @@ import com.wandermore.travelcompanion.viewmodel.TripViewModelFactory
 
 class MainActivity : ComponentActivity() {
 
-    override fun onCreate(savedInstanceState: Bundle?) {
+    override fun onCreate(
+        savedInstanceState: Bundle?
+    ) {
 
         super.onCreate(savedInstanceState)
 
@@ -42,7 +44,8 @@ class MainActivity : ComponentActivity() {
                             database.tripDao(),
                             database.expenseDao(),
                             database.todoDao(),
-                            database.activityDao()
+                            database.activityDao(),
+                            database.itineraryDao()
                         )
                     )
 
@@ -72,7 +75,8 @@ class MainActivity : ComponentActivity() {
                 AppNavigation(
                     navController = navController,
                     tripViewModel = tripViewModel,
-                    exchangeRateViewModel = exchangeRateViewModel
+                    exchangeRateViewModel =
+                        exchangeRateViewModel
                 )
             }
         }
