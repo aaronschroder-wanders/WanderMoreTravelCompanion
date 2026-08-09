@@ -10,8 +10,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.DatePicker
@@ -26,7 +26,10 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TimePicker
+import androidx.compose.material3.TimePickerDialog
 import androidx.compose.material3.rememberDatePickerState
+import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -54,6 +57,10 @@ fun EditActivityScreen(
     onDeleteActivity: () -> Unit,
     onBack: () -> Unit
 ) {
+
+    // ---------------------------------------------------------
+    // FORM STATE
+    // ---------------------------------------------------------
 
     var name by remember {
         mutableStateOf(activity.name)
@@ -94,15 +101,7 @@ fun EditActivityScreen(
     }
 
     var startTime by remember {
-        mutableStateOf(
-            activity.startTime?.let {
-                String.format(
-                    "%02d:%02d",
-                    it.hour,
-                    it.minute
-                )
-            } ?: ""
-        )
+        mutableStateOf(activity.startTime)
     }
 
     var notes by remember {
@@ -112,6 +111,10 @@ fun EditActivityScreen(
     }
 
     var showDatePicker by remember {
+        mutableStateOf(false)
+    }
+
+    var showTimePicker by remember {
         mutableStateOf(false)
     }
 
@@ -159,145 +162,6 @@ fun EditActivityScreen(
         } catch (_: Exception) {
             null
         }
-
-    /*
-     * Accept flexible 24-hour time input:
-     *
-     * 9     -> 09:00
-     * 900   -> 09:00
-     * 0900  -> 09:00
-     * 09:00 -> 09:00
-     * 930   -> 09:30
-     * 23:45 -> 23:45
-     */
-    fun parseFlexibleTime(
-        input: String
-    ): LocalTime? {
-
-        val value =
-            input.trim()
-
-        if (value.isBlank()) {
-            return null
-        }
-
-        return try {
-
-            if (value.contains(":")) {
-
-                val parts =
-                    value.split(":")
-
-                if (parts.size != 2) {
-                    null
-                } else {
-
-                    val hour =
-                        parts[0].toInt()
-
-                    val minute =
-                        parts[1].toInt()
-
-                    if (
-                        hour in 0..23 &&
-                        minute in 0..59
-                    ) {
-                        LocalTime.of(
-                            hour,
-                            minute
-                        )
-                    } else {
-                        null
-                    }
-                }
-
-            } else {
-
-                when (value.length) {
-
-                    1,
-                    2 -> {
-
-                        val hour =
-                            value.toInt()
-
-                        if (hour in 0..23) {
-                            LocalTime.of(
-                                hour,
-                                0
-                            )
-                        } else {
-                            null
-                        }
-                    }
-
-                    3 -> {
-
-                        val hour =
-                            value.substring(
-                                0,
-                                1
-                            ).toInt()
-
-                        val minute =
-                            value.substring(
-                                1,
-                                3
-                            ).toInt()
-
-                        if (
-                            hour in 0..23 &&
-                            minute in 0..59
-                        ) {
-                            LocalTime.of(
-                                hour,
-                                minute
-                            )
-                        } else {
-                            null
-                        }
-                    }
-
-                    4 -> {
-
-                        val hour =
-                            value.substring(
-                                0,
-                                2
-                            ).toInt()
-
-                        val minute =
-                            value.substring(
-                                2,
-                                4
-                            ).toInt()
-
-                        if (
-                            hour in 0..23 &&
-                            minute in 0..59
-                        ) {
-                            LocalTime.of(
-                                hour,
-                                minute
-                            )
-                        } else {
-                            null
-                        }
-                    }
-
-                    else -> null
-                }
-            }
-
-        } catch (_: Exception) {
-            null
-        }
-    }
-
-    val parsedStartTime =
-        parseFlexibleTime(
-            startTime
-        )
 
     Column(
         modifier = Modifier
@@ -371,8 +235,7 @@ fun EditActivityScreen(
                 ExposedDropdownMenuBox(
                     expanded = typeExpanded,
                     onExpandedChange = {
-                        typeExpanded =
-                            !typeExpanded
+                        typeExpanded = !typeExpanded
                     },
                     modifier = Modifier.weight(1f)
                 ) {
@@ -387,8 +250,7 @@ fun EditActivityScreen(
                         trailingIcon = {
                             ExposedDropdownMenuDefaults
                                 .TrailingIcon(
-                                    expanded =
-                                        typeExpanded
+                                    expanded = typeExpanded
                                 )
                         },
                         modifier = Modifier
@@ -408,17 +270,12 @@ fun EditActivityScreen(
 
                             DropdownMenuItem(
                                 text = {
-                                    Text(
-                                        activityType
-                                    )
+                                    Text(activityType)
                                 },
                                 onClick = {
 
-                                    type =
-                                        activityType
-
-                                    typeExpanded =
-                                        false
+                                    type = activityType
+                                    typeExpanded = false
                                 }
                             )
                         }
@@ -472,8 +329,7 @@ fun EditActivityScreen(
                 )
 
                 ExposedDropdownMenuBox(
-                    expanded =
-                        currencyExpanded,
+                    expanded = currencyExpanded,
                     onExpandedChange = {
                         currencyExpanded =
                             !currencyExpanded
@@ -502,8 +358,7 @@ fun EditActivityScreen(
                     )
 
                     ExposedDropdownMenu(
-                        expanded =
-                            currencyExpanded,
+                        expanded = currencyExpanded,
                         onDismissRequest = {
                             currencyExpanded =
                                 false
@@ -515,9 +370,7 @@ fun EditActivityScreen(
 
                             DropdownMenuItem(
                                 text = {
-                                    Text(
-                                        currencyCode
-                                    )
+                                    Text(currencyCode)
                                 },
                                 onClick = {
 
@@ -595,59 +448,47 @@ fun EditActivityScreen(
                     Arrangement.spacedBy(8.dp)
             ) {
 
-                OutlinedTextField(
-                    value = date,
-                    onValueChange = {},
-                    readOnly = true,
-                    label = {
-                        Text("Date")
-                    },
-                    placeholder = {
-                        Text("Select")
-                    },
-                    trailingIcon = {
+                // DATE
 
-                        TextButton(
-                            onClick = {
-                                showDatePicker = true
+                OutlinedButton(
+                    onClick = {
+                        showDatePicker = true
+                    },
+                    modifier = Modifier.weight(1f)
+                ) {
+
+                    Text(
+                        text =
+                            if (date.isBlank()) {
+                                "Select date"
+                            } else {
+                                date
                             }
-                        ) {
+                    )
+                }
 
-                            Text(
-                                if (
-                                    date.isBlank()
-                                ) {
-                                    "Select"
-                                } else {
-                                    "Change"
-                                }
-                            )
-                        }
-                    },
-                    modifier =
-                        Modifier.weight(1f)
-                )
+                // START TIME
 
-                OutlinedTextField(
-                    value = startTime,
-                    onValueChange = {
-                        startTime = it
+                OutlinedButton(
+                    onClick = {
+                        showTimePicker = true
                     },
-                    label = {
-                        Text("Start Time")
-                    },
-                    placeholder = {
-                        Text("HH:MM")
-                    },
-                    modifier =
-                        Modifier.weight(1f),
-                    singleLine = true,
-                    keyboardOptions =
-                        KeyboardOptions(
-                            keyboardType =
-                                KeyboardType.Number
-                        )
-                )
+                    modifier = Modifier.weight(1f)
+                ) {
+
+                    Text(
+                        text =
+                            if (startTime == null) {
+                                "Select time"
+                            } else {
+                                String.format(
+                                    "%02d:%02d",
+                                    startTime!!.hour,
+                                    startTime!!.minute
+                                )
+                            }
+                    )
+                }
             }
 
             Spacer(
@@ -734,9 +575,7 @@ fun EditActivityScreen(
                         val convertedAmount =
                             if (parsedCost != null) {
 
-                                if (
-                                    currency == "NZD"
-                                ) {
+                                if (currency == "NZD") {
 
                                     parsedCost
 
@@ -749,11 +588,8 @@ fun EditActivityScreen(
                                             )
 
                                     if (rate > 0.0) {
-
                                         parsedCost * rate
-
                                     } else {
-
                                         null
                                     }
                                 }
@@ -814,7 +650,7 @@ fun EditActivityScreen(
                                     parsedDate,
 
                                 startTime =
-                                    parsedStartTime
+                                    startTime
                             )
 
                         tripViewModel.updateActivity(
@@ -836,8 +672,19 @@ fun EditActivityScreen(
 
     if (showDatePicker) {
 
+        val initialDateMillis =
+            parsedDate
+                ?.atStartOfDay(
+                    ZoneOffset.UTC
+                )
+                ?.toInstant()
+                ?.toEpochMilli()
+
         val datePickerState =
-            rememberDatePickerState()
+            rememberDatePickerState(
+                initialSelectedDateMillis =
+                    initialDateMillis
+            )
 
         DatePickerDialog(
             onDismissRequest = {
@@ -888,6 +735,54 @@ fun EditActivityScreen(
 
             DatePicker(
                 state = datePickerState
+            )
+        }
+    }
+
+    // -------------------------------------------------------------
+    // TIME PICKER
+    // -------------------------------------------------------------
+
+    if (showTimePicker) {
+
+        val timePickerState =
+            rememberTimePickerState(
+                initialHour =
+                    startTime?.hour ?: 12,
+                initialMinute =
+                    startTime?.minute ?: 0
+            )
+
+        TimePickerDialog(
+            onDismissRequest = {
+                showTimePicker = false
+            },
+
+            confirmButton = {
+
+                Button(
+                    onClick = {
+
+                        startTime =
+                            LocalTime.of(
+                                timePickerState.hour,
+                                timePickerState.minute
+                            )
+
+                        showTimePicker = false
+                    }
+                ) {
+                    Text("OK")
+                }
+            },
+
+            title = {
+                Text("Select start time")
+            }
+        ) {
+
+            TimePicker(
+                state = timePickerState
             )
         }
     }

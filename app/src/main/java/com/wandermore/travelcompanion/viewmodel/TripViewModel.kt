@@ -30,7 +30,6 @@ class TripViewModel(
         tripDao
     )
 
-
     // ---------------------------------------------------------
     // Trip functions
     // ---------------------------------------------------------
@@ -39,7 +38,6 @@ class TripViewModel(
 
         return repository.getTrips()
     }
-
 
     fun getTripByIdFlow(
         id: Long
@@ -50,7 +48,6 @@ class TripViewModel(
         )
     }
 
-
     suspend fun getTripById(
         id: Long
     ): Trip? {
@@ -59,7 +56,6 @@ class TripViewModel(
             id
         )
     }
-
 
     fun addTrip(
         name: String,
@@ -79,7 +75,6 @@ class TripViewModel(
         }
     }
 
-
     fun updateTrip(
         trip: Trip
     ) {
@@ -91,7 +86,6 @@ class TripViewModel(
             )
         }
     }
-
 
     // ---------------------------------------------------------
     // Trip status functions
@@ -110,7 +104,6 @@ class TripViewModel(
         }
     }
 
-
     fun archiveTrip(
         tripId: Long
     ) {
@@ -123,7 +116,6 @@ class TripViewModel(
             )
         }
     }
-
 
     fun restoreTrip(
         tripId: Long,
@@ -138,7 +130,6 @@ class TripViewModel(
             )
         }
     }
-
 
     fun deleteTrip(
         id: Long
@@ -160,7 +151,6 @@ class TripViewModel(
         }
     }
 
-
     // ---------------------------------------------------------
     // Expense functions
     // ---------------------------------------------------------
@@ -177,7 +167,6 @@ class TripViewModel(
         }
     }
 
-
     fun getExpensesForTrip(
         tripId: Long
     ): Flow<List<ExpenseEntity>> {
@@ -187,7 +176,6 @@ class TripViewModel(
         )
     }
 
-
     suspend fun getExpenseById(
         expenseId: Long
     ): ExpenseEntity? {
@@ -196,7 +184,6 @@ class TripViewModel(
             expenseId
         )
     }
-
 
     fun deleteExpense(
         expense: ExpenseEntity
@@ -210,7 +197,6 @@ class TripViewModel(
         }
     }
 
-
     fun updateExpense(
         expense: ExpenseEntity
     ) {
@@ -222,7 +208,6 @@ class TripViewModel(
             )
         }
     }
-
 
     // ---------------------------------------------------------
     // To Do functions
@@ -240,7 +225,6 @@ class TripViewModel(
         }
     }
 
-
     fun getTodosForTrip(
         tripId: Long
     ): Flow<List<TodoEntity>> {
@@ -250,7 +234,6 @@ class TripViewModel(
         )
     }
 
-
     suspend fun getTodoById(
         todoId: Long
     ): TodoEntity? {
@@ -259,7 +242,6 @@ class TripViewModel(
             todoId
         )
     }
-
 
     fun updateTodo(
         todo: TodoEntity
@@ -273,7 +255,6 @@ class TripViewModel(
         }
     }
 
-
     fun deleteTodo(
         todo: TodoEntity
     ) {
@@ -285,7 +266,6 @@ class TripViewModel(
             )
         }
     }
-
 
     // ---------------------------------------------------------
     // Activity functions
@@ -313,7 +293,6 @@ class TripViewModel(
         }
     }
 
-
     fun getActivitiesForTrip(
         tripId: Long
     ): Flow<List<ActivityEntity>> {
@@ -323,7 +302,6 @@ class TripViewModel(
         )
     }
 
-
     suspend fun getActivityById(
         activityId: Long
     ): ActivityEntity? {
@@ -332,7 +310,6 @@ class TripViewModel(
             activityId
         )
     }
-
 
     fun updateActivity(
         activity: ActivityEntity
@@ -350,7 +327,6 @@ class TripViewModel(
         }
     }
 
-
     fun deleteActivity(
         activity: ActivityEntity
     ) {
@@ -366,7 +342,6 @@ class TripViewModel(
             )
         }
     }
-
 
     // ---------------------------------------------------------
     // ACTIVITY → ITINERARY SYNCHRONISATION
@@ -397,7 +372,6 @@ class TripViewModel(
             return
         }
 
-
         // -----------------------------------------------------
         // ACTIVITY IS BOOKED BUT HAS NO DATE
         // -----------------------------------------------------
@@ -413,7 +387,6 @@ class TripViewModel(
 
             return
         }
-
 
         // -----------------------------------------------------
         // CREATE / UPDATE ITINERARY ITEM
@@ -449,7 +422,6 @@ class TripViewModel(
                 )
             }
 
-
         if (existingItinerary == null) {
 
             itineraryDao.insertItinerary(
@@ -463,7 +435,6 @@ class TripViewModel(
             )
         }
     }
-
 
     // ---------------------------------------------------------
     // Itinerary functions
@@ -481,7 +452,6 @@ class TripViewModel(
         }
     }
 
-
     fun getItineraryForTrip(
         tripId: Long
     ): Flow<List<ItineraryEntity>> {
@@ -490,7 +460,6 @@ class TripViewModel(
             tripId
         )
     }
-
 
     suspend fun getItineraryById(
         itineraryId: Long
@@ -501,25 +470,130 @@ class TripViewModel(
         )
     }
 
-
     fun updateItinerary(
         itinerary: ItineraryEntity
     ) {
 
         viewModelScope.launch {
 
+            // -------------------------------------------------
+            // SAVE THE ITINERARY ITEM
+            // -------------------------------------------------
+
             itineraryDao.updateItinerary(
                 itinerary
             )
+
+            // -------------------------------------------------
+            // SYNC BACK TO LINKED ACTIVITY
+            //
+            // Only itinerary items created from an Activity
+            // have an activityId.
+            // -------------------------------------------------
+
+            val activityId =
+                itinerary.activityId
+
+            if (activityId != null) {
+
+                val existingActivity =
+                    activityDao.getActivityById(
+                        activityId
+                    )
+
+                if (existingActivity != null) {
+
+                    val updatedActivity =
+                        existingActivity.copy(
+
+                            // Itinerary title → Activity name
+                            name =
+                                itinerary.title,
+
+                            // Keep the activity type
+                            // in step with the itinerary.
+                            type =
+                                itinerary.type,
+
+                            // Itinerary date → Activity date
+                            date =
+                                itinerary.date,
+
+                            // Itinerary time → Activity
+                            // start time.
+                            startTime =
+                                itinerary.time,
+
+                            // Itinerary location →
+                            // Activity location.
+                            location =
+                                itinerary.location,
+
+                            // Itinerary notes →
+                            // Activity notes.
+                            notes =
+                                itinerary.notes,
+
+                            // Itinerary booked →
+                            // Activity booked.
+                            booked =
+                                itinerary.booked
+                        )
+
+                    activityDao.updateActivity(
+                        updatedActivity
+                    )
+
+                    // -------------------------------------------------
+                    // IMPORTANT
+                    //
+                    // If the Activity has just been marked as
+                    // unbooked, the normal Activity → Itinerary
+                    // synchronisation will remove this itinerary
+                    // item. That is intentional.
+                    // -------------------------------------------------
+
+                    syncActivityToItinerary(
+                        updatedActivity
+                    )
+                }
+            }
         }
     }
-
 
     fun deleteItinerary(
         itinerary: ItineraryEntity
     ) {
 
         viewModelScope.launch {
+
+            // -------------------------------------------------
+            // If this itinerary item came from an Activity,
+            // deleting it should also remove the Activity's
+            // booked itinerary relationship.
+            //
+            // We do NOT delete the Activity itself.
+            // -------------------------------------------------
+
+            val activityId =
+                itinerary.activityId
+
+            if (activityId != null) {
+
+                val activity =
+                    activityDao.getActivityById(
+                        activityId
+                    )
+
+                if (activity != null) {
+
+                    activityDao.updateActivity(
+                        activity.copy(
+                            booked = false
+                        )
+                    )
+                }
+            }
 
             itineraryDao.deleteItinerary(
                 itinerary

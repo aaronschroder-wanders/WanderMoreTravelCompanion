@@ -111,14 +111,21 @@ fun TripHubScreen(
                 modifier = Modifier.height(24.dp)
             )
 
+            // =================================================
+            // MAIN TRIP AREAS
+            // =================================================
+
             Column(
                 modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
+                verticalArrangement =
+                    Arrangement.spacedBy(10.dp)
             ) {
 
                 Button(
                     onClick = onItinerary,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(64.dp)
                 ) {
                     Text(
                         "🗓️  Itinerary & Bookings"
@@ -127,7 +134,9 @@ fun TripHubScreen(
 
                 Button(
                     onClick = onActivities,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(64.dp)
                 ) {
                     Text(
                         "⭐  Attractions & Activities"
@@ -136,7 +145,9 @@ fun TripHubScreen(
 
                 Button(
                     onClick = onToDo,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(64.dp)
                 ) {
                     Text(
                         "✅  To Do"
@@ -145,7 +156,9 @@ fun TripHubScreen(
 
                 Button(
                     onClick = onExpenses,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(64.dp)
                 ) {
                     Text(
                         "💰  Expenses"
@@ -153,6 +166,10 @@ fun TripHubScreen(
                 }
             }
         }
+
+        // =====================================================
+        // TRIP ACTION BUTTONS
+        // =====================================================
 
         Row(
             modifier = Modifier
@@ -163,8 +180,10 @@ fun TripHubScreen(
                     top = 8.dp,
                     bottom = 12.dp
                 ),
-            horizontalArrangement = Arrangement.SpaceEvenly,
-            verticalAlignment = Alignment.CenterVertically
+            horizontalArrangement =
+                Arrangement.SpaceEvenly,
+            verticalAlignment =
+                Alignment.CenterVertically
         ) {
 
             Button(
@@ -225,6 +244,10 @@ fun TripHubScreen(
         }
     }
 
+    // =========================================================
+    // RESTORE DIALOG
+    // =========================================================
+
     if (showRestoreDialog) {
 
         AlertDialog(
@@ -281,6 +304,10 @@ fun TripHubScreen(
             }
         )
     }
+
+    // =========================================================
+    // DELETE DIALOG
+    // =========================================================
 
     if (showDeleteDialog) {
 
