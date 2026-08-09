@@ -18,7 +18,8 @@ import java.time.LocalTime
         )
     ],
     indices = [
-        Index(value = ["tripId"])
+        Index(value = ["tripId"]),
+        Index(value = ["activityId"])
     ]
 )
 data class ItineraryEntity(
@@ -42,7 +43,15 @@ data class ItineraryEntity(
 
     val notes: String? = null,
 
+    // Reserved for a future proper Booking relationship.
     val bookingId: Long? = null,
+
+    // Links this itinerary item back to its Activity.
+    // Null means it was created manually or from another source.
+    val activityId: Long? = null,
+
+    // Whether this itinerary item has been booked.
+    val booked: Boolean = false,
 
     val sortOrder: Int = 0
 )

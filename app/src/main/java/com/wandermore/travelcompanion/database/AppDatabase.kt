@@ -16,7 +16,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         ItineraryEntity::class,
         BookingEntity::class
     ],
-    version = 8,
+    version = 9,
     exportSchema = false
 )
 @TypeConverters(DateConverter::class)
@@ -34,7 +34,13 @@ abstract class AppDatabase : RoomDatabase() {
 
     abstract fun itineraryDao(): ItineraryDao
 
+
     companion object {
+
+        // ---------------------------------------------------------
+        // VERSION 1 → 2
+        // EXPENSE EXCHANGE RATE
+        // ---------------------------------------------------------
 
         val MIGRATION_1_2 = object : Migration(1, 2) {
 
@@ -59,6 +65,11 @@ abstract class AppDatabase : RoomDatabase() {
         }
 
 
+        // ---------------------------------------------------------
+        // VERSION 2 → 3
+        // ACCOMMODATION NIGHTS
+        // ---------------------------------------------------------
+
         val MIGRATION_2_3 = object : Migration(2, 3) {
 
             override fun migrate(
@@ -74,6 +85,11 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+
+        // ---------------------------------------------------------
+        // VERSION 3 → 4
+        // EXCHANGE RATES TABLE
+        // ---------------------------------------------------------
 
         val MIGRATION_3_4 = object : Migration(3, 4) {
 
@@ -94,6 +110,11 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+
+        // ---------------------------------------------------------
+        // VERSION 4 → 5
+        // TRIP STATUS
+        // ---------------------------------------------------------
 
         val MIGRATION_4_5 = object : Migration(4, 5) {
 
@@ -117,6 +138,11 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+
+        // ---------------------------------------------------------
+        // VERSION 5 → 6
+        // TO DOS
+        // ---------------------------------------------------------
 
         val MIGRATION_5_6 = object : Migration(5, 6) {
 
@@ -150,6 +176,11 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+
+        // ---------------------------------------------------------
+        // VERSION 6 → 7
+        // ACTIVITIES
+        // ---------------------------------------------------------
 
         val MIGRATION_6_7 = object : Migration(6, 7) {
 
@@ -268,6 +299,41 @@ abstract class AppDatabase : RoomDatabase() {
                     """
                     CREATE INDEX IF NOT EXISTS index_bookings_tripId
                     ON bookings(tripId)
+                    """.trimIndent()
+                )
+            }
+        }
+
+
+        // ---------------------------------------------------------
+        // VERSION 8 → 9
+        // LINK ACTIVITIES TO ITINERARY
+        // ---------------------------------------------------------
+
+        val MIGRATION_8_9 = object : Migration(8, 9) {
+
+            override fun migrate(
+                database: SupportSQLiteDatabase
+            ) {
+
+                database.execSQL(
+                    """
+                    ALTER TABLE itinerary
+                    ADD COLUMN activityId INTEGER
+                    """.trimIndent()
+                )
+
+                database.execSQL(
+                    """
+                    ALTER TABLE itinerary
+                    ADD COLUMN booked INTEGER NOT NULL DEFAULT 0
+                    """.trimIndent()
+                )
+
+                database.execSQL(
+                    """
+                    CREATE INDEX IF NOT EXISTS index_itinerary_activityId
+                    ON itinerary(activityId)
                     """.trimIndent()
                 )
             }

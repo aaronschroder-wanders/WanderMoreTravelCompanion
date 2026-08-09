@@ -30,7 +30,7 @@ interface ActivityDao {
     @Insert
     suspend fun insertActivity(
         activity: ActivityEntity
-    )
+    ): Long
 
     @Update
     suspend fun updateActivity(

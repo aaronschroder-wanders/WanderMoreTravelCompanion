@@ -14,13 +14,14 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TimePicker
 import androidx.compose.material3.TimePickerDialog
@@ -31,6 +32,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.wandermore.travelcompanion.database.ItineraryEntity
@@ -76,6 +78,14 @@ fun AddItineraryScreen(
 
     var notes by remember {
         mutableStateOf("")
+    }
+
+    // ---------------------------------------------------------
+    // BOOKED
+    // ---------------------------------------------------------
+
+    var booked by remember {
+        mutableStateOf(false)
     }
 
     var showDatePicker by remember {
@@ -271,6 +281,44 @@ fun AddItineraryScreen(
         )
 
         // -----------------------------------------------------
+        // BOOKED
+        // -----------------------------------------------------
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+
+            Column(
+                modifier = Modifier.weight(1f)
+            ) {
+
+                Text(
+                    text = "Booked",
+                    style = MaterialTheme.typography.bodyLarge
+                )
+
+                Text(
+                    text = "Mark this item as already booked.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
+            Switch(
+                checked = booked,
+                onCheckedChange = {
+                    booked = it
+                }
+            )
+        }
+
+        Spacer(
+            modifier = Modifier.height(12.dp)
+        )
+
+        // -----------------------------------------------------
         // NIGHTS
         // -----------------------------------------------------
 
@@ -391,7 +439,8 @@ fun AddItineraryScreen(
                                 notes.trim()
                                     .ifBlank {
                                         null
-                                    }
+                                    },
+                            booked = booked
                         )
 
                     tripViewModel.addItinerary(
@@ -415,9 +464,9 @@ fun AddItineraryScreen(
         )
     }
 
-// =========================================================
-// DATE PICKER
-// =========================================================
+    // =========================================================
+    // DATE PICKER
+    // =========================================================
 
     if (showDatePicker) {
 
@@ -472,9 +521,9 @@ fun AddItineraryScreen(
         }
     }
 
-// =========================================================
-// TIME PICKER
-// =========================================================
+    // =========================================================
+    // TIME PICKER
+    // =========================================================
 
     if (showTimePicker) {
 
@@ -517,5 +566,4 @@ fun AddItineraryScreen(
             )
         }
     }
-
 }

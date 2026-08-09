@@ -45,6 +45,23 @@ interface ItineraryDao {
 
 
     // ---------------------------------------------------------
+    // GET ITINERARY ITEM LINKED TO AN ACTIVITY
+    // ---------------------------------------------------------
+
+    @Query(
+        """
+        SELECT *
+        FROM itinerary
+        WHERE activityId = :activityId
+        LIMIT 1
+        """
+    )
+    suspend fun getItineraryByActivityId(
+        activityId: Long
+    ): ItineraryEntity?
+
+
+    // ---------------------------------------------------------
     // ADD
     // ---------------------------------------------------------
 
@@ -71,6 +88,21 @@ interface ItineraryDao {
     @Delete
     suspend fun deleteItinerary(
         itinerary: ItineraryEntity
+    )
+
+
+    // ---------------------------------------------------------
+    // DELETE BY ACTIVITY
+    // ---------------------------------------------------------
+
+    @Query(
+        """
+        DELETE FROM itinerary
+        WHERE activityId = :activityId
+        """
+    )
+    suspend fun deleteItineraryByActivityId(
+        activityId: Long
     )
 
 

@@ -297,9 +297,19 @@ class TripViewModel(
 
         viewModelScope.launch {
 
-            activityDao.insertActivity(
-                activity
-            )
+            val activityId =
+                activityDao.insertActivity(
+                    activity
+                )
+
+            if (activity.booked) {
+
+                syncActivityToItinerary(
+                    activity.copy(
+                        id = activityId
+                    )
+                )
+            }
         }
     }
 
@@ -333,6 +343,10 @@ class TripViewModel(
             activityDao.updateActivity(
                 activity
             )
+
+            syncActivityToItinerary(
+                activity
+            )
         }
     }
 
@@ -343,8 +357,109 @@ class TripViewModel(
 
         viewModelScope.launch {
 
+            itineraryDao.deleteItineraryByActivityId(
+                activity.id
+            )
+
             activityDao.deleteActivity(
                 activity
+            )
+        }
+    }
+
+
+    // ---------------------------------------------------------
+    // ACTIVITY → ITINERARY SYNCHRONISATION
+    // ---------------------------------------------------------
+
+    private suspend fun syncActivityToItinerary(
+        activity: ActivityEntity
+    ) {
+
+        val existingItinerary =
+            itineraryDao.getItineraryByActivityId(
+                activity.id
+            )
+
+        // -----------------------------------------------------
+        // ACTIVITY IS NOT BOOKED
+        // -----------------------------------------------------
+
+        if (!activity.booked) {
+
+            if (existingItinerary != null) {
+
+                itineraryDao.deleteItinerary(
+                    existingItinerary
+                )
+            }
+
+            return
+        }
+
+
+        // -----------------------------------------------------
+        // ACTIVITY IS BOOKED BUT HAS NO DATE
+        // -----------------------------------------------------
+
+        if (activity.date == null) {
+
+            if (existingItinerary != null) {
+
+                itineraryDao.deleteItinerary(
+                    existingItinerary
+                )
+            }
+
+            return
+        }
+
+
+        // -----------------------------------------------------
+        // CREATE / UPDATE ITINERARY ITEM
+        // -----------------------------------------------------
+
+        val itineraryItem =
+            if (existingItinerary == null) {
+
+                ItineraryEntity(
+                    tripId = activity.tripId,
+                    date = activity.date,
+                    time = activity.startTime,
+                    title = activity.name,
+                    type = activity.type,
+                    location = activity.location,
+                    notes = activity.notes,
+                    activityId = activity.id,
+                    booked = true
+                )
+
+            } else {
+
+                existingItinerary.copy(
+                    tripId = activity.tripId,
+                    date = activity.date,
+                    time = activity.startTime,
+                    title = activity.name,
+                    type = activity.type,
+                    location = activity.location,
+                    notes = activity.notes,
+                    activityId = activity.id,
+                    booked = true
+                )
+            }
+
+
+        if (existingItinerary == null) {
+
+            itineraryDao.insertItinerary(
+                itineraryItem
+            )
+
+        } else {
+
+            itineraryDao.updateItinerary(
+                itineraryItem
             )
         }
     }
