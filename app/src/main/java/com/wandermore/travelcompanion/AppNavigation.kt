@@ -18,12 +18,14 @@ import com.wandermore.travelcompanion.database.ActivityEntity
 import com.wandermore.travelcompanion.database.ExpenseEntity
 import com.wandermore.travelcompanion.database.ItineraryEntity
 import com.wandermore.travelcompanion.database.TodoEntity
+import com.wandermore.travelcompanion.database.TripEstimateEntity
 import com.wandermore.travelcompanion.model.Trip
 import com.wandermore.travelcompanion.ui.screens.ActivitiesScreen
 import com.wandermore.travelcompanion.ui.screens.AddActivityScreen
 import com.wandermore.travelcompanion.ui.screens.AddExpenseScreen
 import com.wandermore.travelcompanion.ui.screens.AddItineraryScreen
 import com.wandermore.travelcompanion.ui.screens.AddTodoScreen
+import com.wandermore.travelcompanion.ui.screens.AddTripEstimateScreen
 import com.wandermore.travelcompanion.ui.screens.ArchivedTripsScreen
 import com.wandermore.travelcompanion.ui.screens.CategoryBreakdownScreen
 import com.wandermore.travelcompanion.ui.screens.CategoryExpensesScreen
@@ -33,12 +35,14 @@ import com.wandermore.travelcompanion.ui.screens.EditExpenseScreen
 import com.wandermore.travelcompanion.ui.screens.EditItineraryScreen
 import com.wandermore.travelcompanion.ui.screens.EditTodoScreen
 import com.wandermore.travelcompanion.ui.screens.EditTripScreen
+import com.wandermore.travelcompanion.ui.screens.EditTripEstimateScreen
 import com.wandermore.travelcompanion.ui.screens.ExchangeRateSettingsScreen
 import com.wandermore.travelcompanion.ui.screens.HomeScreen
 import com.wandermore.travelcompanion.ui.screens.ItineraryDetailsScreen
 import com.wandermore.travelcompanion.ui.screens.ItineraryScreen
 import com.wandermore.travelcompanion.ui.screens.TodoScreen
 import com.wandermore.travelcompanion.ui.screens.TripDetailsScreen
+import com.wandermore.travelcompanion.ui.screens.TripEstimatesScreen
 import com.wandermore.travelcompanion.ui.screens.TripExpensesScreen
 import com.wandermore.travelcompanion.ui.screens.TripHubScreen
 import com.wandermore.travelcompanion.viewmodel.ExchangeRateViewModel
@@ -218,6 +222,13 @@ fun AppNavigation(
                             )
                         },
 
+                        onEstimates = {
+
+                            navController.navigate(
+                                "tripEstimates/$tripId"
+                            )
+                        },
+
                         onEditTrip = {
 
                             navController.navigate(
@@ -252,6 +263,168 @@ fun AppNavigation(
                             tripViewModel.deleteTrip(
                                 tripId
                             )
+
+                            navController.popBackStack()
+                        }
+                    )
+                }
+            }
+
+
+            // =========================================================
+            // TRIP ESTIMATES
+            // =========================================================
+
+            composable(
+                "tripEstimates/{tripId}"
+            ) { entry ->
+
+                val tripId =
+                    entry.arguments
+                        ?.getString("tripId")
+                        ?.toLongOrNull()
+
+                if (tripId != null) {
+
+                    TripEstimatesScreen(
+
+                        tripId = tripId,
+
+                        tripViewModel =
+                            tripViewModel,
+
+                        onAddEstimate = {
+
+                            navController.navigate(
+                                "addTripEstimate/$tripId"
+                            )
+                        },
+
+                        onEditEstimate = { estimateId ->
+
+                            navController.navigate(
+                                "editTripEstimate/$estimateId"
+                            )
+                        },
+
+                        onBack = {
+
+                            navController.popBackStack()
+                        }
+                    )
+                }
+            }
+
+
+            // =========================================================
+            // ADD TRIP ESTIMATE
+            // =========================================================
+
+            composable(
+                "addTripEstimate/{tripId}"
+            ) { entry ->
+
+                val tripId =
+                    entry.arguments
+                        ?.getString("tripId")
+                        ?.toLongOrNull()
+
+                var trip by remember {
+                    mutableStateOf<Trip?>(null)
+                }
+
+                LaunchedEffect(tripId) {
+
+                    if (tripId != null) {
+
+                        trip =
+                            tripViewModel.getTripById(
+                                tripId
+                            )
+                    }
+                }
+
+                trip?.let { item ->
+
+                    AddTripEstimateScreen(
+
+                        trip = item,
+
+                        tripViewModel =
+                            tripViewModel,
+
+                        exchangeRateViewModel =
+                            exchangeRateViewModel,
+
+                        onEstimateAdded = {
+
+                            navController.popBackStack()
+                        },
+
+                        onBack = {
+
+                            navController.popBackStack()
+                        }
+                    )
+                }
+            }
+
+
+            // =========================================================
+            // EDIT TRIP ESTIMATE
+            // =========================================================
+
+            composable(
+                "editTripEstimate/{estimateId}"
+            ) { entry ->
+
+                val estimateId =
+                    entry.arguments
+                        ?.getString("estimateId")
+                        ?.toLongOrNull()
+
+                var estimate by remember {
+                    mutableStateOf<TripEstimateEntity?>(null)
+                }
+
+                LaunchedEffect(estimateId) {
+
+                    if (estimateId != null) {
+
+                        estimate =
+                            tripViewModel.getTripEstimateById(
+                                estimateId
+                            )
+                    }
+                }
+
+                estimate?.let { item ->
+
+                    EditTripEstimateScreen(
+
+                        estimate = item,
+
+                        tripViewModel =
+                            tripViewModel,
+
+                        exchangeRateViewModel =
+                            exchangeRateViewModel,
+
+                        onEstimateUpdated = {
+
+                            navController.popBackStack()
+                        },
+
+                        onDeleteEstimate = {
+
+                            tripViewModel.deleteTripEstimate(
+                                item
+                            )
+
+                            navController.popBackStack()
+                        },
+
+                        onBack = {
 
                             navController.popBackStack()
                         }

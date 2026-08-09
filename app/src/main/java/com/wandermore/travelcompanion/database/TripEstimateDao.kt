@@ -10,35 +10,35 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface TripEstimateDao {
 
-    // ---------------------------------------------------------
-    // GET ALL ESTIMATES FOR A TRIP
-    // ---------------------------------------------------------
+// ---------------------------------------------------------
+// GET ALL ESTIMATES FOR A TRIP
+// ---------------------------------------------------------
 
     @Query(
         """
-        SELECT *
-        FROM trip_estimates
-        WHERE tripId = :tripId
-        ORDER BY category
-        """
+    SELECT *
+    FROM trip_estimates
+    WHERE tripId = :tripId
+    ORDER BY category
+    """
     )
     fun getEstimatesForTrip(
         tripId: Long
     ): Flow<List<TripEstimateEntity>>
 
 
-    // ---------------------------------------------------------
-    // GET ESTIMATE FOR A TRIP + CATEGORY
-    // ---------------------------------------------------------
+// ---------------------------------------------------------
+// GET ESTIMATE FOR A TRIP + CATEGORY
+// ---------------------------------------------------------
 
     @Query(
         """
-        SELECT *
-        FROM trip_estimates
-        WHERE tripId = :tripId
-        AND category = :category
-        LIMIT 1
-        """
+    SELECT *
+    FROM trip_estimates
+    WHERE tripId = :tripId
+    AND category = :category
+    LIMIT 1
+    """
     )
     suspend fun getEstimate(
         tripId: Long,
@@ -46,9 +46,26 @@ interface TripEstimateDao {
     ): TripEstimateEntity?
 
 
-    // ---------------------------------------------------------
-    // INSERT
-    // ---------------------------------------------------------
+// ---------------------------------------------------------
+// GET ESTIMATE BY ID
+// ---------------------------------------------------------
+
+    @Query(
+        """
+    SELECT *
+    FROM trip_estimates
+    WHERE id = :estimateId
+    LIMIT 1
+    """
+    )
+    suspend fun getEstimateById(
+        estimateId: Long
+    ): TripEstimateEntity?
+
+
+// ---------------------------------------------------------
+// INSERT
+// ---------------------------------------------------------
 
     @Insert
     suspend fun insertEstimate(
@@ -56,9 +73,9 @@ interface TripEstimateDao {
     ): Long
 
 
-    // ---------------------------------------------------------
-    // UPDATE
-    // ---------------------------------------------------------
+// ---------------------------------------------------------
+// UPDATE
+// ---------------------------------------------------------
 
     @Update
     suspend fun updateEstimate(
@@ -66,9 +83,9 @@ interface TripEstimateDao {
     )
 
 
-    // ---------------------------------------------------------
-    // DELETE
-    // ---------------------------------------------------------
+// ---------------------------------------------------------
+// DELETE
+// ---------------------------------------------------------
 
     @Delete
     suspend fun deleteEstimate(
@@ -76,19 +93,20 @@ interface TripEstimateDao {
     )
 
 
-    // ---------------------------------------------------------
-    // DELETE BY TRIP
-    // Useful if we ever need to remove all estimates
-    // for a particular trip.
-    // ---------------------------------------------------------
+// ---------------------------------------------------------
+// DELETE BY TRIP
+// Useful if we ever need to remove all estimates
+// for a particular trip.
+// ---------------------------------------------------------
 
     @Query(
         """
-        DELETE FROM trip_estimates
-        WHERE tripId = :tripId
-        """
+    DELETE FROM trip_estimates
+    WHERE tripId = :tripId
+    """
     )
     suspend fun deleteEstimatesForTrip(
         tripId: Long
     )
+
 }

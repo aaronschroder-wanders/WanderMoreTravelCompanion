@@ -36,6 +36,7 @@ fun TripHubScreen(
     onActivities: () -> Unit,
     onToDo: () -> Unit,
     onExpenses: () -> Unit,
+    onEstimates: () -> Unit,
     onEditTrip: () -> Unit,
     onStartTrip: () -> Unit,
     onArchiveTrip: () -> Unit,
@@ -154,6 +155,18 @@ fun TripHubScreen(
                     )
                 }
 
+                // Estimates deliberately comes before Expenses.
+                Button(
+                    onClick = onEstimates,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(64.dp)
+                ) {
+                    Text(
+                        "📊  Estimates"
+                    )
+                }
+
                 Button(
                     onClick = onExpenses,
                     modifier = Modifier
@@ -244,9 +257,9 @@ fun TripHubScreen(
         }
     }
 
-    // =========================================================
-    // RESTORE DIALOG
-    // =========================================================
+// =========================================================
+// RESTORE DIALOG
+// =========================================================
 
     if (showRestoreDialog) {
 
@@ -305,9 +318,9 @@ fun TripHubScreen(
         )
     }
 
-    // =========================================================
-    // DELETE DIALOG
-    // =========================================================
+// =========================================================
+// DELETE DIALOG
+// =========================================================
 
     if (showDeleteDialog) {
 
@@ -355,4 +368,5 @@ fun TripHubScreen(
             }
         )
     }
+
 }

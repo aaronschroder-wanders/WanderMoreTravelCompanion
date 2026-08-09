@@ -477,6 +477,14 @@ class TripViewModel(
         )
     }
 
+    suspend fun getTripEstimateById(
+        estimateId: Long
+    ): TripEstimateEntity? {
+
+        return tripEstimateDao.getEstimateById(
+            estimateId
+        )
+    }
 
     fun updateTripEstimate(
         estimate: TripEstimateEntity
