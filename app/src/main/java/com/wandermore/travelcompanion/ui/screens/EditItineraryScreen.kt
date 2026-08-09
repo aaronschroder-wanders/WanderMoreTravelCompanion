@@ -14,7 +14,10 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -48,9 +51,9 @@ fun EditItineraryScreen(
     onBack: () -> Unit
 ) {
 
-    // ---------------------------------------------------------
-    // FORM STATE
-    // ---------------------------------------------------------
+// ---------------------------------------------------------
+// FORM STATE
+// ---------------------------------------------------------
 
     var existingItem by remember {
         mutableStateOf<ItineraryEntity?>(null)
@@ -92,9 +95,27 @@ fun EditItineraryScreen(
         mutableStateOf(false)
     }
 
-    // ---------------------------------------------------------
-    // LOAD EXISTING ITINERARY ITEM
-    // ---------------------------------------------------------
+    var typeExpanded by remember {
+        mutableStateOf(false)
+    }
+
+// ---------------------------------------------------------
+// ITINERARY TYPES
+// ---------------------------------------------------------
+
+    val itineraryTypes = listOf(
+        "Travel",
+        "Accommodation",
+        "Activity",
+        "Attraction",
+        "Arrival",
+        "Departure",
+        "Other"
+    )
+
+// ---------------------------------------------------------
+// LOAD EXISTING ITINERARY ITEM
+// ---------------------------------------------------------
 
     LaunchedEffect(itineraryId) {
 
@@ -111,21 +132,25 @@ fun EditItineraryScreen(
             time = item.time
             title = item.title
             type = item.type
-            nightsText = item.nights?.toString() ?: ""
-            location = item.location ?: ""
-            notes = item.notes ?: ""
+            nightsText =
+                item.nights?.toString() ?: ""
+            location =
+                item.location ?: ""
+            notes =
+                item.notes ?: ""
         }
     }
 
-    // ---------------------------------------------------------
-    // WAIT FOR ITEM TO LOAD
-    // ---------------------------------------------------------
+// ---------------------------------------------------------
+// WAIT FOR ITEM TO LOAD
+// ---------------------------------------------------------
 
     if (existingItem == null) {
         return
     }
 
-    val currentItem = existingItem!!
+    val currentItem =
+        existingItem!!
 
     val dateFormatter =
         DateTimeFormatter.ofPattern(
@@ -161,9 +186,12 @@ fun EditItineraryScreen(
         )
 
         Text(
-            text = "Update this travel plan, stay or event.",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            text =
+                "Update this travel plan, stay or event.",
+            style =
+                MaterialTheme.typography.bodyMedium,
+            color =
+                MaterialTheme.colorScheme.onSurfaceVariant
         )
 
         Spacer(
@@ -185,7 +213,9 @@ fun EditItineraryScreen(
                 text = if (date == null) {
                     "Select date"
                 } else {
-                    date!!.format(dateFormatter)
+                    date!!.format(
+                        dateFormatter
+                    )
                 }
             )
         }
@@ -209,7 +239,9 @@ fun EditItineraryScreen(
                 text = if (time == null) {
                     "Select time — optional"
                 } else {
-                    time!!.format(timeFormatter)
+                    time!!.format(
+                        timeFormatter
+                    )
                 }
             )
         }
@@ -242,17 +274,57 @@ fun EditItineraryScreen(
         // TYPE
         // -----------------------------------------------------
 
-        OutlinedTextField(
-            value = type,
-            onValueChange = {
-                type = it
+        ExposedDropdownMenuBox(
+            expanded = typeExpanded,
+            onExpandedChange = {
+                typeExpanded = !typeExpanded
             },
-            label = {
-                Text("Type")
-            },
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true
-        )
+            modifier = Modifier.fillMaxWidth()
+        ) {
+
+            OutlinedTextField(
+                value = type,
+                onValueChange = {},
+                readOnly = true,
+                label = {
+                    Text("Type")
+                },
+                placeholder = {
+                    Text("Select type")
+                },
+                trailingIcon = {
+                    ExposedDropdownMenuDefaults.TrailingIcon(
+                        expanded = typeExpanded
+                    )
+                },
+                modifier = Modifier
+                    .menuAnchor()
+                    .fillMaxWidth(),
+                singleLine = true
+            )
+
+            ExposedDropdownMenu(
+                expanded = typeExpanded,
+                onDismissRequest = {
+                    typeExpanded = false
+                }
+            ) {
+
+                itineraryTypes.forEach { itineraryType ->
+
+                    DropdownMenuItem(
+                        text = {
+                            Text(itineraryType)
+                        },
+                        onClick = {
+
+                            type = itineraryType
+                            typeExpanded = false
+                        }
+                    )
+                }
+            }
+        }
 
         Spacer(
             modifier = Modifier.height(12.dp)
@@ -265,6 +337,7 @@ fun EditItineraryScreen(
         OutlinedTextField(
             value = nightsText,
             onValueChange = {
+
                 if (
                     it.all { character ->
                         character.isDigit()
@@ -300,7 +373,9 @@ fun EditItineraryScreen(
                 Text("Location")
             },
             placeholder = {
-                Text("City, address or destination")
+                Text(
+                    "City, address or destination"
+                )
             },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true
@@ -363,7 +438,7 @@ fun EditItineraryScreen(
                             date = selectedDate,
                             time = time,
                             title = title.trim(),
-                            type = type.trim(),
+                            type = type,
                             nights =
                                 nightsText
                                     .toIntOrNull(),
@@ -402,9 +477,9 @@ fun EditItineraryScreen(
         )
     }
 
-    // =========================================================
-    // DATE PICKER
-    // =========================================================
+// =========================================================
+// DATE PICKER
+// =========================================================
 
     if (showDatePicker) {
 
@@ -467,9 +542,9 @@ fun EditItineraryScreen(
         }
     }
 
-    // =========================================================
-    // TIME PICKER
-    // =========================================================
+// =========================================================
+// TIME PICKER
+// =========================================================
 
     if (showTimePicker) {
 
@@ -512,4 +587,5 @@ fun EditItineraryScreen(
             )
         }
     }
+
 }

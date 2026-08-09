@@ -15,6 +15,9 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -82,6 +85,20 @@ fun AddItineraryScreen(
     var showTimePicker by remember {
         mutableStateOf(false)
     }
+
+    var typeExpanded by remember {
+        mutableStateOf(false)
+    }
+
+    val itineraryTypes = listOf(
+        "Travel",
+        "Accommodation",
+        "Activity",
+        "Attraction",
+        "Arrival",
+        "Departure",
+        "Other"
+    )
 
     val dateFormatter =
         DateTimeFormatter.ofPattern("dd MMM yyyy")
@@ -197,22 +214,57 @@ fun AddItineraryScreen(
         // TYPE
         // -----------------------------------------------------
 
-        OutlinedTextField(
-            value = type,
-            onValueChange = {
-                type = it
+        ExposedDropdownMenuBox(
+            expanded = typeExpanded,
+            onExpandedChange = {
+                typeExpanded = !typeExpanded
             },
-            label = {
-                Text("Type")
-            },
-            placeholder = {
-                Text(
-                    "e.g. Travel, Accommodation, Arrival"
-                )
-            },
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true
-        )
+            modifier = Modifier.fillMaxWidth()
+        ) {
+
+            OutlinedTextField(
+                value = type,
+                onValueChange = {},
+                readOnly = true,
+                label = {
+                    Text("Type")
+                },
+                placeholder = {
+                    Text("Select type")
+                },
+                trailingIcon = {
+                    ExposedDropdownMenuDefaults.TrailingIcon(
+                        expanded = typeExpanded
+                    )
+                },
+                modifier = Modifier
+                    .menuAnchor()
+                    .fillMaxWidth(),
+                singleLine = true
+            )
+
+            ExposedDropdownMenu(
+                expanded = typeExpanded,
+                onDismissRequest = {
+                    typeExpanded = false
+                }
+            ) {
+
+                itineraryTypes.forEach { itineraryType ->
+
+                    DropdownMenuItem(
+                        text = {
+                            Text(itineraryType)
+                        },
+                        onClick = {
+
+                            type = itineraryType
+                            typeExpanded = false
+                        }
+                    )
+                }
+            }
+        }
 
         Spacer(
             modifier = Modifier.height(12.dp)
@@ -225,6 +277,7 @@ fun AddItineraryScreen(
         OutlinedTextField(
             value = nightsText,
             onValueChange = {
+
                 if (
                     it.all { character ->
                         character.isDigit()
@@ -327,7 +380,7 @@ fun AddItineraryScreen(
                             date = selectedDate,
                             time = time,
                             title = title.trim(),
-                            type = type.trim(),
+                            type = type,
                             nights = nights,
                             location =
                                 location.trim()
@@ -362,9 +415,9 @@ fun AddItineraryScreen(
         )
     }
 
-    // =========================================================
-    // DATE PICKER
-    // =========================================================
+// =========================================================
+// DATE PICKER
+// =========================================================
 
     if (showDatePicker) {
 
@@ -419,9 +472,9 @@ fun AddItineraryScreen(
         }
     }
 
-    // =========================================================
-    // TIME PICKER
-    // =========================================================
+// =========================================================
+// TIME PICKER
+// =========================================================
 
     if (showTimePicker) {
 
@@ -464,4 +517,5 @@ fun AddItineraryScreen(
             )
         }
     }
+
 }
