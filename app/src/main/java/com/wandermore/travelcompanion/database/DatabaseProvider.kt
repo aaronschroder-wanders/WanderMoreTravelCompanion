@@ -8,28 +8,33 @@ object DatabaseProvider {
     @Volatile
     private var INSTANCE: AppDatabase? = null
 
-    fun getDatabase(context: Context): AppDatabase {
+    fun getDatabase(
+        context: Context
+    ): AppDatabase {
 
         return INSTANCE ?: synchronized(this) {
 
-            val instance = Room.databaseBuilder(
-                context.applicationContext,
-                AppDatabase::class.java,
-                "wander_more_database"
-            )
-                .addMigrations(
-                    AppDatabase.MIGRATION_1_2,
-                    AppDatabase.MIGRATION_2_3,
-                    AppDatabase.MIGRATION_3_4,
-                    AppDatabase.MIGRATION_4_5,
-                    AppDatabase.MIGRATION_5_6,
-                    AppDatabase.MIGRATION_6_7,
-                    AppDatabase.MIGRATION_7_8,
-                    AppDatabase.MIGRATION_8_9
+            val instance =
+                Room.databaseBuilder(
+                    context.applicationContext,
+                    AppDatabase::class.java,
+                    "wander_more_database"
                 )
-                .build()
+                    .addMigrations(
+                        AppDatabase.MIGRATION_1_2,
+                        AppDatabase.MIGRATION_2_3,
+                        AppDatabase.MIGRATION_3_4,
+                        AppDatabase.MIGRATION_4_5,
+                        AppDatabase.MIGRATION_5_6,
+                        AppDatabase.MIGRATION_6_7,
+                        AppDatabase.MIGRATION_7_8,
+                        AppDatabase.MIGRATION_8_9,
+                        AppDatabase.MIGRATION_9_10
+                    )
+                    .build()
 
             INSTANCE = instance
+
             instance
         }
     }

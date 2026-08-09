@@ -12,6 +12,8 @@ import com.wandermore.travelcompanion.database.ItineraryEntity
 import com.wandermore.travelcompanion.database.TodoDao
 import com.wandermore.travelcompanion.database.TodoEntity
 import com.wandermore.travelcompanion.database.TripDao
+import com.wandermore.travelcompanion.database.TripEstimateDao
+import com.wandermore.travelcompanion.database.TripEstimateEntity
 import com.wandermore.travelcompanion.model.Trip
 import com.wandermore.travelcompanion.model.TripStatus
 import kotlinx.coroutines.flow.Flow
@@ -23,7 +25,8 @@ class TripViewModel(
     private val expenseDao: ExpenseDao,
     private val todoDao: TodoDao,
     private val activityDao: ActivityDao,
-    private val itineraryDao: ItineraryDao
+    private val itineraryDao: ItineraryDao,
+    private val tripEstimateDao: TripEstimateDao
 ) : ViewModel() {
 
     private val repository = TripRepository(
@@ -435,6 +438,84 @@ class TripViewModel(
             )
         }
     }
+
+    // ---------------------------------------------------------
+    // Trip Estimate functions
+    // ---------------------------------------------------------
+
+    fun addTripEstimate(
+        estimate: TripEstimateEntity
+    ) {
+
+        viewModelScope.launch {
+
+            tripEstimateDao.insertEstimate(
+                estimate
+            )
+        }
+    }
+
+
+    fun getTripEstimatesForTrip(
+        tripId: Long
+    ): Flow<List<TripEstimateEntity>> {
+
+        return tripEstimateDao.getEstimatesForTrip(
+            tripId
+        )
+    }
+
+
+    suspend fun getTripEstimate(
+        tripId: Long,
+        category: String
+    ): TripEstimateEntity? {
+
+        return tripEstimateDao.getEstimate(
+            tripId,
+            category
+        )
+    }
+
+
+    fun updateTripEstimate(
+        estimate: TripEstimateEntity
+    ) {
+
+        viewModelScope.launch {
+
+            tripEstimateDao.updateEstimate(
+                estimate
+            )
+        }
+    }
+
+
+    fun deleteTripEstimate(
+        estimate: TripEstimateEntity
+    ) {
+
+        viewModelScope.launch {
+
+            tripEstimateDao.deleteEstimate(
+                estimate
+            )
+        }
+    }
+
+
+    fun deleteTripEstimatesForTrip(
+        tripId: Long
+    ) {
+
+        viewModelScope.launch {
+
+            tripEstimateDao.deleteEstimatesForTrip(
+                tripId
+            )
+        }
+    }
+
 
     // ---------------------------------------------------------
     // Itinerary functions

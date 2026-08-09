@@ -14,9 +14,10 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         TodoEntity::class,
         ActivityEntity::class,
         ItineraryEntity::class,
-        BookingEntity::class
+        BookingEntity::class,
+        TripEstimateEntity::class
     ],
-    version = 9,
+    version = 10,
     exportSchema = false
 )
 @TypeConverters(DateConverter::class)
@@ -33,6 +34,8 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun activityDao(): ActivityDao
 
     abstract fun itineraryDao(): ItineraryDao
+
+    abstract fun tripEstimateDao(): TripEstimateDao
 
 
     companion object {
@@ -334,6 +337,53 @@ abstract class AppDatabase : RoomDatabase() {
                     """
                     CREATE INDEX IF NOT EXISTS index_itinerary_activityId
                     ON itinerary(activityId)
+                    """.trimIndent()
+                )
+            }
+        }
+
+
+        // ---------------------------------------------------------
+        // VERSION 9 → 10
+        // TRIP ESTIMATES
+        // ---------------------------------------------------------
+
+        val MIGRATION_9_10 = object : Migration(9, 10) {
+
+            override fun migrate(
+                database: SupportSQLiteDatabase
+            ) {
+
+                database.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS trip_estimates (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        tripId INTEGER NOT NULL,
+                        category TEXT NOT NULL,
+                        estimateType TEXT NOT NULL,
+                        amount REAL NOT NULL,
+                        currency TEXT NOT NULL,
+                        convertedAmount REAL NOT NULL,
+                        notes TEXT,
+                        FOREIGN KEY(tripId)
+                            REFERENCES trips(id)
+                            ON DELETE CASCADE
+                    )
+                    """.trimIndent()
+                )
+
+                database.execSQL(
+                    """
+                    CREATE INDEX IF NOT EXISTS index_trip_estimates_tripId
+                    ON trip_estimates(tripId)
+                    """.trimIndent()
+                )
+
+                database.execSQL(
+                    """
+                    CREATE UNIQUE INDEX IF NOT EXISTS
+                    index_trip_estimates_tripId_category
+                    ON trip_estimates(tripId, category)
                     """.trimIndent()
                 )
             }
