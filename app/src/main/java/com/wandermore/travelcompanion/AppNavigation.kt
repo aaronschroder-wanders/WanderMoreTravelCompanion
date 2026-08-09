@@ -30,6 +30,7 @@ import com.wandermore.travelcompanion.ui.screens.CategoryExpensesScreen
 import com.wandermore.travelcompanion.ui.screens.CreateTripScreen
 import com.wandermore.travelcompanion.ui.screens.EditActivityScreen
 import com.wandermore.travelcompanion.ui.screens.EditExpenseScreen
+import com.wandermore.travelcompanion.ui.screens.EditItineraryScreen
 import com.wandermore.travelcompanion.ui.screens.EditTodoScreen
 import com.wandermore.travelcompanion.ui.screens.EditTripScreen
 import com.wandermore.travelcompanion.ui.screens.ExchangeRateSettingsScreen
@@ -376,8 +377,9 @@ fun AppNavigation(
 
                         onEdit = {
 
-                            // Edit itinerary screen
-                            // will be added next.
+                            navController.navigate(
+                                "editItinerary/${item.id}"
+                            )
                         },
 
                         onDelete = {
@@ -385,6 +387,42 @@ fun AppNavigation(
                             tripViewModel.deleteItinerary(
                                 item
                             )
+
+                            navController.popBackStack()
+                        },
+
+                        onBack = {
+
+                            navController.popBackStack()
+                        }
+                    )
+                }
+            }
+
+
+            // =========================================================
+            // EDIT ITINERARY
+            // =========================================================
+
+            composable(
+                "editItinerary/{itineraryId}"
+            ) { entry ->
+
+                val itineraryId =
+                    entry.arguments
+                        ?.getString("itineraryId")
+                        ?.toLongOrNull()
+
+                if (itineraryId != null) {
+
+                    EditItineraryScreen(
+
+                        itineraryId = itineraryId,
+
+                        tripViewModel =
+                            tripViewModel,
+
+                        onItineraryUpdated = {
 
                             navController.popBackStack()
                         },
