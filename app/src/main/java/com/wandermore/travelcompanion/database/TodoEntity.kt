@@ -4,8 +4,10 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import kotlinx.serialization.Serializable
 import java.time.LocalDate
 
+@Serializable
 @Entity(
     tableName = "todos",
     foreignKeys = [
@@ -29,6 +31,7 @@ data class TodoEntity(
 
     val task: String,
 
+    @Serializable(with = LocalDateSerializer::class)
     val dueDate: LocalDate? = null,
 
     val assignedTo: String,

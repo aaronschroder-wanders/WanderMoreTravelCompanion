@@ -4,9 +4,11 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import kotlinx.serialization.Serializable
 import java.time.LocalDate
 import java.time.LocalTime
 
+@Serializable
 @Entity(
     tableName = "itinerary",
     foreignKeys = [
@@ -29,8 +31,10 @@ data class ItineraryEntity(
 
     val tripId: Long,
 
+    @Serializable(with = LocalDateSerializer::class)
     val date: LocalDate,
 
+    @Serializable(with = LocalTimeSerializer::class)
     val time: LocalTime? = null,
 
     val title: String,

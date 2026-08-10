@@ -11,22 +11,38 @@ import kotlinx.coroutines.flow.Flow
 interface ExpenseDao {
 
     @Insert
-    suspend fun insertExpense(expense: ExpenseEntity)
+    suspend fun insertExpense(
+        expense: ExpenseEntity
+    )
 
+    @Query(
+        "SELECT * FROM expenses WHERE tripId = :tripId ORDER BY date DESC"
+    )
+    fun getExpensesForTrip(
+        tripId: Long
+    ): Flow<List<ExpenseEntity>>
 
-    @Query("SELECT * FROM expenses WHERE tripId = :tripId ORDER BY date DESC")
-    fun getExpensesForTrip(tripId: Long): Flow<List<ExpenseEntity>>
+    // ---------------------------------------------------------
+    // BACKUP
+    // ---------------------------------------------------------
 
+    @Query("SELECT * FROM expenses")
+    suspend fun getAllExpensesForBackup(): List<ExpenseEntity>
 
-    @Query("SELECT * FROM expenses WHERE id = :expenseId")
-    suspend fun getExpenseById(expenseId: Long): ExpenseEntity?
-
+    @Query(
+        "SELECT * FROM expenses WHERE id = :expenseId"
+    )
+    suspend fun getExpenseById(
+        expenseId: Long
+    ): ExpenseEntity?
 
     @Delete
-    suspend fun deleteExpense(expense: ExpenseEntity)
-
+    suspend fun deleteExpense(
+        expense: ExpenseEntity
+    )
 
     @Update
-    suspend fun updateExpense(expense: ExpenseEntity)
-
+    suspend fun updateExpense(
+        expense: ExpenseEntity
+    )
 }

@@ -4,9 +4,10 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import kotlinx.serialization.Serializable
 import java.time.LocalDate
 
-
+@Serializable
 @Entity(
     tableName = "expenses",
     foreignKeys = [
@@ -36,6 +37,7 @@ data class ExpenseEntity(
 
     val category: String,
 
+    @Serializable(with = LocalDateSerializer::class)
     val date: LocalDate,
 
     // Exchange rate used when this expense was entered
@@ -46,5 +48,4 @@ data class ExpenseEntity(
 
     // Number of nights for accommodation expenses
     val numberOfNights: Int? = null
-
 )

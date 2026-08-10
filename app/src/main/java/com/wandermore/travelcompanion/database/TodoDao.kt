@@ -24,7 +24,6 @@ interface TodoDao {
         tripId: Long
     ): Flow<List<TodoEntity>>
 
-
     @Query(
         """
         SELECT * FROM todos
@@ -36,18 +35,22 @@ interface TodoDao {
         todoId: Long
     ): TodoEntity?
 
+    // ---------------------------------------------------------
+    // BACKUP
+    // ---------------------------------------------------------
+
+    @Query("SELECT * FROM todos")
+    suspend fun getAllTodosForBackup(): List<TodoEntity>
 
     @Insert
     suspend fun insertTodo(
         todo: TodoEntity
     )
 
-
     @Update
     suspend fun updateTodo(
         todo: TodoEntity
     )
-
 
     @Delete
     suspend fun deleteTodo(

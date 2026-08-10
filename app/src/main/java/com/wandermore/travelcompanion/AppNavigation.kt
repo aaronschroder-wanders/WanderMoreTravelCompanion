@@ -1,5 +1,9 @@
 package com.wandermore.travelcompanion
 
+import androidx.activity.result.contract.ActivityResultContracts
+import java.time.LocalDateTime
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
@@ -15,6 +19,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.wandermore.travelcompanion.database.ActivityEntity
+import com.wandermore.travelcompanion.database.AppDatabase
 import com.wandermore.travelcompanion.database.ExpenseEntity
 import com.wandermore.travelcompanion.database.ItineraryEntity
 import com.wandermore.travelcompanion.database.TodoEntity
@@ -40,6 +45,7 @@ import com.wandermore.travelcompanion.ui.screens.ExchangeRateSettingsScreen
 import com.wandermore.travelcompanion.ui.screens.HomeScreen
 import com.wandermore.travelcompanion.ui.screens.ItineraryDetailsScreen
 import com.wandermore.travelcompanion.ui.screens.ItineraryScreen
+import com.wandermore.travelcompanion.ui.screens.SettingsScreen
 import com.wandermore.travelcompanion.ui.screens.TodoScreen
 import com.wandermore.travelcompanion.ui.screens.TripDetailsScreen
 import com.wandermore.travelcompanion.ui.screens.TripEstimatesScreen
@@ -47,13 +53,88 @@ import com.wandermore.travelcompanion.ui.screens.TripExpensesScreen
 import com.wandermore.travelcompanion.ui.screens.TripHubScreen
 import com.wandermore.travelcompanion.viewmodel.ExchangeRateViewModel
 import com.wandermore.travelcompanion.viewmodel.TripViewModel
+import androidx.compose.runtime.rememberCoroutineScope
+import com.wandermore.travelcompanion.data.repository.BackupRepository
+import kotlinx.coroutines.launch
 
 @Composable
 fun AppNavigation(
     navController: NavHostController,
     tripViewModel: TripViewModel,
-    exchangeRateViewModel: ExchangeRateViewModel
+    exchangeRateViewModel: ExchangeRateViewModel,
+    database: AppDatabase
 ) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+
+    val coroutineScope = rememberCoroutineScope()
+
+    val backupRepository =
+        remember(database) {
+            BackupRepository(database)
+        }
+
+    // =========================================================
+    // BACKUP FILE CREATION
+    // =========================================================
+
+    val backupLauncher =
+        rememberLauncherForActivityResult(
+            contract =
+                ActivityResultContracts.CreateDocument(
+                    "application/json"
+                )
+        ) { uri: Uri? ->
+
+            if (uri != null) {
+
+                coroutineScope.launch {
+
+                    val backupJson =
+                        backupRepository.createBackup()
+
+                    context.contentResolver
+                        .openOutputStream(uri)
+                        ?.bufferedWriter()
+                        ?.use { writer ->
+
+                            writer.write(
+                                backupJson
+                            )
+                        }
+                }
+            }
+        }
+
+
+    // =========================================================
+    // RESTORE FILE PICKER
+    // =========================================================
+
+    val restoreLauncher =
+        rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.OpenDocument()
+        ) { uri: Uri? ->
+
+            if (uri != null) {
+
+                coroutineScope.launch {
+
+                    val backupJson =
+                        context.contentResolver
+                            .openInputStream(uri)
+                            ?.bufferedReader()
+                            ?.use { it.readText() }
+
+                    if (backupJson != null) {
+
+                        backupRepository.restoreBackup(
+                            backupJson
+                        )
+                    }
+                }
+            }
+        }
+
 
     Scaffold(
         modifier = Modifier.fillMaxSize()
@@ -95,7 +176,7 @@ fun AppNavigation(
 
                     onSettings = {
                         navController.navigate(
-                            "exchangeRates"
+                            "settings"
                         )
                     },
 
@@ -151,6 +232,55 @@ fun AppNavigation(
                     onTripCreated = {
                         navController.popBackStack()
                     }
+                )
+            }
+
+
+            // =========================================================
+            // SETTINGS
+            // =========================================================
+
+            composable("settings") {
+
+                SettingsScreen(
+
+                    onExchangeRates = {
+
+                        navController.navigate(
+                            "exchangeRates"
+                        )
+                    },
+
+                    onBackup = {
+
+                        val filename =
+                            "WanderMore_Backup_${
+                                LocalDateTime.now()
+                                    .toString()
+                                    .replace(":", "-")
+                                    .substringBefore(".")
+                            }.json"
+
+                        backupLauncher.launch(
+                            filename
+                        )
+
+                    },
+
+                    onRestore = {
+
+                        restoreLauncher.launch(
+                            arrayOf("application/json")
+                        )
+
+                    },
+
+                    onBack = {
+
+                        navController.popBackStack()
+
+                    }
+
                 )
             }
 

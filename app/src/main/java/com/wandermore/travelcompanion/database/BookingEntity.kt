@@ -4,9 +4,11 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import kotlinx.serialization.Serializable
 import java.time.LocalDate
 import java.time.LocalTime
 
+@Serializable
 @Entity(
     tableName = "bookings",
     foreignKeys = [
@@ -32,8 +34,10 @@ data class BookingEntity(
 
     val type: String,
 
+    @Serializable(with = LocalDateSerializer::class)
     val date: LocalDate? = null,
 
+    @Serializable(with = LocalTimeSerializer::class)
     val time: LocalTime? = null,
 
     val provider: String? = null,
@@ -46,6 +50,7 @@ data class BookingEntity(
 
     val convertedAmount: Double? = null,
 
+    @Serializable(with = LocalDateSerializer::class)
     val cancelFreeBefore: LocalDate? = null,
 
     val address: String? = null,

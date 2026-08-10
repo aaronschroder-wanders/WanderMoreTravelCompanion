@@ -3,9 +3,11 @@ package com.wandermore.travelcompanion.database
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import java.time.LocalDate
 import com.wandermore.travelcompanion.model.TripStatus
+import kotlinx.serialization.Serializable
+import java.time.LocalDate
 
+@Serializable
 @Entity(
     tableName = "trips"
 )
@@ -18,8 +20,10 @@ data class TripEntity(
 
     val name: String,
 
+    @Serializable(with = LocalDateSerializer::class)
     val startDate: LocalDate,
 
+    @Serializable(with = LocalDateSerializer::class)
     val endDate: LocalDate,
 
     val homeCurrency: String,

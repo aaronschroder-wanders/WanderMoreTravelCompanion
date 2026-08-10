@@ -27,6 +27,13 @@ interface ActivityDao {
         tripId: Long
     ): Flow<List<ActivityEntity>>
 
+    // ---------------------------------------------------------
+    // BACKUP
+    // ---------------------------------------------------------
+
+    @Query("SELECT * FROM activities")
+    suspend fun getAllActivitiesForBackup(): List<ActivityEntity>
+
     @Insert
     suspend fun insertActivity(
         activity: ActivityEntity

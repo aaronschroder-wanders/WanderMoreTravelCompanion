@@ -7,14 +7,20 @@ import androidx.room.Query
 import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
 
-
 @Dao
 interface TripDao {
 
+    // =========================================================
+    // NORMAL TRIP LIST
+    // =========================================================
 
     @Query("SELECT * FROM trips")
     fun getAllTrips(): Flow<List<TripEntity>>
 
+
+    // =========================================================
+    // GET SINGLE TRIP
+    // =========================================================
 
     @Query(
         """
@@ -26,6 +32,30 @@ interface TripDao {
         tripId: Long
     ): Flow<TripEntity?>
 
+
+    // =========================================================
+    // BACKUP
+    // =========================================================
+
+    @Query("SELECT * FROM trips")
+    suspend fun getAllTripsForBackup(): List<TripEntity>
+
+
+    // =========================================================
+    // RESTORE
+    // Delete all trips before restoring backup
+    //
+    // Child records are deleted automatically through
+    // the ON DELETE CASCADE relationships.
+    // =========================================================
+
+    @Query("DELETE FROM trips")
+    suspend fun deleteAllTrips()
+
+
+    // =========================================================
+    // NORMAL TRIP OPERATIONS
+    // =========================================================
 
     @Insert
     suspend fun insertTrip(
@@ -39,10 +69,14 @@ interface TripDao {
     )
 
 
+    // =========================================================
+    // TRIP STATUS
+    // =========================================================
+
     @Query(
         """
-        UPDATE trips 
-        SET status = :status 
+        UPDATE trips
+        SET status = :status
         WHERE id = :tripId
         """
     )
@@ -52,9 +86,12 @@ interface TripDao {
     )
 
 
+    // =========================================================
+    // DELETE SINGLE TRIP
+    // =========================================================
+
     @Delete
     suspend fun deleteTrip(
         trip: TripEntity
     )
-
 }

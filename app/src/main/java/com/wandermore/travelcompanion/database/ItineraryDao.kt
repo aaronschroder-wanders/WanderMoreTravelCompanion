@@ -26,6 +26,12 @@ interface ItineraryDao {
         tripId: Long
     ): Flow<List<ItineraryEntity>>
 
+    // ---------------------------------------------------------
+    // BACKUP
+    // ---------------------------------------------------------
+
+    @Query("SELECT * FROM itinerary")
+    suspend fun getAllItineraryForBackup(): List<ItineraryEntity>
 
     // ---------------------------------------------------------
     // GET ONE ITINERARY ITEM
@@ -43,7 +49,6 @@ interface ItineraryDao {
         id: Long
     ): ItineraryEntity?
 
-
     // ---------------------------------------------------------
     // GET ITINERARY ITEM LINKED TO AN ACTIVITY
     // ---------------------------------------------------------
@@ -60,7 +65,6 @@ interface ItineraryDao {
         activityId: Long
     ): ItineraryEntity?
 
-
     // ---------------------------------------------------------
     // ADD
     // ---------------------------------------------------------
@@ -69,7 +73,6 @@ interface ItineraryDao {
     suspend fun insertItinerary(
         itinerary: ItineraryEntity
     ): Long
-
 
     // ---------------------------------------------------------
     // UPDATE
@@ -80,7 +83,6 @@ interface ItineraryDao {
         itinerary: ItineraryEntity
     )
 
-
     // ---------------------------------------------------------
     // DELETE
     // ---------------------------------------------------------
@@ -89,7 +91,6 @@ interface ItineraryDao {
     suspend fun deleteItinerary(
         itinerary: ItineraryEntity
     )
-
 
     // ---------------------------------------------------------
     // DELETE BY ACTIVITY
@@ -104,7 +105,6 @@ interface ItineraryDao {
     suspend fun deleteItineraryByActivityId(
         activityId: Long
     )
-
 
     // ---------------------------------------------------------
     // DELETE ALL FOR A TRIP

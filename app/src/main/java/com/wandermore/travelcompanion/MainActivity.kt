@@ -77,7 +77,8 @@ class MainActivity : ComponentActivity() {
                     navController = navController,
                     tripViewModel = tripViewModel,
                     exchangeRateViewModel =
-                        exchangeRateViewModel
+                        exchangeRateViewModel,
+                    database = database
                 )
             }
         }

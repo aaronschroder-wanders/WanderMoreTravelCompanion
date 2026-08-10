@@ -37,6 +37,8 @@ abstract class AppDatabase : RoomDatabase() {
 
     abstract fun tripEstimateDao(): TripEstimateDao
 
+    abstract fun bookingDao(): BookingDao
+
 
     companion object {
 
