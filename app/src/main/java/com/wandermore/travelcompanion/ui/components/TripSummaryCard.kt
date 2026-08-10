@@ -15,7 +15,7 @@ import com.wandermore.travelcompanion.util.formatMoney
 @Composable
 fun TripSummaryCard(
     plannedDays: Long,
-    expenseCount: Int,
+    totalEstimate: Double,
     totalSpent: Double,
     airfareTotal: Double,
     currency: String,
@@ -38,6 +38,9 @@ fun TripSummaryCard(
         } else {
             0.0
         }
+
+    val remaining =
+        totalEstimate - totalSpent
 
     Card(
         modifier = Modifier
@@ -63,7 +66,12 @@ fun TripSummaryCard(
             )
 
             Text(
-                text = "💳 Expenses: $expenseCount",
+                text = "🎯 Total estimate: ${
+                    formatMoney(
+                        totalEstimate,
+                        currency
+                    )
+                }",
                 style = MaterialTheme.typography.bodyMedium
             )
 
@@ -78,17 +86,32 @@ fun TripSummaryCard(
             )
 
             Text(
+                text =
+                    if (remaining >= 0) {
+                        "💵 Remaining: ${
+                            formatMoney(
+                                remaining,
+                                currency
+                            )
+                        }"
+                    } else {
+                        "⚠️ Over by: ${
+                            formatMoney(
+                                -remaining,
+                                currency
+                            )
+                        }"
+                    },
+                style = MaterialTheme.typography.bodyMedium
+            )
+
+            Text(
                 text = "📊 Average per day: ${
                     formatMoney(
                         averagePerDay,
                         currency
                     )
-                }",
-                style = MaterialTheme.typography.bodyMedium
-            )
-
-            Text(
-                text = "✈️ Average excl. flights per day: ${
+                }  /  Excl. flights: ${
                     formatMoney(
                         averageExcludingFlights,
                         currency

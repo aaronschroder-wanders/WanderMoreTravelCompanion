@@ -1,9 +1,7 @@
 package com.wandermore.travelcompanion.ui.components
 
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -29,7 +27,7 @@ fun TripSectionHeader(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(bottom = 16.dp)
+            .padding(bottom = 6.dp)
     ) {
 
         // -----------------------------------------------------
@@ -47,10 +45,6 @@ fun TripSectionHeader(
             color = MaterialTheme.colorScheme.onSurface
         )
 
-        Spacer(
-            modifier = Modifier.height(4.dp)
-        )
-
         // -----------------------------------------------------
         // TRIP NAME
         // -----------------------------------------------------
@@ -60,10 +54,6 @@ fun TripSectionHeader(
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.SemiBold,
             color = MaterialTheme.colorScheme.primary
-        )
-
-        Spacer(
-            modifier = Modifier.height(2.dp)
         )
 
         // -----------------------------------------------------
@@ -88,4 +78,5 @@ fun TripSectionHeader(
             color = MaterialTheme.colorScheme.onSurface
         )
     }
+
 }

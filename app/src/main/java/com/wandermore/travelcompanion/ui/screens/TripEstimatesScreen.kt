@@ -72,6 +72,29 @@ fun TripEstimatesScreen(
         )
 
     // ---------------------------------------------------------
+    // CALCULATE TOTAL ESTIMATED COST
+    //
+    // convertedAmount is already in the trip home currency.
+    // Apply the appropriate day/night multiplier here.
+    // ---------------------------------------------------------
+
+    val estimatedTripTotal =
+        estimates.sumOf { estimate ->
+
+            val multiplier =
+                when (estimate.estimateType) {
+
+                    "PER_NIGHT" -> tripNights
+
+                    "PER_DAY" -> tripDays
+
+                    else -> 1L
+                }
+
+            estimate.convertedAmount * multiplier
+        }
+
+    // ---------------------------------------------------------
     // SCREEN
     // ---------------------------------------------------------
 
@@ -103,6 +126,41 @@ fun TripEstimatesScreen(
             text = "${tripDays} days • ${tripNights} nights • Home currency: ${currentTrip.homeCurrency}",
             style = MaterialTheme.typography.bodyMedium
         )
+
+        Spacer(
+            modifier = Modifier.height(12.dp)
+        )
+
+        // -----------------------------------------------------
+        // TOTAL ESTIMATE SUMMARY
+        // -----------------------------------------------------
+
+        Card(
+            modifier = Modifier.fillMaxWidth()
+        ) {
+
+            Column(
+                modifier = Modifier.padding(16.dp)
+            ) {
+
+                Text(
+                    text = "Estimated Trip Total",
+                    style = MaterialTheme.typography.titleMedium
+                )
+
+                Spacer(
+                    modifier = Modifier.height(4.dp)
+                )
+
+                Text(
+                    text = formatMoney(
+                        estimatedTripTotal,
+                        currentTrip.homeCurrency
+                    ),
+                    style = MaterialTheme.typography.headlineSmall
+                )
+            }
+        }
 
         Spacer(
             modifier = Modifier.height(16.dp)
@@ -192,6 +250,7 @@ fun TripEstimatesScreen(
         }
     }
 }
+
 
 // =============================================================
 // ESTIMATE CARD
@@ -301,6 +360,7 @@ private fun TripEstimateCard(
         }
     }
 }
+
 
 // =============================================================
 // MONEY FORMATTING

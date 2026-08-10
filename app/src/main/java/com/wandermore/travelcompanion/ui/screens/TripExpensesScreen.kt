@@ -60,6 +60,16 @@ fun TripExpensesScreen(
         )
 
     // ---------------------------------------------------------
+    // LOAD ESTIMATES
+    // ---------------------------------------------------------
+
+    val estimates by tripViewModel
+        .getTripEstimatesForTrip(currentTrip.id)
+        .collectAsState(
+            initial = emptyList()
+        )
+
+    // ---------------------------------------------------------
     // TOTALS
     // ---------------------------------------------------------
 
@@ -76,7 +86,7 @@ fun TripExpensesScreen(
         }
 
     // ---------------------------------------------------------
-    // TRIP DAYS
+    // TRIP DAYS / NIGHTS
     // ---------------------------------------------------------
 
     val plannedDays =
@@ -84,6 +94,42 @@ fun TripExpensesScreen(
             currentTrip.startDate,
             currentTrip.endDate
         ) + 1
+
+    val plannedNights =
+        ChronoUnit.DAYS.between(
+            currentTrip.startDate,
+            currentTrip.endDate
+        )
+
+    // ---------------------------------------------------------
+    // TOTAL ESTIMATE
+    //
+    // PER_NIGHT = estimate × planned nights
+    // PER_DAY   = estimate × planned days
+    // OTHER     = estimate × 1
+    //
+    // convertedAmount is already in home currency.
+    // ---------------------------------------------------------
+
+    val totalEstimate =
+        estimates.sumOf { estimate ->
+
+            val multiplier =
+                when (estimate.estimateType) {
+
+                    "PER_NIGHT" -> plannedNights
+
+                    "PER_DAY" -> plannedDays
+
+                    else -> 1L
+                }
+
+            estimate.convertedAmount * multiplier
+        }
+
+    // ---------------------------------------------------------
+    // DAYS USED FOR AVERAGES
+    // ---------------------------------------------------------
 
     val daysForAverages =
         when (currentTrip.status) {
@@ -126,7 +172,7 @@ fun TripExpensesScreen(
     ) {
 
         // -----------------------------------------------------
-        // SHARED TRIP SECTION HEADER
+        // HEADER
         // -----------------------------------------------------
 
         TripSectionHeader(
@@ -143,20 +189,11 @@ fun TripExpensesScreen(
 
         TripSummaryCard(
             plannedDays = daysForAverages,
-            expenseCount = expenses.size,
+            totalEstimate = totalEstimate,
             totalSpent = total,
             airfareTotal = airfareTotal,
             currency = currentTrip.homeCurrency,
             onClick = onCategoryBreakdown
-        )
-
-        Spacer(
-            modifier = Modifier.height(12.dp)
-        )
-
-        Text(
-            text = "Expense List",
-            style = MaterialTheme.typography.titleMedium
         )
 
         Spacer(
@@ -166,6 +203,15 @@ fun TripExpensesScreen(
         // -----------------------------------------------------
         // EXPENSE LIST
         // -----------------------------------------------------
+
+        Text(
+            text = "Expense List",
+            style = MaterialTheme.typography.titleMedium
+        )
+
+        Spacer(
+            modifier = Modifier.height(4.dp)
+        )
 
         if (expenses.isEmpty()) {
 
@@ -182,7 +228,8 @@ fun TripExpensesScreen(
         } else {
 
             LazyColumn(
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(2.dp)
             ) {
 
                 val groupedExpenses =
@@ -202,7 +249,7 @@ fun TripExpensesScreen(
                             text = formatDate(date),
                             style = MaterialTheme.typography.bodyMedium,
                             modifier = Modifier.padding(
-                                top = 6.dp,
+                                top = 4.dp,
                                 bottom = 2.dp
                             )
                         )
@@ -221,10 +268,6 @@ fun TripExpensesScreen(
                                     expense.id
                                 )
                             }
-                        )
-
-                        Spacer(
-                            modifier = Modifier.height(2.dp)
                         )
                     }
                 }

@@ -62,11 +62,29 @@ fun TripDetailsScreen(
 
     val currentTrip = tripState ?: return
 
+    // ---------------------------------------------------------
+    // LOAD EXPENSES
+    // ---------------------------------------------------------
+
     val expenses by tripViewModel
         .getExpensesForTrip(currentTrip.id)
         .collectAsState(
             initial = emptyList()
         )
+
+    // ---------------------------------------------------------
+    // LOAD ESTIMATES
+    // ---------------------------------------------------------
+
+    val estimates by tripViewModel
+        .getTripEstimatesForTrip(currentTrip.id)
+        .collectAsState(
+            initial = emptyList()
+        )
+
+    // ---------------------------------------------------------
+    // ACTUAL EXPENSE TOTALS
+    // ---------------------------------------------------------
 
     val total = expenses.sumOf {
         it.convertedAmount
@@ -80,11 +98,52 @@ fun TripDetailsScreen(
             it.convertedAmount
         }
 
+    // ---------------------------------------------------------
+    // TRIP DAYS / NIGHTS
+    // ---------------------------------------------------------
+
     val plannedDays =
         ChronoUnit.DAYS.between(
             currentTrip.startDate,
             currentTrip.endDate
         ) + 1
+
+    val plannedNights =
+        ChronoUnit.DAYS.between(
+            currentTrip.startDate,
+            currentTrip.endDate
+        )
+
+    // ---------------------------------------------------------
+    // TOTAL ESTIMATE
+    //
+    // Uses the same calculation as the Trip Estimates screen:
+    // PER_NIGHT = estimate × nights
+    // PER_DAY   = estimate × days
+    // OTHER     = estimate × 1
+    //
+    // convertedAmount is already in home currency.
+    // ---------------------------------------------------------
+
+    val totalEstimate =
+        estimates.sumOf { estimate ->
+
+            val multiplier =
+                when (estimate.estimateType) {
+
+                    "PER_NIGHT" -> plannedNights
+
+                    "PER_DAY" -> plannedDays
+
+                    else -> 1L
+                }
+
+            estimate.convertedAmount * multiplier
+        }
+
+    // ---------------------------------------------------------
+    // DAYS USED FOR AVERAGES
+    // ---------------------------------------------------------
 
     val daysForAverages =
         when (currentTrip.status) {
@@ -115,6 +174,10 @@ fun TripDetailsScreen(
             TripStatus.PLANNED,
             TripStatus.ARCHIVED -> plannedDays
         }
+
+    // ---------------------------------------------------------
+    // SCREEN
+    // ---------------------------------------------------------
 
     Column(
         modifier = Modifier
@@ -191,9 +254,13 @@ fun TripDetailsScreen(
             modifier = Modifier.height(16.dp)
         )
 
+        // -----------------------------------------------------
+        // TRIP SUMMARY
+        // -----------------------------------------------------
+
         TripSummaryCard(
             plannedDays = daysForAverages,
-            expenseCount = expenses.size,
+            totalEstimate = totalEstimate,
             totalSpent = total,
             airfareTotal = airfareTotal,
             currency = currentTrip.homeCurrency,
@@ -275,6 +342,10 @@ fun TripDetailsScreen(
             modifier = Modifier.height(8.dp)
         )
 
+        // -----------------------------------------------------
+        // BOTTOM BUTTONS
+        // -----------------------------------------------------
+
         Row(
             modifier = Modifier
                 .fillMaxWidth(),
@@ -338,6 +409,10 @@ fun TripDetailsScreen(
         }
     }
 
+    // ---------------------------------------------------------
+    // RESTORE DIALOG
+    // ---------------------------------------------------------
+
     if (showRestoreDialog) {
 
         AlertDialog(
@@ -388,6 +463,10 @@ fun TripDetailsScreen(
             }
         )
     }
+
+    // ---------------------------------------------------------
+    // DELETE DIALOG
+    // ---------------------------------------------------------
 
     if (showDeleteDialog) {
 
