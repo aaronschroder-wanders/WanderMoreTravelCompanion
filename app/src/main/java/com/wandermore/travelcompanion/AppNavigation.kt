@@ -56,6 +56,7 @@ import com.wandermore.travelcompanion.viewmodel.TripViewModel
 import androidx.compose.runtime.rememberCoroutineScope
 import com.wandermore.travelcompanion.data.repository.BackupRepository
 import kotlinx.coroutines.launch
+import android.widget.Toast
 
 @Composable
 fun AppNavigation(
@@ -101,6 +102,12 @@ fun AppNavigation(
                                 backupJson
                             )
                         }
+
+                    Toast.makeText(
+                        context,
+                        "Backup Successful",
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
             }
         }
@@ -130,6 +137,12 @@ fun AppNavigation(
                         backupRepository.restoreBackup(
                             backupJson
                         )
+
+                        Toast.makeText(
+                            context,
+                            "Restore Successful",
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
                 }
             }
