@@ -444,14 +444,31 @@ class TripViewModel(
     // ---------------------------------------------------------
 
     fun addTripEstimate(
-        estimate: TripEstimateEntity
+        estimate: TripEstimateEntity,
+        onAdded: () -> Unit,
+        onDuplicate: () -> Unit
     ) {
 
         viewModelScope.launch {
 
+            val existingEstimate =
+                tripEstimateDao.getEstimate(
+                    estimate.tripId,
+                    estimate.category
+                )
+
+            if (existingEstimate != null) {
+
+                onDuplicate()
+
+                return@launch
+            }
+
             tripEstimateDao.insertEstimate(
                 estimate
             )
+
+            onAdded()
         }
     }
 

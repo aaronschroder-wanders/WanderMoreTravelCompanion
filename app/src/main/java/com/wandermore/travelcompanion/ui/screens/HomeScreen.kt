@@ -16,6 +16,8 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.wandermore.travelcompanion.model.Trip
 import com.wandermore.travelcompanion.model.TripStatus
@@ -47,37 +49,76 @@ fun HomeScreen(
         modifier = modifier.fillMaxSize()
     ) {
 
+        // =====================================================
+        // WANDER MORE HEADER
+        // =====================================================
+
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(
-                    top = 16.dp,
-                    bottom = 8.dp
+                    top = 20.dp,
+                    bottom = 12.dp
                 ),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
             Text(
                 text = "Wander More",
-                style = MaterialTheme.typography.headlineMedium
+                style = MaterialTheme.typography.displaySmall,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF00A6A6)
             )
 
             Text(
                 text = "Travel Companion",
-                style = MaterialTheme.typography.titleMedium,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.SemiBold,
+                color = Color(0xFFF2A900),
                 modifier = Modifier.padding(
-                    top = 4.dp
+                    top = 2.dp
                 )
             )
 
             Text(
-                text = "Plan. Track. Remember your journeys.",
+                text = "For wherever the journey takes you.",
                 style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(
-                    top = 4.dp
+                    top = 6.dp
                 )
             )
+
+            Row(
+                modifier = Modifier.padding(
+                    top = 8.dp
+                ),
+                horizontalArrangement = Arrangement.spacedBy(5.dp)
+            ) {
+
+                Text(
+                    text = "•",
+                    color = Color(0xFF00A6A6),
+                    fontWeight = FontWeight.Bold
+                )
+
+                Text(
+                    text = "•",
+                    color = Color(0xFFF2A900),
+                    fontWeight = FontWeight.Bold
+                )
+
+                Text(
+                    text = "•",
+                    color = Color(0xFF00A6A6),
+                    fontWeight = FontWeight.Bold
+                )
+            }
         }
+
+        // =====================================================
+        // TRIP LIST
+        // =====================================================
 
         LazyColumn(
             modifier = Modifier
@@ -86,6 +127,10 @@ fun HomeScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Top
         ) {
+
+            // -------------------------------------------------
+            // CURRENT TRIPS
+            // -------------------------------------------------
 
             item {
 
@@ -112,7 +157,9 @@ fun HomeScreen(
 
             } else {
 
-                items(currentTrips) { trip ->
+                items(
+                    items = currentTrips
+                ) { trip ->
 
                     val expenses by tripViewModel
                         .getExpensesForTrip(trip.id)
@@ -134,6 +181,10 @@ fun HomeScreen(
                     )
                 }
             }
+
+            // -------------------------------------------------
+            // PLANNED TRIPS
+            // -------------------------------------------------
 
             item {
 
@@ -160,7 +211,9 @@ fun HomeScreen(
 
             } else {
 
-                items(plannedTrips) { trip ->
+                items(
+                    items = plannedTrips
+                ) { trip ->
 
                     val expenses by tripViewModel
                         .getExpensesForTrip(trip.id)
@@ -183,6 +236,10 @@ fun HomeScreen(
                 }
             }
         }
+
+        // =====================================================
+        // BOTTOM BUTTONS
+        // =====================================================
 
         Row(
             modifier = Modifier

@@ -123,7 +123,9 @@ fun TripEstimatesScreen(
         )
 
         Text(
-            text = "${tripDays} days • ${tripNights} nights • Home currency: ${currentTrip.homeCurrency}",
+            text =
+                "${tripDays} days • ${tripNights} nights • " +
+                        "Home currency: ${currentTrip.homeCurrency}",
             style = MaterialTheme.typography.bodyMedium
         )
 
@@ -187,7 +189,9 @@ fun TripEstimatesScreen(
                 )
 
                 Text(
-                    text = "Add estimates for accommodation, food, transport and other trip costs.",
+                    text =
+                        "Add estimates for accommodation, food, " +
+                                "transport and other trip costs.",
                     style = MaterialTheme.typography.bodyMedium
                 )
             }
@@ -251,7 +255,6 @@ fun TripEstimatesScreen(
     }
 }
 
-
 // =============================================================
 // ESTIMATE CARD
 // =============================================================
@@ -265,6 +268,10 @@ private fun TripEstimateCard(
     onClick: () -> Unit
 ) {
 
+    // ---------------------------------------------------------
+    // CALCULATE MULTIPLIER
+    // ---------------------------------------------------------
+
     val multiplier =
         when (estimate.estimateType) {
 
@@ -276,10 +283,9 @@ private fun TripEstimateCard(
         }
 
     // ---------------------------------------------------------
-    // IMPORTANT
+    // CALCULATED TOTAL
     //
-    // amount = original amount entered by the traveller
-    // convertedAmount = amount converted to home currency
+    // convertedAmount is already in the home currency.
     // ---------------------------------------------------------
 
     val calculatedAmount =
@@ -293,10 +299,16 @@ private fun TripEstimateCard(
         when (estimate.estimateType) {
 
             "PER_NIGHT" ->
-                "${formatMoney(estimate.amount, estimate.currency)} × $tripNights nights"
+                "${formatMoney(
+                    estimate.amount,
+                    estimate.currency
+                )} × $tripNights nights"
 
             "PER_DAY" ->
-                "${formatMoney(estimate.amount, estimate.currency)} × $tripDays days"
+                "${formatMoney(
+                    estimate.amount,
+                    estimate.currency
+                )} × $tripDays days"
 
             else ->
                 formatMoney(
@@ -304,6 +316,18 @@ private fun TripEstimateCard(
                     estimate.currency
                 )
         }
+
+    // ---------------------------------------------------------
+    // SIMPLE HOME-CURRENCY ONE-OFF
+    //
+    // In this case the basis amount IS already the final total,
+    // so displaying "Estimated total" underneath would duplicate
+    // the same information.
+    // ---------------------------------------------------------
+
+    val isSimpleHomeCurrencyOneOff =
+        estimate.estimateType == "ONE_OFF" &&
+                estimate.currency == homeCurrency
 
     Card(
         onClick = onClick,
@@ -314,6 +338,10 @@ private fun TripEstimateCard(
             modifier = Modifier.padding(16.dp)
         ) {
 
+            // -------------------------------------------------
+            // CATEGORY
+            // -------------------------------------------------
+
             Text(
                 text = estimate.category,
                 style = MaterialTheme.typography.titleMedium
@@ -323,28 +351,42 @@ private fun TripEstimateCard(
                 modifier = Modifier.height(4.dp)
             )
 
+            // -------------------------------------------------
+            // BASIS AMOUNT
+            // -------------------------------------------------
+
             Text(
                 text = basisText,
                 style = MaterialTheme.typography.bodyMedium
             )
 
-            Spacer(
-                modifier = Modifier.height(6.dp)
-            )
-
             // -------------------------------------------------
-            // TOTAL IS ALWAYS SHOWN IN HOME CURRENCY
+            // CALCULATED TOTAL
+            //
+            // Only show this when it adds useful information.
             // -------------------------------------------------
 
-            Text(
-                text = "Estimated total: ${
-                    formatMoney(
-                        calculatedAmount,
-                        homeCurrency
-                    )
-                }",
-                style = MaterialTheme.typography.titleSmall
-            )
+            if (!isSimpleHomeCurrencyOneOff) {
+
+                Spacer(
+                    modifier = Modifier.height(6.dp)
+                )
+
+                Text(
+                    text =
+                        "Estimated total: ${
+                            formatMoney(
+                                calculatedAmount,
+                                homeCurrency
+                            )
+                        }",
+                    style = MaterialTheme.typography.titleSmall
+                )
+            }
+
+            // -------------------------------------------------
+            // NOTES
+            // -------------------------------------------------
 
             if (!estimate.notes.isNullOrBlank()) {
 
@@ -360,7 +402,6 @@ private fun TripEstimateCard(
         }
     }
 }
-
 
 // =============================================================
 // MONEY FORMATTING
