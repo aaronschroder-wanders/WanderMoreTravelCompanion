@@ -68,7 +68,7 @@ fun ItineraryDetailsScreen(
 
             title = {
                 Text(
-                    text = "Delete itinerary item?"
+                    text = "Delete Item?"
                 )
             },
 
@@ -330,7 +330,6 @@ fun ItineraryDetailsScreen(
 
                     // -----------------------------------------
                     // DEPARTURE
-                    // Calculated from Date + Nights
                     // -----------------------------------------
 
                     itinerary.nights?.let { nights ->
@@ -499,7 +498,7 @@ fun ItineraryDetailsScreen(
         // FIXED ACTION BUTTONS
         // =====================================================
 
-        Column(
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(
@@ -507,41 +506,34 @@ fun ItineraryDetailsScreen(
                     end = 16.dp,
                     top = 8.dp,
                     bottom = 10.dp
-                )
+                ),
+            horizontalArrangement =
+                Arrangement.spacedBy(8.dp)
         ) {
 
             // -------------------------------------------------
-            // BACK + EDIT
+            // BACK
             // -------------------------------------------------
 
-            Row(
+            Button(
+                onClick = onBack,
                 modifier =
-                    Modifier.fillMaxWidth(),
-                horizontalArrangement =
-                    Arrangement.spacedBy(12.dp)
+                    Modifier.weight(1f)
             ) {
-
-                Button(
-                    onClick = onBack,
-                    modifier =
-                        Modifier.weight(1f)
-                ) {
-                    Text("Back")
-                }
-
-                Button(
-                    onClick = onEdit,
-                    modifier =
-                        Modifier.weight(1f)
-                ) {
-                    Text("Edit")
-                }
+                Text("Back")
             }
 
-            Spacer(
+            // -------------------------------------------------
+            // EDIT
+            // -------------------------------------------------
+
+            Button(
+                onClick = onEdit,
                 modifier =
-                    Modifier.height(10.dp)
-            )
+                    Modifier.weight(1f)
+            ) {
+                Text("Edit")
+            }
 
             // -------------------------------------------------
             // DELETE
@@ -552,9 +544,9 @@ fun ItineraryDetailsScreen(
                     showDeleteDialog = true
                 },
                 modifier =
-                    Modifier.fillMaxWidth()
+                    Modifier.weight(1f)
             ) {
-                Text("Delete Itinerary Item")
+                Text("Delete")
             }
         }
     }

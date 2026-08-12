@@ -185,6 +185,10 @@ fun AddTodoScreen(
             modifier = Modifier.fillMaxWidth()
         )
 
+        // =====================================================
+        // SAVE BUTTON
+        // =====================================================
+
         Button(
             onClick = {
 
@@ -223,21 +227,29 @@ fun AddTodoScreen(
 
                     onTodoAdded()
                 }
-            }
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 20.dp)
         ) {
 
             Text(
-                text = "Add To Do"
+                text = "Save"
             )
         }
 
         if (errorMessage.isNotBlank()) {
 
             Text(
-                text = errorMessage
+                text = errorMessage,
+                modifier = Modifier.padding(top = 8.dp)
             )
         }
     }
+
+    // =========================================================
+    // DATE PICKER
+    // =========================================================
 
     if (showDatePicker) {
 

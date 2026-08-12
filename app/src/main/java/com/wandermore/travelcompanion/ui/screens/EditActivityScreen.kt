@@ -10,8 +10,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.DatePicker
@@ -21,7 +21,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -37,6 +36,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.wandermore.travelcompanion.database.ActivityEntity
@@ -101,7 +101,9 @@ fun EditActivityScreen(
     }
 
     var startTime by remember {
-        mutableStateOf(activity.startTime)
+        mutableStateOf(
+            activity.startTime
+        )
     }
 
     var notes by remember {
@@ -163,6 +165,118 @@ fun EditActivityScreen(
             null
         }
 
+    // ---------------------------------------------------------
+    // TIME NORMALISATION
+    //
+    // Accepts:
+    // 9     -> 09:00
+    // 900   -> 09:00
+    // 0900  -> 09:00
+    // 09:00 -> 09:00
+    // 1430  -> 14:30
+    // 14:30 -> 14:30
+    // ---------------------------------------------------------
+
+    fun normaliseTime(input: String): String? {
+
+        val value =
+            input.trim()
+
+        if (value.isBlank()) {
+            return null
+        }
+
+        return try {
+
+            val hour: Int
+            val minute: Int
+
+            if (value.contains(":")) {
+
+                val parts =
+                    value.split(":")
+
+                if (parts.size != 2) {
+                    return null
+                }
+
+                hour =
+                    parts[0].toInt()
+
+                minute =
+                    parts[1].toInt()
+
+            } else {
+
+                when (value.length) {
+
+                    1,
+                    2 -> {
+
+                        hour =
+                            value.toInt()
+
+                        minute = 0
+                    }
+
+                    3 -> {
+
+                        hour =
+                            value.substring(
+                                0,
+                                1
+                            ).toInt()
+
+                        minute =
+                            value.substring(
+                                1,
+                                3
+                            ).toInt()
+                    }
+
+                    4 -> {
+
+                        hour =
+                            value.substring(
+                                0,
+                                2
+                            ).toInt()
+
+                        minute =
+                            value.substring(
+                                2,
+                                4
+                            ).toInt()
+                    }
+
+                    else -> {
+                        return null
+                    }
+                }
+            }
+
+            if (
+                hour !in 0..23 ||
+                minute !in 0..59
+            ) {
+                return null
+            }
+
+            "%02d:%02d".format(
+                hour,
+                minute
+            )
+
+        } catch (_: Exception) {
+
+            null
+        }
+    }
+
+    // ---------------------------------------------------------
+    // SCREEN
+    // ---------------------------------------------------------
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -174,22 +288,23 @@ fun EditActivityScreen(
             )
     ) {
 
-        // ---------------------------------------------------------
+        // -----------------------------------------------------
         // TITLE
-        // ---------------------------------------------------------
+        // -----------------------------------------------------
 
         Text(
             text = "Edit Activity",
-            style = MaterialTheme.typography.headlineMedium
+            style =
+                MaterialTheme.typography.headlineMedium
         )
 
         Spacer(
             modifier = Modifier.height(12.dp)
         )
 
-        // ---------------------------------------------------------
+        // -----------------------------------------------------
         // SCROLLABLE FORM
-        // ---------------------------------------------------------
+        // -----------------------------------------------------
 
         Column(
             modifier = Modifier
@@ -202,9 +317,9 @@ fun EditActivityScreen(
                 )
         ) {
 
-            // -----------------------------------------------------
+            // -------------------------------------------------
             // NAME
-            // -----------------------------------------------------
+            // -------------------------------------------------
 
             OutlinedTextField(
                 value = name,
@@ -214,7 +329,8 @@ fun EditActivityScreen(
                 label = {
                     Text("Name")
                 },
-                modifier = Modifier.fillMaxWidth(),
+                modifier =
+                    Modifier.fillMaxWidth(),
                 singleLine = true
             )
 
@@ -222,12 +338,13 @@ fun EditActivityScreen(
                 modifier = Modifier.height(10.dp)
             )
 
-            // -----------------------------------------------------
+            // -------------------------------------------------
             // TYPE + LOCATION
-            // -----------------------------------------------------
+            // -------------------------------------------------
 
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier =
+                    Modifier.fillMaxWidth(),
                 horizontalArrangement =
                     Arrangement.spacedBy(8.dp)
             ) {
@@ -235,9 +352,11 @@ fun EditActivityScreen(
                 ExposedDropdownMenuBox(
                     expanded = typeExpanded,
                     onExpandedChange = {
-                        typeExpanded = !typeExpanded
+                        typeExpanded =
+                            !typeExpanded
                     },
-                    modifier = Modifier.weight(1f)
+                    modifier =
+                        Modifier.weight(1f)
                 ) {
 
                     OutlinedTextField(
@@ -250,18 +369,22 @@ fun EditActivityScreen(
                         trailingIcon = {
                             ExposedDropdownMenuDefaults
                                 .TrailingIcon(
-                                    expanded = typeExpanded
+                                    expanded =
+                                        typeExpanded
                                 )
                         },
-                        modifier = Modifier
-                            .menuAnchor()
-                            .fillMaxWidth()
+                        modifier =
+                            Modifier
+                                .menuAnchor()
+                                .fillMaxWidth()
                     )
 
                     ExposedDropdownMenu(
-                        expanded = typeExpanded,
+                        expanded =
+                            typeExpanded,
                         onDismissRequest = {
-                            typeExpanded = false
+                            typeExpanded =
+                                false
                         }
                     ) {
 
@@ -270,12 +393,17 @@ fun EditActivityScreen(
 
                             DropdownMenuItem(
                                 text = {
-                                    Text(activityType)
+                                    Text(
+                                        activityType
+                                    )
                                 },
                                 onClick = {
 
-                                    type = activityType
-                                    typeExpanded = false
+                                    type =
+                                        activityType
+
+                                    typeExpanded =
+                                        false
                                 }
                             )
                         }
@@ -300,12 +428,13 @@ fun EditActivityScreen(
                 modifier = Modifier.height(10.dp)
             )
 
-            // -----------------------------------------------------
+            // -------------------------------------------------
             // ESTIMATED COST + CURRENCY
-            // -----------------------------------------------------
+            // -------------------------------------------------
 
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier =
+                    Modifier.fillMaxWidth(),
                 horizontalArrangement =
                     Arrangement.spacedBy(8.dp)
             ) {
@@ -329,7 +458,8 @@ fun EditActivityScreen(
                 )
 
                 ExposedDropdownMenuBox(
-                    expanded = currencyExpanded,
+                    expanded =
+                        currencyExpanded,
                     onExpandedChange = {
                         currencyExpanded =
                             !currencyExpanded
@@ -352,13 +482,15 @@ fun EditActivityScreen(
                                         currencyExpanded
                                 )
                         },
-                        modifier = Modifier
-                            .menuAnchor()
-                            .fillMaxWidth()
+                        modifier =
+                            Modifier
+                                .menuAnchor()
+                                .fillMaxWidth()
                     )
 
                     ExposedDropdownMenu(
-                        expanded = currencyExpanded,
+                        expanded =
+                            currencyExpanded,
                         onDismissRequest = {
                             currencyExpanded =
                                 false
@@ -370,7 +502,9 @@ fun EditActivityScreen(
 
                             DropdownMenuItem(
                                 text = {
-                                    Text(currencyCode)
+                                    Text(
+                                        currencyCode
+                                    )
                                 },
                                 onClick = {
 
@@ -390,12 +524,13 @@ fun EditActivityScreen(
                 modifier = Modifier.height(8.dp)
             )
 
-            // -----------------------------------------------------
+            // -------------------------------------------------
             // BOOKED
-            // -----------------------------------------------------
+            // -------------------------------------------------
 
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier =
+                    Modifier.fillMaxWidth(),
                 horizontalArrangement =
                     Arrangement.SpaceBetween,
                 verticalAlignment =
@@ -418,9 +553,9 @@ fun EditActivityScreen(
                 modifier = Modifier.height(8.dp)
             )
 
-            // -----------------------------------------------------
+            // -------------------------------------------------
             // WEBSITE
-            // -----------------------------------------------------
+            // -------------------------------------------------
 
             OutlinedTextField(
                 value = website,
@@ -430,7 +565,8 @@ fun EditActivityScreen(
                 label = {
                     Text("Website")
                 },
-                modifier = Modifier.fillMaxWidth(),
+                modifier =
+                    Modifier.fillMaxWidth(),
                 singleLine = true
             )
 
@@ -438,66 +574,109 @@ fun EditActivityScreen(
                 modifier = Modifier.height(10.dp)
             )
 
-            // -----------------------------------------------------
+            // -------------------------------------------------
             // DATE + START TIME
-            // -----------------------------------------------------
+            // -------------------------------------------------
 
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier =
+                    Modifier.fillMaxWidth(),
                 horizontalArrangement =
                     Arrangement.spacedBy(8.dp)
             ) {
 
                 // DATE
 
-                OutlinedButton(
-                    onClick = {
-                        showDatePicker = true
+                OutlinedTextField(
+                    value = date,
+                    onValueChange = {},
+                    readOnly = true,
+                    label = {
+                        Text("Date")
                     },
-                    modifier = Modifier.weight(1f)
-                ) {
+                    placeholder = {
+                        Text("Select")
+                    },
+                    trailingIcon = {
 
-                    Text(
-                        text =
-                            if (date.isBlank()) {
-                                "Select date"
-                            } else {
-                                date
+                        TextButton(
+                            onClick = {
+                                showDatePicker =
+                                    true
                             }
-                    )
-                }
+                        ) {
+
+                            Text(
+                                if (
+                                    date.isBlank()
+                                ) {
+                                    "Select"
+                                } else {
+                                    "Change"
+                                }
+                            )
+                        }
+                    },
+                    modifier =
+                        Modifier.weight(1f)
+                )
 
                 // START TIME
 
-                OutlinedButton(
-                    onClick = {
-                        showTimePicker = true
-                    },
-                    modifier = Modifier.weight(1f)
-                ) {
+                OutlinedTextField(
+                    value =
+                        startTime?.let {
+                            String.format(
+                                "%02d:%02d",
+                                it.hour,
+                                it.minute
+                            )
+                        } ?: "",
+                    onValueChange = {
+                        val formatted =
+                            normaliseTime(it)
 
-                    Text(
-                        text =
-                            if (startTime == null) {
-                                "Select time"
-                            } else {
-                                String.format(
-                                    "%02d:%02d",
-                                    startTime!!.hour,
-                                    startTime!!.minute
-                                )
-                            }
-                    )
-                }
+                        if (formatted != null) {
+
+                            startTime =
+                                try {
+                                    LocalTime.parse(
+                                        formatted
+                                    )
+                                } catch (_: Exception) {
+                                    null
+                                }
+
+                        } else if (it.isBlank()) {
+
+                            startTime = null
+                        }
+                    },
+                    label = {
+                        Text("Start Time")
+                    },
+                    placeholder = {
+                        Text("HH:MM")
+                    },
+                    modifier =
+                        Modifier
+                            .weight(1f),
+                    singleLine = true,
+                    keyboardOptions =
+                        KeyboardOptions(
+                            keyboardType =
+                                KeyboardType.Number
+                        )
+                )
             }
 
             Spacer(
                 modifier = Modifier.height(10.dp)
             )
 
-            // -----------------------------------------------------
+            // -------------------------------------------------
             // NOTES
-            // -----------------------------------------------------
+            // -------------------------------------------------
 
             OutlinedTextField(
                 value = notes,
@@ -507,7 +686,8 @@ fun EditActivityScreen(
                 label = {
                     Text("Notes")
                 },
-                modifier = Modifier.fillMaxWidth(),
+                modifier =
+                    Modifier.fillMaxWidth(),
                 minLines = 3,
                 maxLines = 3
             )
@@ -515,28 +695,11 @@ fun EditActivityScreen(
             Spacer(
                 modifier = Modifier.height(20.dp)
             )
-
-            // -----------------------------------------------------
-            // DELETE
-            // -----------------------------------------------------
-
-            OutlinedButton(
-                onClick = {
-                    showDeleteConfirmation = true
-                },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Delete Activity")
-            }
-
-            Spacer(
-                modifier = Modifier.height(16.dp)
-            )
         }
 
-        // ---------------------------------------------------------
-        // FIXED BACK / SAVE BUTTONS
-        // ---------------------------------------------------------
+        // -----------------------------------------------------
+        // FIXED BOTTOM BUTTONS
+        // -----------------------------------------------------
 
         Row(
             modifier = Modifier
@@ -546,31 +709,42 @@ fun EditActivityScreen(
                     bottom = 8.dp
                 ),
             horizontalArrangement =
-                Arrangement.SpaceEvenly
+                Arrangement.spacedBy(8.dp)
         ) {
 
+            // BACK
+
             Button(
-                onClick = onBack
+                onClick = onBack,
+                modifier =
+                    Modifier.weight(1f)
             ) {
                 Text("Back")
             }
+
+            // DELETE
+
+            Button(
+                onClick = {
+                    showDeleteConfirmation =
+                        true
+                },
+                modifier =
+                    Modifier.weight(1f)
+            ) {
+                Text("Delete")
+            }
+
+            // SAVE
 
             Button(
                 onClick = {
 
                     if (name.isNotBlank()) {
 
-                        /*
-                         * Calculate the NZD value at save time.
-                         *
-                         * The database stores:
-                         *
-                         * 1 foreign currency = X NZD
-                         *
-                         * So:
-                         *
-                         * foreign amount × rateToNZD = NZD amount
-                         */
+                        // -------------------------------------------------
+                        // CALCULATE NZD CONVERSION
+                        // -------------------------------------------------
 
                         val convertedAmount =
                             if (parsedCost != null) {
@@ -659,16 +833,18 @@ fun EditActivityScreen(
 
                         onActivityUpdated()
                     }
-                }
+                },
+                modifier =
+                    Modifier.weight(1f)
             ) {
                 Text("Save")
             }
         }
     }
 
-    // -------------------------------------------------------------
+    // ---------------------------------------------------------
     // DATE PICKER
-    // -------------------------------------------------------------
+    // ---------------------------------------------------------
 
     if (showDatePicker) {
 
@@ -714,7 +890,8 @@ fun EditActivityScreen(
                                     selectedDate.toString()
                             }
 
-                        showDatePicker = false
+                        showDatePicker =
+                            false
                     }
                 ) {
                     Text("OK")
@@ -725,7 +902,8 @@ fun EditActivityScreen(
 
                 TextButton(
                     onClick = {
-                        showDatePicker = false
+                        showDatePicker =
+                            false
                     }
                 ) {
                     Text("Cancel")
@@ -734,14 +912,15 @@ fun EditActivityScreen(
         ) {
 
             DatePicker(
-                state = datePickerState
+                state =
+                    datePickerState
             )
         }
     }
 
-    // -------------------------------------------------------------
+    // ---------------------------------------------------------
     // TIME PICKER
-    // -------------------------------------------------------------
+    // ---------------------------------------------------------
 
     if (showTimePicker) {
 
@@ -769,7 +948,8 @@ fun EditActivityScreen(
                                 timePickerState.minute
                             )
 
-                        showTimePicker = false
+                        showTimePicker =
+                            false
                     }
                 ) {
                     Text("OK")
@@ -782,20 +962,22 @@ fun EditActivityScreen(
         ) {
 
             TimePicker(
-                state = timePickerState
+                state =
+                    timePickerState
             )
         }
     }
 
-    // -------------------------------------------------------------
+    // ---------------------------------------------------------
     // DELETE CONFIRMATION
-    // -------------------------------------------------------------
+    // ---------------------------------------------------------
 
     if (showDeleteConfirmation) {
 
         AlertDialog(
             onDismissRequest = {
-                showDeleteConfirmation = false
+                showDeleteConfirmation =
+                    false
             },
 
             title = {
@@ -805,7 +987,8 @@ fun EditActivityScreen(
             text = {
                 Text(
                     "Are you sure you want to delete " +
-                            "\"${activity.name}\"? This cannot be undone."
+                            "\"${activity.name}\"? " +
+                            "This cannot be undone."
                 )
             },
 
@@ -814,7 +997,8 @@ fun EditActivityScreen(
                 TextButton(
                     onClick = {
 
-                        showDeleteConfirmation = false
+                        showDeleteConfirmation =
+                            false
 
                         onDeleteActivity()
                     }
@@ -827,7 +1011,8 @@ fun EditActivityScreen(
 
                 TextButton(
                     onClick = {
-                        showDeleteConfirmation = false
+                        showDeleteConfirmation =
+                            false
                     }
                 ) {
                     Text("Cancel")

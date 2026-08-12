@@ -1,11 +1,14 @@
 package com.wandermore.travelcompanion.ui.screens
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DatePicker
@@ -187,69 +190,87 @@ fun EditTodoScreen(
             modifier = Modifier.fillMaxWidth()
         )
 
-        Button(
-            onClick = {
+        // =====================================================
+        // ACTION BUTTONS
+        // =====================================================
 
-                errorMessage = ""
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 20.dp),
+            horizontalArrangement =
+                Arrangement.spacedBy(8.dp)
+        ) {
 
-                if (task.isBlank()) {
+            // DELETE - LEFT
+            Button(
+                onClick = {
+                    showDeleteConfirmation = true
+                },
+                modifier = Modifier.weight(1f)
+            ) {
 
-                    errorMessage =
-                        "Please enter a task"
+                Text("Delete")
+            }
 
-                } else {
+            // SAVE - RIGHT
+            Button(
+                onClick = {
 
-                    val updatedTodo =
-                        todo.copy(
+                    errorMessage = ""
 
-                            task = task.trim(),
+                    if (task.isBlank()) {
 
-                            dueDate = dueDate,
+                        errorMessage =
+                            "Please enter a task"
 
-                            assignedTo = assignedTo,
+                    } else {
 
-                            completed = completed,
+                        val updatedTodo =
+                            todo.copy(
 
-                            notes =
-                                notes
-                                    .trim()
-                                    .ifBlank {
-                                        null
-                                    }
+                                task = task.trim(),
+
+                                dueDate = dueDate,
+
+                                assignedTo = assignedTo,
+
+                                completed = completed,
+
+                                notes =
+                                    notes
+                                        .trim()
+                                        .ifBlank {
+                                            null
+                                        }
+                            )
+
+                        tripViewModel.updateTodo(
+                            updatedTodo
                         )
 
-                    tripViewModel.updateTodo(
-                        updatedTodo
-                    )
+                        onTodoUpdated()
+                    }
+                },
+                modifier = Modifier.weight(1f)
+            ) {
 
-                    onTodoUpdated()
-                }
+                Text("Save")
             }
-        ) {
-
-            Text(
-                text = "Save Changes"
-            )
-        }
-
-        TextButton(
-            onClick = {
-                showDeleteConfirmation = true
-            }
-        ) {
-
-            Text(
-                text = "Delete To Do"
-            )
         }
 
         if (errorMessage.isNotBlank()) {
 
             Text(
-                text = errorMessage
+                text = errorMessage,
+                modifier = Modifier.padding(top = 8.dp)
             )
         }
     }
+
+    // =========================================================
+    // DATE PICKER
+    // =========================================================
 
     if (showDatePicker) {
 
@@ -295,9 +316,13 @@ fun EditTodoScreen(
         }
     }
 
+    // =========================================================
+    // DELETE CONFIRMATION
+    // =========================================================
+
     if (showDeleteConfirmation) {
 
-        androidx.compose.material3.AlertDialog(
+        AlertDialog(
 
             onDismissRequest = {
                 showDeleteConfirmation = false

@@ -276,6 +276,23 @@ fun EditTripEstimateScreen(
                 Arrangement.spacedBy(6.dp)
         ) {
 
+            // CANCEL - LEFT
+            Button(
+                onClick = onBack,
+                modifier = Modifier.weight(1f)
+            ) {
+                Text("Cancel")
+            }
+
+            // DELETE - CENTRE
+            Button(
+                onClick = onDeleteEstimate,
+                modifier = Modifier.weight(1f)
+            ) {
+                Text("Delete")
+            }
+
+            // SAVE - RIGHT
             Button(
                 onClick = {
 
@@ -329,20 +346,6 @@ fun EditTripEstimateScreen(
                             enteredAmount > 0.0
             ) {
                 Text("Save")
-            }
-
-            Button(
-                onClick = onDeleteEstimate,
-                modifier = Modifier.weight(1f)
-            ) {
-                Text("Delete")
-            }
-
-            Button(
-                onClick = onBack,
-                modifier = Modifier.weight(1f)
-            ) {
-                Text("Cancel")
             }
         }
 

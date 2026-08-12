@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
@@ -20,6 +21,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TimePicker
 import androidx.compose.material3.TimePickerDialog
 import androidx.compose.material3.rememberDatePickerState
@@ -47,6 +49,7 @@ fun EditItineraryScreen(
     itineraryId: Long,
     tripViewModel: TripViewModel,
     onItineraryUpdated: () -> Unit,
+    onDeleteItinerary: (ItineraryEntity) -> Unit,
     onBack: () -> Unit
 ) {
 
@@ -98,6 +101,10 @@ fun EditItineraryScreen(
         mutableStateOf(false)
     }
 
+    var showDeleteConfirmation by remember {
+        mutableStateOf(false)
+    }
+
     // ---------------------------------------------------------
     // LOAD EXISTING ITEM
     // ---------------------------------------------------------
@@ -123,9 +130,8 @@ fun EditItineraryScreen(
                 item.location ?: ""
             notes =
                 item.notes ?: ""
-
-            // Load the existing Booked status.
-            booked = item.booked
+            booked =
+                item.booked
         }
     }
 
@@ -161,7 +167,7 @@ fun EditItineraryScreen(
     ) {
 
         // =====================================================
-        // SCROLLABLE FORM AREA
+        // SCROLLABLE FORM
         // =====================================================
 
         Column(
@@ -181,8 +187,7 @@ fun EditItineraryScreen(
             Text(
                 text = "Edit Itinerary Item",
                 style =
-                    MaterialTheme.typography
-                        .headlineMedium
+                    MaterialTheme.typography.headlineMedium
             )
 
             Spacer(
@@ -306,7 +311,8 @@ fun EditItineraryScreen(
             // -------------------------------------------------
 
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier =
+                    Modifier.fillMaxWidth(),
                 horizontalArrangement =
                     Arrangement.SpaceBetween,
                 verticalAlignment =
@@ -314,7 +320,8 @@ fun EditItineraryScreen(
             ) {
 
                 Column(
-                    modifier = Modifier.weight(1f)
+                    modifier =
+                        Modifier.weight(1f)
                 ) {
 
                     Text(
@@ -431,11 +438,8 @@ fun EditItineraryScreen(
                 minLines = 3
             )
 
-            // Extra space so the last field can scroll
-            // comfortably above the fixed buttons.
-
             Spacer(
-                modifier = Modifier.height(24.dp)
+                modifier = Modifier.height(20.dp)
             )
         }
 
@@ -449,15 +453,15 @@ fun EditItineraryScreen(
                 .padding(
                     start = 16.dp,
                     end = 16.dp,
-                    top = 10.dp,
+                    top = 8.dp,
                     bottom = 10.dp
                 ),
             horizontalArrangement =
-                Arrangement.spacedBy(12.dp)
+                Arrangement.spacedBy(6.dp)
         ) {
 
             // -------------------------------------------------
-            // CANCEL
+            // BACK
             // -------------------------------------------------
 
             Button(
@@ -465,11 +469,25 @@ fun EditItineraryScreen(
                 modifier =
                     Modifier.weight(1f)
             ) {
-                Text("Cancel")
+                Text("Back")
             }
 
             // -------------------------------------------------
-            // SAVE CHANGES
+            // DELETE
+            // -------------------------------------------------
+
+            Button(
+                onClick = {
+                    showDeleteConfirmation = true
+                },
+                modifier =
+                    Modifier.weight(1f)
+            ) {
+                Text("Delete")
+            }
+
+            // -------------------------------------------------
+            // SAVE
             // -------------------------------------------------
 
             Button(
@@ -511,7 +529,6 @@ fun EditItineraryScreen(
                                         null
                                     },
 
-                            // Save the Booked status.
                             booked =
                                 booked
                         )
@@ -529,9 +546,9 @@ fun EditItineraryScreen(
                             type.isNotBlank(),
 
                 modifier =
-                    Modifier.weight(1.5f)
+                    Modifier.weight(1f)
             ) {
-                Text("Save Changes")
+                Text("Save")
             }
         }
     }
@@ -652,5 +669,56 @@ fun EditItineraryScreen(
                 state = timePickerState
             )
         }
+    }
+
+    // =========================================================
+    // DELETE CONFIRMATION
+    // =========================================================
+
+    if (showDeleteConfirmation) {
+
+        AlertDialog(
+
+            onDismissRequest = {
+                showDeleteConfirmation = false
+            },
+
+            title = {
+                Text("Delete Item?")
+            },
+
+            text = {
+                Text(
+                    "Are you sure you want to delete this itinerary item?"
+                )
+            },
+
+            confirmButton = {
+
+                TextButton(
+                    onClick = {
+
+                        showDeleteConfirmation = false
+
+                        onDeleteItinerary(
+                            currentItem
+                        )
+                    }
+                ) {
+                    Text("Delete")
+                }
+            },
+
+            dismissButton = {
+
+                TextButton(
+                    onClick = {
+                        showDeleteConfirmation = false
+                    }
+                ) {
+                    Text("Cancel")
+                }
+            }
+        )
     }
 }

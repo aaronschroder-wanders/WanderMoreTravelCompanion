@@ -247,6 +247,10 @@ fun AddActivityScreen(
         }
     }
 
+    // =========================================================
+    // SCREEN
+    // =========================================================
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -264,23 +268,31 @@ fun AddActivityScreen(
 
         Text(
             text = "Add Activity",
-            style = MaterialTheme.typography.headlineMedium
+            style =
+                MaterialTheme.typography
+                    .headlineMedium
         )
 
         Spacer(
-            modifier = Modifier.height(12.dp)
+            modifier =
+                Modifier.height(12.dp)
         )
 
         // -----------------------------------------------------
         // SCROLLABLE FORM
+        //
+        // imePadding allows the lower fields to move above
+        // the keyboard when it is displayed.
         // -----------------------------------------------------
 
         Column(
             modifier = Modifier
                 .weight(1f)
+                .fillMaxWidth()
                 .verticalScroll(
                     rememberScrollState()
                 )
+                .imePadding()
                 .padding(
                     bottom = 24.dp
                 )
@@ -298,12 +310,14 @@ fun AddActivityScreen(
                 label = {
                     Text("Name")
                 },
-                modifier = Modifier.fillMaxWidth(),
+                modifier =
+                    Modifier.fillMaxWidth(),
                 singleLine = true
             )
 
             Spacer(
-                modifier = Modifier.height(10.dp)
+                modifier =
+                    Modifier.height(10.dp)
             )
 
             // -------------------------------------------------
@@ -311,18 +325,21 @@ fun AddActivityScreen(
             // -------------------------------------------------
 
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier =
+                    Modifier.fillMaxWidth(),
                 horizontalArrangement =
                     Arrangement.spacedBy(8.dp)
             ) {
 
                 ExposedDropdownMenuBox(
-                    expanded = typeExpanded,
+                    expanded =
+                        typeExpanded,
                     onExpandedChange = {
                         typeExpanded =
                             !typeExpanded
                     },
-                    modifier = Modifier.weight(1f)
+                    modifier =
+                        Modifier.weight(1f)
                 ) {
 
                     OutlinedTextField(
@@ -333,20 +350,25 @@ fun AddActivityScreen(
                             Text("Type")
                         },
                         trailingIcon = {
-                            ExposedDropdownMenuDefaults.TrailingIcon(
-                                expanded =
-                                    typeExpanded
-                            )
+
+                            ExposedDropdownMenuDefaults
+                                .TrailingIcon(
+                                    expanded =
+                                        typeExpanded
+                                )
                         },
-                        modifier = Modifier
-                            .menuAnchor()
-                            .fillMaxWidth()
+                        modifier =
+                            Modifier
+                                .menuAnchor()
+                                .fillMaxWidth()
                     )
 
                     ExposedDropdownMenu(
-                        expanded = typeExpanded,
+                        expanded =
+                            typeExpanded,
                         onDismissRequest = {
-                            typeExpanded = false
+                            typeExpanded =
+                                false
                         }
                     ) {
 
@@ -380,13 +402,15 @@ fun AddActivityScreen(
                     label = {
                         Text("Location")
                     },
-                    modifier = Modifier.weight(1f),
+                    modifier =
+                        Modifier.weight(1f),
                     singleLine = true
                 )
             }
 
             Spacer(
-                modifier = Modifier.height(10.dp)
+                modifier =
+                    Modifier.height(10.dp)
             )
 
             // -------------------------------------------------
@@ -394,7 +418,8 @@ fun AddActivityScreen(
             // -------------------------------------------------
 
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier =
+                    Modifier.fillMaxWidth(),
                 horizontalArrangement =
                     Arrangement.spacedBy(8.dp)
             ) {
@@ -407,7 +432,8 @@ fun AddActivityScreen(
                     label = {
                         Text("Estimated Cost")
                     },
-                    modifier = Modifier.weight(1f),
+                    modifier =
+                        Modifier.weight(1f),
                     singleLine = true,
                     keyboardOptions =
                         KeyboardOptions(
@@ -417,12 +443,14 @@ fun AddActivityScreen(
                 )
 
                 ExposedDropdownMenuBox(
-                    expanded = currencyExpanded,
+                    expanded =
+                        currencyExpanded,
                     onExpandedChange = {
                         currencyExpanded =
                             !currencyExpanded
                     },
-                    modifier = Modifier.weight(1f)
+                    modifier =
+                        Modifier.weight(1f)
                 ) {
 
                     OutlinedTextField(
@@ -433,18 +461,22 @@ fun AddActivityScreen(
                             Text("Currency")
                         },
                         trailingIcon = {
-                            ExposedDropdownMenuDefaults.TrailingIcon(
-                                expanded =
-                                    currencyExpanded
-                            )
+
+                            ExposedDropdownMenuDefaults
+                                .TrailingIcon(
+                                    expanded =
+                                        currencyExpanded
+                                )
                         },
-                        modifier = Modifier
-                            .menuAnchor()
-                            .fillMaxWidth()
+                        modifier =
+                            Modifier
+                                .menuAnchor()
+                                .fillMaxWidth()
                     )
 
                     ExposedDropdownMenu(
-                        expanded = currencyExpanded,
+                        expanded =
+                            currencyExpanded,
                         onDismissRequest = {
                             currencyExpanded =
                                 false
@@ -475,7 +507,8 @@ fun AddActivityScreen(
             }
 
             Spacer(
-                modifier = Modifier.height(8.dp)
+                modifier =
+                    Modifier.height(8.dp)
             )
 
             // -------------------------------------------------
@@ -483,7 +516,8 @@ fun AddActivityScreen(
             // -------------------------------------------------
 
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier =
+                    Modifier.fillMaxWidth(),
                 horizontalArrangement =
                     Arrangement.SpaceBetween,
                 verticalAlignment =
@@ -503,7 +537,8 @@ fun AddActivityScreen(
             }
 
             Spacer(
-                modifier = Modifier.height(8.dp)
+                modifier =
+                    Modifier.height(8.dp)
             )
 
             // -------------------------------------------------
@@ -518,12 +553,14 @@ fun AddActivityScreen(
                 label = {
                     Text("Website")
                 },
-                modifier = Modifier.fillMaxWidth(),
+                modifier =
+                    Modifier.fillMaxWidth(),
                 singleLine = true
             )
 
             Spacer(
-                modifier = Modifier.height(10.dp)
+                modifier =
+                    Modifier.height(10.dp)
             )
 
             // -------------------------------------------------
@@ -531,7 +568,8 @@ fun AddActivityScreen(
             // -------------------------------------------------
 
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier =
+                    Modifier.fillMaxWidth(),
                 horizontalArrangement =
                     Arrangement.spacedBy(8.dp)
             ) {
@@ -565,7 +603,8 @@ fun AddActivityScreen(
                             )
                         }
                     },
-                    modifier = Modifier.weight(1f)
+                    modifier =
+                        Modifier.weight(1f)
                 )
 
                 OutlinedTextField(
@@ -579,24 +618,31 @@ fun AddActivityScreen(
                     placeholder = {
                         Text("HH:MM")
                     },
-                    modifier = Modifier
-                        .weight(1f)
-                        .onFocusChanged { focusState ->
+                    modifier =
+                        Modifier
+                            .weight(1f)
+                            .onFocusChanged {
+                                    focusState ->
 
-                            if (!focusState.isFocused) {
+                                if (
+                                    !focusState
+                                        .isFocused
+                                ) {
 
-                                val formatted =
-                                    normaliseTime(
-                                        startTime
-                                    )
+                                    val formatted =
+                                        normaliseTime(
+                                            startTime
+                                        )
 
-                                if (formatted != null) {
+                                    if (
+                                        formatted != null
+                                    ) {
 
-                                    startTime =
-                                        formatted
+                                        startTime =
+                                            formatted
+                                    }
                                 }
-                            }
-                        },
+                            },
                     singleLine = true,
                     keyboardOptions =
                         KeyboardOptions(
@@ -607,7 +653,8 @@ fun AddActivityScreen(
             }
 
             Spacer(
-                modifier = Modifier.height(10.dp)
+                modifier =
+                    Modifier.height(10.dp)
             )
 
             // -------------------------------------------------
@@ -622,19 +669,25 @@ fun AddActivityScreen(
                 label = {
                     Text("Notes")
                 },
-                modifier = Modifier.fillMaxWidth(),
+                modifier =
+                    Modifier.fillMaxWidth(),
                 minLines = 3,
                 maxLines = 3
             )
 
+            // Extra space at the bottom of the form.
+            // This gives the last field room to scroll above
+            // the keyboard.
+
             Spacer(
-                modifier = Modifier.height(20.dp)
+                modifier =
+                    Modifier.height(32.dp)
             )
         }
 
-        // -----------------------------------------------------
+        // =====================================================
         // FIXED BOTTOM BUTTONS
-        // -----------------------------------------------------
+        // =====================================================
 
         Row(
             modifier = Modifier
@@ -644,14 +697,24 @@ fun AddActivityScreen(
                     bottom = 8.dp
                 ),
             horizontalArrangement =
-                Arrangement.SpaceEvenly
+                Arrangement.spacedBy(12.dp)
         ) {
 
+            // -------------------------------------------------
+            // BACK
+            // -------------------------------------------------
+
             Button(
-                onClick = onBack
+                onClick = onBack,
+                modifier =
+                    Modifier.weight(1f)
             ) {
                 Text("Back")
             }
+
+            // -------------------------------------------------
+            // SAVE
+            // -------------------------------------------------
 
             Button(
                 onClick = {
@@ -659,6 +722,7 @@ fun AddActivityScreen(
                     if (name.isNotBlank()) {
 
                         // Normalise the time before saving.
+
                         val formattedTime =
                             normaliseTime(
                                 startTime
@@ -684,14 +748,23 @@ fun AddActivityScreen(
                         // -------------------------------------------------
 
                         val convertedAmount =
-                            if (parsedCost != null) {
+                            if (
+                                parsedCost != null
+                            ) {
 
                                 val rate =
                                     exchangeRateViewModel
-                                        .getRate(currency)
+                                        .getRate(
+                                            currency
+                                        )
 
-                                if (rate > 0.0) {
-                                    parsedCost * rate
+                                if (
+                                    rate > 0.0
+                                ) {
+
+                                    parsedCost *
+                                            rate
+
                                 } else {
                                     null
                                 }
@@ -760,7 +833,10 @@ fun AddActivityScreen(
                                             LocalTime.parse(
                                                 it
                                             )
-                                        } catch (_: Exception) {
+                                        } catch (
+                                            _:
+                                            Exception
+                                        ) {
                                             null
                                         }
                                     }
@@ -772,16 +848,18 @@ fun AddActivityScreen(
 
                         onActivityAdded()
                     }
-                }
+                },
+                modifier =
+                    Modifier.weight(1f)
             ) {
                 Text("Save")
             }
         }
     }
 
-    // ---------------------------------------------------------
+    // =========================================================
     // DATE PICKER
-    // ---------------------------------------------------------
+    // =========================================================
 
     if (showDatePicker) {
 
@@ -789,8 +867,10 @@ fun AddActivityScreen(
             rememberDatePickerState()
 
         DatePickerDialog(
+
             onDismissRequest = {
-                showDatePicker = false
+                showDatePicker =
+                    false
             },
 
             confirmButton = {
@@ -813,7 +893,8 @@ fun AddActivityScreen(
                                         .toLocalDate()
 
                                 date =
-                                    selectedDate.toString()
+                                    selectedDate
+                                        .toString()
                             }
 
                         showDatePicker =

@@ -226,7 +226,7 @@ fun ItineraryScreen(
                 onClick = onAddItinerary,
                 modifier = Modifier.weight(1.5f)
             ) {
-                Text("＋ Add Item")
+                Text("Add Item")
             }
         }
     }

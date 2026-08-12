@@ -6,7 +6,11 @@ import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -530,6 +534,10 @@ fun AppNavigation(
                     mutableStateOf<TripEstimateEntity?>(null)
                 }
 
+                var showDeleteEstimateDialog by remember {
+                    mutableStateOf(false)
+                }
+
                 LaunchedEffect(estimateId) {
 
                     if (estimateId != null) {
@@ -539,6 +547,59 @@ fun AppNavigation(
                                 estimateId
                             )
                     }
+                }
+
+                // =====================================================
+                // DELETE ESTIMATE CONFIRMATION
+                // =====================================================
+
+                if (showDeleteEstimateDialog && estimate != null) {
+
+                    AlertDialog(
+                        onDismissRequest = {
+                            showDeleteEstimateDialog = false
+                        },
+
+                        title = {
+                            Text("Delete estimate?")
+                        },
+
+                        text = {
+                            Text(
+                                "Are you sure you want to delete this estimate? " +
+                                        "This cannot be undone."
+                            )
+                        },
+
+                        confirmButton = {
+
+                            Button(
+                                onClick = {
+
+                                    tripViewModel.deleteTripEstimate(
+                                        estimate!!
+                                    )
+
+                                    showDeleteEstimateDialog = false
+
+                                    navController.popBackStack()
+                                }
+                            ) {
+                                Text("Delete")
+                            }
+                        },
+
+                        dismissButton = {
+
+                            TextButton(
+                                onClick = {
+                                    showDeleteEstimateDialog = false
+                                }
+                            ) {
+                                Text("Cancel")
+                            }
+                        }
+                    )
                 }
 
                 estimate?.let { item ->
@@ -560,11 +621,7 @@ fun AppNavigation(
 
                         onDeleteEstimate = {
 
-                            tripViewModel.deleteTripEstimate(
-                                item
-                            )
-
-                            navController.popBackStack()
+                            showDeleteEstimateDialog = true
                         },
 
                         onBack = {
@@ -739,6 +796,15 @@ fun AppNavigation(
                             tripViewModel,
 
                         onItineraryUpdated = {
+
+                            navController.popBackStack()
+                        },
+
+                        onDeleteItinerary = { item ->
+
+                            tripViewModel.deleteItinerary(
+                                item
+                            )
 
                             navController.popBackStack()
                         },

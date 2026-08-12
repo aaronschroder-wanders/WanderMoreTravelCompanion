@@ -329,6 +329,15 @@ fun AddTripEstimateScreen(
                 Arrangement.spacedBy(8.dp)
         ) {
 
+            // CANCEL - LEFT
+            Button(
+                onClick = onBack,
+                modifier = Modifier.weight(1f)
+            ) {
+                Text("Cancel")
+            }
+
+            // SAVE - RIGHT
             Button(
                 onClick = {
 
@@ -380,13 +389,6 @@ fun AddTripEstimateScreen(
                             enteredAmount > 0.0
             ) {
                 Text("Save")
-            }
-
-            Button(
-                onClick = onBack,
-                modifier = Modifier.weight(1f)
-            ) {
-                Text("Cancel")
             }
         }
 

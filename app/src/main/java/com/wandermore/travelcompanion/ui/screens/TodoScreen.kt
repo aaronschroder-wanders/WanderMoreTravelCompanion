@@ -55,10 +55,23 @@ fun TodoScreen(
             initial = emptyList()
         )
 
-    // Put incomplete items first and completed items at the bottom.
-    val sortedTodos = todos.sortedBy {
-        it.completed
-    }
+    // ---------------------------------------------------------
+    // GROUP BY DUE DATE
+    //
+    // Items with a due date are grouped by date.
+    // Items with no date are kept in a separate group.
+    // ---------------------------------------------------------
+
+    val groupedTodos =
+        todos
+            .groupBy { it.dueDate }
+            .toList()
+            .sortedWith(
+                compareBy(
+                    { it.first == null },
+                    { it.first }
+                )
+            )
 
     // ---------------------------------------------------------
     // SCREEN
@@ -101,33 +114,84 @@ fun TodoScreen(
         } else {
 
             LazyColumn(
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
+                verticalArrangement =
+                    Arrangement.spacedBy(6.dp)
             ) {
 
-                items(
-                    items = sortedTodos,
-                    key = { it.id }
-                ) { todo ->
+                groupedTodos.forEach {
+                        (dueDate, todosForDate) ->
 
-                    TodoRow(
-                        todo = todo,
-                        onClick = {
-                            onEditTodo(
-                                todo.id
-                            )
+                    // -------------------------------------------------
+                    // DATE HEADING
+                    // -------------------------------------------------
+
+                    item(
+                        key = "date_$dueDate"
+                    ) {
+
+                        Spacer(
+                            modifier = Modifier.height(8.dp)
+                        )
+
+                        Text(
+                            text =
+                                if (dueDate == null) {
+                                    "No Due Date"
+                                } else {
+                                    formatDate(dueDate)
+                                },
+                            style =
+                                MaterialTheme.typography
+                                    .titleMedium,
+                            color =
+                                MaterialTheme.colorScheme
+                                    .primary
+                        )
+
+                        Spacer(
+                            modifier = Modifier.height(4.dp)
+                        )
+                    }
+
+                    // -------------------------------------------------
+                    // ITEMS FOR THIS DATE
+                    //
+                    // Incomplete items first, completed items last.
+                    // -------------------------------------------------
+
+                    items(
+                        items =
+                            todosForDate.sortedBy {
+                                it.completed
+                            },
+                        key = {
+                            it.id
                         }
-                    )
+                    ) { todo ->
 
+                        TodoRow(
+                            todo = todo,
+                            onClick = {
+                                onEditTodo(
+                                    todo.id
+                                )
+                            }
+                        )
+                    }
+                }
+
+                item {
                     Spacer(
-                        modifier = Modifier.height(6.dp)
+                        modifier = Modifier.height(8.dp)
                     )
                 }
             }
         }
 
-        // -----------------------------------------------------
+        // ---------------------------------------------------------
         // BOTTOM BUTTONS
-        // -----------------------------------------------------
+        // ---------------------------------------------------------
 
         Spacer(
             modifier = Modifier.height(8.dp)
@@ -135,7 +199,8 @@ fun TodoScreen(
 
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly
+            horizontalArrangement =
+                Arrangement.SpaceEvenly
         ) {
 
             Button(
@@ -178,31 +243,41 @@ private fun TodoRow(
                     .padding(12.dp)
             ) {
 
+                // -------------------------------------------------
+                // TASK
+                // -------------------------------------------------
+
                 Text(
-                    text = if (todo.completed) {
-                        "✓ ${todo.task}"
-                    } else {
-                        "☐ ${todo.task}"
-                    },
-                    style = MaterialTheme.typography.titleMedium
+                    text =
+                        if (todo.completed) {
+                            "✓ ${todo.task}"
+                        } else {
+                            "☐ ${todo.task}"
+                        },
+                    style =
+                        MaterialTheme.typography
+                            .titleMedium
                 )
 
                 Spacer(
                     modifier = Modifier.height(4.dp)
                 )
 
+                // -------------------------------------------------
+                // ASSIGNED TO
+                // -------------------------------------------------
+
                 Text(
-                    text = "Assigned to: ${todo.assignedTo}",
-                    style = MaterialTheme.typography.bodySmall
+                    text =
+                        "Assigned to: ${todo.assignedTo}",
+                    style =
+                        MaterialTheme.typography
+                            .bodySmall
                 )
 
-                if (todo.dueDate != null) {
-
-                    Text(
-                        text = "Due: ${formatDate(todo.dueDate)}",
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                }
+                // -------------------------------------------------
+                // NOTES
+                // -------------------------------------------------
 
                 if (!todo.notes.isNullOrBlank()) {
 
@@ -212,7 +287,9 @@ private fun TodoRow(
 
                     Text(
                         text = todo.notes!!,
-                        style = MaterialTheme.typography.bodyMedium
+                        style =
+                            MaterialTheme.typography
+                                .bodyMedium
                     )
                 }
             }
