@@ -18,6 +18,7 @@ fun TripSummaryCard(
     totalEstimate: Double,
     totalSpent: Double,
     airfareTotal: Double,
+    foodDrinkPerDay: Double = 0.0,
     currency: String,
     onClick: () -> Unit
 ) {
@@ -114,6 +115,16 @@ fun TripSummaryCard(
                 }  /  Excl. flights: ${
                     formatMoney(
                         averageExcludingFlights,
+                        currency
+                    )
+                }",
+                style = MaterialTheme.typography.bodyMedium
+            )
+
+            Text(
+                text = "🍜 Food & Drink per day: ${
+                    formatMoney(
+                        foodDrinkPerDay,
                         currency
                     )
                 }",

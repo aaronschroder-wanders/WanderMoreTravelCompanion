@@ -129,6 +129,13 @@ fun TripExpensesScreen(
 
     // ---------------------------------------------------------
     // DAYS USED FOR AVERAGES
+    //
+    // CURRENT:
+    // Count from trip start through today, inclusive.
+    // If today is after the trip end date, cap at end date.
+    //
+    // PLANNED / ARCHIVED:
+    // Use the full planned trip duration.
     // ---------------------------------------------------------
 
     val daysForAverages =
@@ -162,6 +169,25 @@ fun TripExpensesScreen(
         }
 
     // ---------------------------------------------------------
+    // FOOD & DRINK DAILY AVERAGE
+    // ---------------------------------------------------------
+
+    val foodDrinkTotal = expenses
+        .filter {
+            it.category == "Food & Drink"
+        }
+        .sumOf {
+            it.convertedAmount
+        }
+
+    val foodDrinkPerDay =
+        if (daysForAverages > 0) {
+            foodDrinkTotal / daysForAverages
+        } else {
+            0.0
+        }
+
+    // ---------------------------------------------------------
     // SCREEN
     // ---------------------------------------------------------
 
@@ -192,6 +218,7 @@ fun TripExpensesScreen(
             totalEstimate = totalEstimate,
             totalSpent = total,
             airfareTotal = airfareTotal,
+            foodDrinkPerDay = foodDrinkPerDay,
             currency = currentTrip.homeCurrency,
             onClick = onCategoryBreakdown
         )

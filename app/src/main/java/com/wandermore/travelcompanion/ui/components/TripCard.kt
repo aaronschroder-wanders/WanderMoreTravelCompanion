@@ -2,6 +2,7 @@ package com.wandermore.travelcompanion.ui.components
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Card
 import androidx.compose.material3.Text
@@ -13,7 +14,6 @@ import com.wandermore.travelcompanion.model.TripStatus
 import com.wandermore.travelcompanion.util.formatDate
 import java.time.temporal.ChronoUnit
 import java.util.Locale
-import androidx.compose.foundation.layout.fillMaxWidth
 
 @Composable
 fun TripCard(
@@ -60,7 +60,7 @@ fun TripCard(
             )
 
             Text(
-                text = "💰 ${trip.homeCurrency}"
+                text = "🗓️ $tripDays days"
             )
 
             if (trip.status == TripStatus.ARCHIVED) {
