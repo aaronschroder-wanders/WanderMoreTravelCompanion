@@ -10,11 +10,17 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.wandermore.travelcompanion.ui.components.CurrencyDropdown
+import com.wandermore.travelcompanion.viewmodel.UserSettingsViewModel
 
 @Composable
 fun SettingsScreen(
+
+    userSettingsViewModel: UserSettingsViewModel,
 
     onExchangeRates: () -> Unit,
 
@@ -25,6 +31,11 @@ fun SettingsScreen(
     onBack: () -> Unit
 
 ) {
+
+    val homeCurrency by userSettingsViewModel
+        .homeCurrency
+        .collectAsState()
+
 
     Column(
 
@@ -69,6 +80,70 @@ fun SettingsScreen(
         )
 
 
+        // =========================================================
+        // HOME CURRENCY
+        // =========================================================
+
+        Card(
+
+            modifier =
+                Modifier.fillMaxWidth()
+
+        ) {
+
+            Column(
+
+                modifier =
+                    Modifier.padding(16.dp),
+
+                verticalArrangement =
+                    Arrangement.spacedBy(8.dp)
+
+            ) {
+
+                Text(
+
+                    text = "Home Currency",
+
+                    style =
+                        MaterialTheme.typography.titleMedium
+
+                )
+
+
+                Text(
+
+                    text =
+                        "Used as the currency for new trips and calculations."
+
+                )
+
+
+                CurrencyDropdown(
+
+                    selectedCurrency =
+                        homeCurrency,
+
+                    onCurrencySelected = { currency ->
+
+                        userSettingsViewModel
+                            .setHomeCurrency(currency)
+
+                    },
+
+                    label = "Home Currency"
+
+                )
+
+            }
+
+        }
+
+
+        // =========================================================
+        // EXCHANGE RATES
+        // =========================================================
+
         Card(
 
             modifier =
@@ -87,7 +162,10 @@ fun SettingsScreen(
             ) {
 
                 Text(
-                    text = "Currency Exchange Rates"
+
+                    text =
+                        "Currency Exchange Rates"
+
                 )
 
             }
@@ -131,7 +209,10 @@ fun SettingsScreen(
             ) {
 
                 Text(
-                    text = "Backup to Google Drive"
+
+                    text =
+                        "Backup to Google Drive"
+
                 )
 
             }
@@ -157,7 +238,10 @@ fun SettingsScreen(
             ) {
 
                 Text(
-                    text = "Restore from Google Drive"
+
+                    text =
+                        "Restore from Google Drive"
+
                 )
 
             }
@@ -171,7 +255,10 @@ fun SettingsScreen(
         // =========================================================
 
         Column(
-            modifier = Modifier.weight(1f)
+
+            modifier =
+                Modifier.weight(1f)
+
         ) {
         }
 
@@ -188,7 +275,10 @@ fun SettingsScreen(
         ) {
 
             Text(
-                text = "Back"
+
+                text =
+                    "Back"
+
             )
 
         }

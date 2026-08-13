@@ -3,11 +3,13 @@ package com.wandermore.travelcompanion.data.repository
 import androidx.room.withTransaction
 import com.wandermore.travelcompanion.database.AppDatabase
 import com.wandermore.travelcompanion.database.BackupData
+import kotlinx.coroutines.flow.first
 import kotlinx.serialization.json.Json
 import java.time.LocalDateTime
 
 class BackupRepository(
-    private val database: AppDatabase
+    private val database: AppDatabase,
+    private val userSettingsRepository: UserSettingsRepository
 ) {
 
     private val json = Json {
@@ -16,9 +18,9 @@ class BackupRepository(
         ignoreUnknownKeys = true
     }
 
-// ---------------------------------------------------------
-// CREATE BACKUP
-// ---------------------------------------------------------
+    // ---------------------------------------------------------
+    // CREATE BACKUP
+    // ---------------------------------------------------------
 
     suspend fun createBackup(): String {
 
@@ -54,10 +56,18 @@ class BackupRepository(
             database.tripEstimateDao()
                 .getAllEstimatesForBackup()
 
+        val homeCurrency =
+            userSettingsRepository
+                .homeCurrency
+                .first()
+
         val backup =
             BackupData(
                 backupVersion = 1,
                 createdAt = LocalDateTime.now().toString(),
+
+                homeCurrency = homeCurrency,
+
                 trips = trips,
                 expenses = expenses,
                 exchangeRates = exchangeRates,
@@ -75,9 +85,9 @@ class BackupRepository(
     }
 
 
-// ---------------------------------------------------------
-// RESTORE BACKUP
-// ---------------------------------------------------------
+    // ---------------------------------------------------------
+    // RESTORE BACKUP
+    // ---------------------------------------------------------
 
     suspend fun restoreBackup(
         backupJson: String
@@ -110,6 +120,7 @@ class BackupRepository(
             // -------------------------------------------------
 
             backup.trips.forEach { trip ->
+
                 database.tripDao()
                     .insertTrip(trip)
             }
@@ -120,6 +131,7 @@ class BackupRepository(
             // -------------------------------------------------
 
             backup.expenses.forEach { expense ->
+
                 database.expenseDao()
                     .insertExpense(expense)
             }
@@ -130,6 +142,7 @@ class BackupRepository(
             // -------------------------------------------------
 
             backup.todos.forEach { todo ->
+
                 database.todoDao()
                     .insertTodo(todo)
             }
@@ -140,6 +153,7 @@ class BackupRepository(
             // -------------------------------------------------
 
             backup.activities.forEach { activity ->
+
                 database.activityDao()
                     .insertActivity(activity)
             }
@@ -150,6 +164,7 @@ class BackupRepository(
             // -------------------------------------------------
 
             backup.itinerary.forEach { itineraryItem ->
+
                 database.itineraryDao()
                     .insertItinerary(itineraryItem)
             }
@@ -160,6 +175,7 @@ class BackupRepository(
             // -------------------------------------------------
 
             backup.bookings.forEach { booking ->
+
                 database.bookingDao()
                     .insertBooking(booking)
             }
@@ -170,6 +186,7 @@ class BackupRepository(
             // -------------------------------------------------
 
             backup.tripEstimates.forEach { estimate ->
+
                 database.tripEstimateDao()
                     .insertEstimate(estimate)
             }
@@ -183,8 +200,18 @@ class BackupRepository(
                 .deleteAllRates()
 
             database.exchangeRateDao()
-                .insertRates(backup.exchangeRates)
+                .insertRates(
+                    backup.exchangeRates
+                )
         }
-    }
 
+        // ---------------------------------------------------------
+        // RESTORE USER SETTINGS
+        // ---------------------------------------------------------
+
+        userSettingsRepository
+            .setHomeCurrency(
+                backup.homeCurrency
+            )
+    }
 }

@@ -9,6 +9,8 @@ data class BackupData(
 
     val createdAt: String,
 
+    val homeCurrency: String,
+
     val trips: List<TripEntity>,
 
     val expenses: List<ExpenseEntity>,

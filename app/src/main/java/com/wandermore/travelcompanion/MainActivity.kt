@@ -15,6 +15,9 @@ import com.wandermore.travelcompanion.viewmodel.ExchangeRateViewModel
 import com.wandermore.travelcompanion.viewmodel.ExchangeRateViewModelFactory
 import com.wandermore.travelcompanion.viewmodel.TripViewModel
 import com.wandermore.travelcompanion.viewmodel.TripViewModelFactory
+import com.wandermore.travelcompanion.data.repository.UserSettingsRepository
+import com.wandermore.travelcompanion.viewmodel.UserSettingsViewModel
+import com.wandermore.travelcompanion.viewmodel.UserSettingsViewModelFactory
 
 class MainActivity : ComponentActivity() {
 
@@ -58,6 +61,24 @@ class MainActivity : ComponentActivity() {
                         )
                     }
 
+                val userSettingsRepository =
+                    remember {
+
+                        UserSettingsRepository(
+                            applicationContext
+                        )
+
+                    }
+
+                val userSettingsViewModel:
+                        UserSettingsViewModel =
+                    viewModel(
+                        factory =
+                            UserSettingsViewModelFactory(
+                                userSettingsRepository
+                            )
+                    )
+
                 val exchangeRateViewModel:
                         ExchangeRateViewModel =
                     viewModel(
@@ -78,6 +99,10 @@ class MainActivity : ComponentActivity() {
                     tripViewModel = tripViewModel,
                     exchangeRateViewModel =
                         exchangeRateViewModel,
+                    userSettingsViewModel =
+                        userSettingsViewModel,
+                    userSettingsRepository =
+                        userSettingsRepository,
                     database = database
                 )
             }

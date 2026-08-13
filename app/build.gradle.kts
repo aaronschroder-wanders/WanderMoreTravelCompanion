@@ -60,4 +60,5 @@ dependencies {
     ksp("androidx.room:room-compiler:2.7.2")
 
     implementation(libs.kotlinx.serialization.json)
+    implementation(libs.androidx.datastore.preferences)
 }

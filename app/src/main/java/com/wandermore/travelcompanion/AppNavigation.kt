@@ -61,12 +61,17 @@ import androidx.compose.runtime.rememberCoroutineScope
 import com.wandermore.travelcompanion.data.repository.BackupRepository
 import kotlinx.coroutines.launch
 import android.widget.Toast
+import com.wandermore.travelcompanion.viewmodel.UserSettingsViewModel
+import com.wandermore.travelcompanion.data.repository.UserSettingsRepository
+
 
 @Composable
 fun AppNavigation(
     navController: NavHostController,
     tripViewModel: TripViewModel,
     exchangeRateViewModel: ExchangeRateViewModel,
+    userSettingsViewModel: UserSettingsViewModel,
+    userSettingsRepository: UserSettingsRepository,
     database: AppDatabase
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
@@ -74,8 +79,15 @@ fun AppNavigation(
     val coroutineScope = rememberCoroutineScope()
 
     val backupRepository =
-        remember(database) {
-            BackupRepository(database)
+        remember(
+            database,
+            userSettingsRepository
+        ) {
+            BackupRepository(
+                database = database,
+                userSettingsRepository =
+                    userSettingsRepository
+            )
         }
 
     // =========================================================
@@ -260,6 +272,9 @@ fun AppNavigation(
             composable("settings") {
 
                 SettingsScreen(
+
+                    userSettingsViewModel =
+                        userSettingsViewModel,
 
                     onExchangeRates = {
 
