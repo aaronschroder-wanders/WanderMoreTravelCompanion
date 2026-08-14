@@ -257,6 +257,7 @@ fun AppNavigation(
 
                 CreateTripScreen(
                     tripViewModel = tripViewModel,
+                    userSettingsViewModel = userSettingsViewModel,
 
                     onTripCreated = {
                         navController.popBackStack()

@@ -37,7 +37,6 @@ fun CategoryExpensesScreen(
 
 ) {
 
-
     val expenses by tripViewModel
         .getExpensesForTrip(tripId)
         .collectAsState(
@@ -53,7 +52,6 @@ fun CategoryExpensesScreen(
         }
 
 
-
     val total =
         categoryExpenses.sumOf {
 
@@ -62,29 +60,28 @@ fun CategoryExpensesScreen(
         }
 
 
-
     Column(
 
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp),
 
-        horizontalAlignment = Alignment.CenterHorizontally,
+        horizontalAlignment =
+            Alignment.CenterHorizontally,
 
-        verticalArrangement = Arrangement.Top
+        verticalArrangement =
+            Arrangement.Top
 
     ) {
-
-
 
         Text(
 
             text = category,
 
-            style = MaterialTheme.typography.titleLarge
+            style =
+                MaterialTheme.typography.titleLarge
 
         )
-
 
 
         Text(
@@ -94,14 +91,15 @@ fun CategoryExpensesScreen(
                 currency
             ),
 
-            style = MaterialTheme.typography.titleMedium,
+            style =
+                MaterialTheme.typography.titleMedium,
 
-            modifier = Modifier.padding(
-                vertical = 12.dp
-            )
+            modifier =
+                Modifier.padding(
+                    vertical = 12.dp
+                )
 
         )
-
 
 
         LazyColumn(
@@ -112,15 +110,15 @@ fun CategoryExpensesScreen(
 
         ) {
 
-
-
             items(categoryExpenses) { expense ->
-
-
 
                 ExpenseCard(
 
                     expense = expense,
+
+                    // The currency parameter is the
+                    // home currency belonging to this trip.
+                    homeCurrency = currency,
 
                     onClick = {
 
@@ -132,12 +130,9 @@ fun CategoryExpensesScreen(
 
                 )
 
-
             }
 
-
         }
-
 
 
         Button(
@@ -150,14 +145,11 @@ fun CategoryExpensesScreen(
 
         ) {
 
-
             Text(
                 "Back to Breakdown"
             )
 
-
         }
-
 
     }
 

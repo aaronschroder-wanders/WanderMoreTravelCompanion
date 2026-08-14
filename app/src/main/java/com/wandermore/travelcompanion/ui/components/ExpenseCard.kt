@@ -16,11 +16,11 @@ import com.wandermore.travelcompanion.database.ExpenseEntity
 import com.wandermore.travelcompanion.util.ExpenseCategoryIcons
 import com.wandermore.travelcompanion.util.formatMoney
 import java.time.format.DateTimeFormatter
-import java.util.Locale
 
 @Composable
 fun ExpenseCard(
     expense: ExpenseEntity,
+    homeCurrency: String,
     onClick: () -> Unit
 ) {
 
@@ -91,10 +91,9 @@ fun ExpenseCard(
                 )
 
                 Text(
-                    text = "≈ NZ$ " + String.format(
-                        Locale.US,
-                        "%,.2f",
-                        expense.convertedAmount
+                    text = "≈ " + formatMoney(
+                        expense.convertedAmount,
+                        homeCurrency
                     ),
                     style = MaterialTheme.typography.bodyLarge
                 )
@@ -103,11 +102,11 @@ fun ExpenseCard(
             if (nightlyRate != null) {
 
                 Text(
-                    text = "${expense.numberOfNights} nights • NZ$ " + String.format(
-                        Locale.US,
-                        "%,.2f",
-                        nightlyRate
-                    ) + "/night",
+                    text = "${expense.numberOfNights} nights • " +
+                            "${formatMoney(
+                                nightlyRate,
+                                homeCurrency
+                            )}/night",
                     style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier.padding(top = 4.dp)
                 )

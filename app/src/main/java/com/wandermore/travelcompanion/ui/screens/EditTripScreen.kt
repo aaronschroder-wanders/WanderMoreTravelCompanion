@@ -26,7 +26,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.wandermore.travelcompanion.model.Trip
 import com.wandermore.travelcompanion.model.TripStatus
-import com.wandermore.travelcompanion.ui.components.CurrencyDropdown
 import com.wandermore.travelcompanion.util.formatDate
 import com.wandermore.travelcompanion.viewmodel.TripViewModel
 import java.time.Instant
@@ -41,28 +40,51 @@ fun EditTripScreen(
     onTripUpdated: () -> Unit
 ) {
 
-    var name by remember { mutableStateOf(trip.name) }
-    var startDate by remember { mutableStateOf<LocalDate?>(trip.startDate) }
-    var endDate by remember { mutableStateOf<LocalDate?>(trip.endDate) }
-    var currency by remember { mutableStateOf(trip.homeCurrency) }
-    var status by remember { mutableStateOf(trip.status) }
+    var name by remember {
+        mutableStateOf(trip.name)
+    }
 
-    var errorMessage by remember { mutableStateOf("") }
+    var startDate by remember {
+        mutableStateOf<LocalDate?>(trip.startDate)
+    }
 
-    var showStartPicker by remember { mutableStateOf(false) }
-    var showEndPicker by remember { mutableStateOf(false) }
+    var endDate by remember {
+        mutableStateOf<LocalDate?>(trip.endDate)
+    }
 
-    var statusExpanded by remember { mutableStateOf(false) }
+    var status by remember {
+        mutableStateOf(trip.status)
+    }
+
+    var errorMessage by remember {
+        mutableStateOf("")
+    }
+
+    var showStartPicker by remember {
+        mutableStateOf(false)
+    }
+
+    var showEndPicker by remember {
+        mutableStateOf(false)
+    }
+
+    var statusExpanded by remember {
+        mutableStateOf(false)
+    }
 
 
     Column(
+
         modifier = Modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState())
+            .verticalScroll(
+                rememberScrollState()
+            )
             .imePadding()
             .padding(16.dp),
 
-        horizontalAlignment = Alignment.CenterHorizontally
+        horizontalAlignment =
+            Alignment.CenterHorizontally
     ) {
 
 
@@ -71,55 +93,93 @@ fun EditTripScreen(
         )
 
 
+        // ---------------------------------------------------------
+        // TRIP NAME
+        // ---------------------------------------------------------
+
         OutlinedTextField(
+
             value = name,
+
             onValueChange = {
                 name = it
             },
+
             label = {
                 Text("Trip name")
             }
         )
 
 
+        // ---------------------------------------------------------
+        // START DATE
+        // ---------------------------------------------------------
+
         Button(
+
             onClick = {
                 showStartPicker = true
             }
+
         ) {
 
             Text(
-                text = startDate?.let {
-                    formatDate(it)
-                } ?: "Select start date"
+
+                text =
+                    startDate?.let {
+                        formatDate(it)
+                    }
+                        ?: "Select start date"
+
             )
 
         }
 
 
+        // ---------------------------------------------------------
+        // END DATE
+        // ---------------------------------------------------------
+
         Button(
+
             onClick = {
                 showEndPicker = true
             }
+
         ) {
 
             Text(
-                text = endDate?.let {
-                    formatDate(it)
-                } ?: "Select end date"
+
+                text =
+                    endDate?.let {
+                        formatDate(it)
+                    }
+                        ?: "Select end date"
+
             )
 
         }
 
 
-        CurrencyDropdown(
-            selectedCurrency = currency,
-            onCurrencySelected = {
-                currency = it
-            },
-            label = "Home Currency"
+        // ---------------------------------------------------------
+        // HOME CURRENCY
+        //
+        // This is the currency stored with this trip.
+        // It is deliberately not editable.
+        // ---------------------------------------------------------
+
+        Text(
+            text = "Home Currency: ${trip.homeCurrency}"
         )
 
+        Text(
+            text = "Trip currency cannot be changed."
+        )
+
+
+        // ---------------------------------------------------------
+        // TRIP STATUS
+        // ---------------------------------------------------------
 
         Text(
             text = "Trip Status"
@@ -127,27 +187,34 @@ fun EditTripScreen(
 
 
         OutlinedButton(
+
             onClick = {
                 statusExpanded = true
             }
+
         ) {
 
             Text(
+
                 status.name
                     .lowercase()
                     .replaceFirstChar {
                         it.uppercase()
                     }
+
             )
 
         }
 
 
         DropdownMenu(
+
             expanded = statusExpanded,
+
             onDismissRequest = {
                 statusExpanded = false
             }
+
         ) {
 
             TripStatus.values().forEach { option ->
@@ -157,11 +224,13 @@ fun EditTripScreen(
                     text = {
 
                         Text(
+
                             option.name
                                 .lowercase()
                                 .replaceFirstChar {
                                     it.uppercase()
                                 }
+
                         )
 
                     },
@@ -180,6 +249,10 @@ fun EditTripScreen(
         }
 
 
+        // ---------------------------------------------------------
+        // SAVE
+        // ---------------------------------------------------------
+
         Button(
 
             onClick = {
@@ -190,30 +263,45 @@ fun EditTripScreen(
                     name.isBlank()
                     || startDate == null
                     || endDate == null
-
                 ) {
 
                     errorMessage =
                         "Please complete all fields"
 
-                } else if (endDate!! < startDate!!) {
+                } else if (
+                    endDate!! < startDate!!
+                ) {
 
                     errorMessage =
                         "End date cannot be before start date"
 
                 } else {
 
-                    val updatedTrip = trip.copy(
+                    val updatedTrip =
+                        trip.copy(
 
-                        name = name,
-                        startDate = startDate!!,
-                        endDate = endDate!!,
-                        homeCurrency = currency,
-                        status = status
+                            name = name,
 
+                            startDate =
+                                startDate!!,
+
+                            endDate =
+                                endDate!!,
+
+                            // IMPORTANT:
+                            // Preserve the currency already
+                            // belonging to this trip.
+                            homeCurrency =
+                                trip.homeCurrency,
+
+                            status =
+                                status
+
+                        )
+
+                    tripViewModel.updateTrip(
+                        updatedTrip
                     )
-
-                    tripViewModel.updateTrip(updatedTrip)
 
                     onTripUpdated()
 
@@ -230,6 +318,10 @@ fun EditTripScreen(
         }
 
 
+        // ---------------------------------------------------------
+        // ERROR
+        // ---------------------------------------------------------
+
         if (errorMessage.isNotBlank()) {
 
             Text(
@@ -241,10 +333,14 @@ fun EditTripScreen(
     }
 
 
+    // =========================================================
+    // START DATE PICKER
+    // =========================================================
 
     if (showStartPicker) {
 
-        val datePickerState = rememberDatePickerState()
+        val datePickerState =
+            rememberDatePickerState()
 
 
         DatePickerDialog(
@@ -260,18 +356,22 @@ fun EditTripScreen(
                     onClick = {
 
                         startDate =
-                            datePickerState.selectedDateMillis?.let {
+                            datePickerState
+                                .selectedDateMillis
+                                ?.let {
 
-                                Instant.ofEpochMilli(it)
-                                    .atZone(
-                                        ZoneId.systemDefault()
-                                    )
-                                    .toLocalDate()
+                                    Instant
+                                        .ofEpochMilli(it)
+                                        .atZone(
+                                            ZoneId.systemDefault()
+                                        )
+                                        .toLocalDate()
 
-                            }
+                                }
 
 
                         showStartPicker = false
+
                         showEndPicker = true
 
                     }
@@ -295,10 +395,14 @@ fun EditTripScreen(
     }
 
 
+    // =========================================================
+    // END DATE PICKER
+    // =========================================================
 
     if (showEndPicker) {
 
-        val datePickerState = rememberDatePickerState()
+        val datePickerState =
+            rememberDatePickerState()
 
 
         DatePickerDialog(
@@ -314,15 +418,18 @@ fun EditTripScreen(
                     onClick = {
 
                         endDate =
-                            datePickerState.selectedDateMillis?.let {
+                            datePickerState
+                                .selectedDateMillis
+                                ?.let {
 
-                                Instant.ofEpochMilli(it)
-                                    .atZone(
-                                        ZoneId.systemDefault()
-                                    )
-                                    .toLocalDate()
+                                    Instant
+                                        .ofEpochMilli(it)
+                                        .atZone(
+                                            ZoneId.systemDefault()
+                                        )
+                                        .toLocalDate()
 
-                            }
+                                }
 
 
                         showEndPicker = false

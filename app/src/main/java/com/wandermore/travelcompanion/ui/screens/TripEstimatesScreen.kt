@@ -20,9 +20,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.wandermore.travelcompanion.database.TripEstimateEntity
+import com.wandermore.travelcompanion.util.formatMoney
 import com.wandermore.travelcompanion.viewmodel.TripViewModel
 import java.time.temporal.ChronoUnit
-import java.util.Locale
 
 @Composable
 fun TripEstimatesScreen(
@@ -239,17 +239,13 @@ fun TripEstimatesScreen(
             Button(
                 onClick = onBack
             ) {
-                Text(
-                    "Back"
-                )
+                Text("Back")
             }
 
             Button(
                 onClick = onAddEstimate
             ) {
-                Text(
-                    "Add Estimate"
-                )
+                Text("Add Estimate")
             }
         }
     }
@@ -399,89 +395,6 @@ private fun TripEstimateCard(
                     style = MaterialTheme.typography.bodySmall
                 )
             }
-        }
-    }
-}
-
-// =============================================================
-// MONEY FORMATTING
-// =============================================================
-
-private fun formatMoney(
-    amount: Double,
-    currency: String
-): String {
-
-    return when (currency) {
-
-        "NZD" -> {
-            "NZ$ %,.2f".format(
-                Locale.US,
-                amount
-            )
-        }
-
-        "AUD" -> {
-            "A$ %,.2f".format(
-                Locale.US,
-                amount
-            )
-        }
-
-        "USD" -> {
-            "US$ %,.2f".format(
-                Locale.US,
-                amount
-            )
-        }
-
-        "EUR" -> {
-            "€ %,.2f".format(
-                Locale.US,
-                amount
-            )
-        }
-
-        "GBP" -> {
-            "£ %,.2f".format(
-                Locale.US,
-                amount
-            )
-        }
-
-        "THB" -> {
-            "฿ %,.2f".format(
-                Locale.US,
-                amount
-            )
-        }
-
-        "VND" -> {
-            "₫ %,.0f".format(
-                Locale.US,
-                amount
-            )
-        }
-
-        "LAK" -> {
-            "₭ %,.0f".format(
-                Locale.US,
-                amount
-            )
-        }
-
-        "CNY" -> {
-            "¥ %,.2f".format(
-                Locale.US,
-                amount
-            )
-        }
-
-        else -> {
-            "$currency %,.2f".format(
-                Locale.US,
-                amount
-            )
         }
     }
 }

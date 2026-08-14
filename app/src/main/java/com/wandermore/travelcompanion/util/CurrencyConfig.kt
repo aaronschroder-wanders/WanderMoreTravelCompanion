@@ -9,7 +9,8 @@ fun currencyDecimalPlaces(
 
         "JPY",
         "KRW",
-        "VND" -> 0
+        "VND",
+        "LAK" -> 0
 
         else -> 2
 

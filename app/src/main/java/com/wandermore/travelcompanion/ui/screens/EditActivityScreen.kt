@@ -30,13 +30,13 @@ import androidx.compose.material3.TimePickerDialog
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.wandermore.travelcompanion.database.ActivityEntity
@@ -57,6 +57,21 @@ fun EditActivityScreen(
     onDeleteActivity: () -> Unit,
     onBack: () -> Unit
 ) {
+
+    // =========================================================
+    // LOAD TRIP
+    //
+    // The trip contains the permanent home currency that
+    // belongs to this activity.
+    // =========================================================
+
+    val tripState by tripViewModel
+        .getTripByIdFlow(activity.tripId)
+        .collectAsState(
+            initial = null
+        )
+
+    val trip = tripState ?: return
 
     // ---------------------------------------------------------
     // FORM STATE
@@ -82,7 +97,7 @@ fun EditActivityScreen(
 
     var currency by remember {
         mutableStateOf(
-            activity.currency ?: "NZD"
+            activity.currency ?: trip.homeCurrency
         )
     }
 
@@ -273,9 +288,9 @@ fun EditActivityScreen(
         }
     }
 
-    // ---------------------------------------------------------
+    // =========================================================
     // SCREEN
-    // ---------------------------------------------------------
+    // =========================================================
 
     Column(
         modifier = Modifier
@@ -296,6 +311,23 @@ fun EditActivityScreen(
             text = "Edit Activity",
             style =
                 MaterialTheme.typography.headlineMedium
+        )
+
+        Spacer(
+            modifier = Modifier.height(4.dp)
+        )
+
+        Text(
+            text = trip.name,
+            style =
+                MaterialTheme.typography.titleMedium
+        )
+
+        Text(
+            text =
+                "Home currency: ${trip.homeCurrency}",
+            style =
+                MaterialTheme.typography.bodyMedium
         )
 
         Spacer(
@@ -633,6 +665,7 @@ fun EditActivityScreen(
                             )
                         } ?: "",
                     onValueChange = {
+
                         val formatted =
                             normaliseTime(it)
 
@@ -659,8 +692,7 @@ fun EditActivityScreen(
                         Text("HH:MM")
                     },
                     modifier =
-                        Modifier
-                            .weight(1f),
+                        Modifier.weight(1f),
                     singleLine = true,
                     keyboardOptions =
                         KeyboardOptions(
@@ -743,32 +775,56 @@ fun EditActivityScreen(
                     if (name.isNotBlank()) {
 
                         // -------------------------------------------------
-                        // CALCULATE NZD CONVERSION
+                        // CALCULATE CONVERSION
+                        //
+                        // The database stores:
+                        //
+                        // 1 unit of activity currency = X NZD
+                        //
+                        // Convert:
+                        //
+                        // activity currency
+                        //        ↓
+                        //       NZD
+                        //        ↓
+                        // trip home currency
+                        //
+                        // This deliberately does NOT use getRate(),
+                        // because getRate() uses the user's current
+                        // global Home Currency.
                         // -------------------------------------------------
 
                         val convertedAmount =
                             if (parsedCost != null) {
 
-                                if (currency == "NZD") {
+                                val activityRateToNZD =
+                                    exchangeRateViewModel
+                                        .getRateToNZD(
+                                            currency
+                                        )
 
-                                    parsedCost
+                                val tripHomeRateToNZD =
+                                    exchangeRateViewModel
+                                        .getRateToNZD(
+                                            trip.homeCurrency
+                                        )
+
+                                if (
+                                    activityRateToNZD > 0.0 &&
+                                    tripHomeRateToNZD > 0.0
+                                ) {
+
+                                    parsedCost *
+                                            activityRateToNZD /
+                                            tripHomeRateToNZD
 
                                 } else {
 
-                                    val rate =
-                                        exchangeRateViewModel
-                                            .getRate(
-                                                currency
-                                            )
-
-                                    if (rate > 0.0) {
-                                        parsedCost * rate
-                                    } else {
-                                        null
-                                    }
+                                    null
                                 }
 
                             } else {
+
                                 null
                             }
 
@@ -887,7 +943,8 @@ fun EditActivityScreen(
                                         .toLocalDate()
 
                                 date =
-                                    selectedDate.toString()
+                                    selectedDate
+                                        .toString()
                             }
 
                         showDatePicker =

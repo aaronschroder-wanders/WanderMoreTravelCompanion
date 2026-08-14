@@ -290,6 +290,7 @@ fun TripExpensesScreen(
 
                         ExpenseCard(
                             expense = expense,
+                            homeCurrency = currentTrip.homeCurrency,
                             onClick = {
                                 onEditExpense(
                                     expense.id

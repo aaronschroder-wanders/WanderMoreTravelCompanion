@@ -116,13 +116,6 @@ fun TripDetailsScreen(
 
     // ---------------------------------------------------------
     // TOTAL ESTIMATE
-    //
-    // Uses the same calculation as the Trip Estimates screen:
-    // PER_NIGHT = estimate × nights
-    // PER_DAY   = estimate × days
-    // OTHER     = estimate × 1
-    //
-    // convertedAmount is already in home currency.
     // ---------------------------------------------------------
 
     val totalEstimate =
@@ -324,9 +317,18 @@ fun TripDetailsScreen(
                     ) { expense ->
 
                         ExpenseCard(
+
                             expense = expense,
+
+                            // Use the home currency stored
+                            // with this particular trip.
+                            homeCurrency =
+                                currentTrip.homeCurrency,
+
                             onClick = {
-                                onEditExpense(expense.id)
+                                onEditExpense(
+                                    expense.id
+                                )
                             }
                         )
 
@@ -349,13 +351,16 @@ fun TripDetailsScreen(
         Row(
             modifier = Modifier
                 .fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly,
-            verticalAlignment = Alignment.CenterVertically
+            horizontalArrangement =
+                Arrangement.SpaceEvenly,
+            verticalAlignment =
+                Alignment.CenterVertically
         ) {
 
             Button(
                 onClick = onEditTrip
             ) {
+
                 Text(
                     "Edit Trip"
                 )
@@ -364,6 +369,7 @@ fun TripDetailsScreen(
             Button(
                 onClick = onAddExpense
             ) {
+
                 Text(
                     "Add Expense"
                 )
@@ -376,6 +382,7 @@ fun TripDetailsScreen(
                     Button(
                         onClick = onStartTrip
                     ) {
+
                         Text(
                             "Start Trip"
                         )
@@ -387,6 +394,7 @@ fun TripDetailsScreen(
                     Button(
                         onClick = onArchiveTrip
                     ) {
+
                         Text(
                             "Archive Trip"
                         )
@@ -400,6 +408,7 @@ fun TripDetailsScreen(
                             showRestoreDialog = true
                         }
                     ) {
+
                         Text(
                             "Restore"
                         )
@@ -416,20 +425,25 @@ fun TripDetailsScreen(
     if (showRestoreDialog) {
 
         AlertDialog(
+
             onDismissRequest = {
                 showRestoreDialog = false
             },
+
             title = {
                 Text("Restore Trip?")
             },
+
             text = {
                 Text(
-                    "Where should ${currentTrip.name} be moved?"
+                    "Where should ${currentTrip.name} be moved to?"
                 )
             },
+
             confirmButton = {
 
                 Button(
+
                     onClick = {
 
                         onRestoreTrip(
@@ -438,15 +452,19 @@ fun TripDetailsScreen(
 
                         showRestoreDialog = false
                     }
+
                 ) {
+
                     Text(
                         "Restore as Planned"
                     )
                 }
             },
+
             dismissButton = {
 
                 Button(
+
                     onClick = {
 
                         onRestoreTrip(
@@ -455,7 +473,9 @@ fun TripDetailsScreen(
 
                         showRestoreDialog = false
                     }
+
                 ) {
+
                     Text(
                         "Restore as Current"
                     )
@@ -471,36 +491,47 @@ fun TripDetailsScreen(
     if (showDeleteDialog) {
 
         AlertDialog(
+
             onDismissRequest = {
                 showDeleteDialog = false
             },
+
             title = {
                 Text("Delete Trip?")
             },
+
             text = {
                 Text(
                     "Are you sure you want to permanently delete ${currentTrip.name}?"
                 )
             },
+
             confirmButton = {
 
                 Button(
+
                     onClick = {
                         onDeleteTrip()
                     }
+
                 ) {
+
                     Text(
                         "Delete Permanently"
                     )
                 }
             },
+
             dismissButton = {
 
                 Button(
+
                     onClick = {
                         showDeleteDialog = false
                     }
+
                 ) {
+
                     Text(
                         "Cancel"
                     )

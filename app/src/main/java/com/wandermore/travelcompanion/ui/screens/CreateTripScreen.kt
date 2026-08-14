@@ -10,19 +10,20 @@ import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberDatePickerState
-import androidx.compose.material3.SelectableDates
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import com.wandermore.travelcompanion.ui.components.CurrencyDropdown
 import com.wandermore.travelcompanion.util.formatDate
 import com.wandermore.travelcompanion.viewmodel.TripViewModel
+import com.wandermore.travelcompanion.viewmodel.UserSettingsViewModel
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -31,8 +32,13 @@ import java.time.ZoneId
 @Composable
 fun CreateTripScreen(
     tripViewModel: TripViewModel,
+    userSettingsViewModel: UserSettingsViewModel,
     onTripCreated: () -> Unit
 ) {
+
+    val homeCurrency by userSettingsViewModel
+        .homeCurrency
+        .collectAsState()
 
     var name by remember {
         mutableStateOf("")
@@ -44,10 +50,6 @@ fun CreateTripScreen(
 
     var endDate by remember {
         mutableStateOf<LocalDate?>(null)
-    }
-
-    var currency by remember {
-        mutableStateOf("NZD")
     }
 
     var errorMessage by remember {
@@ -134,14 +136,15 @@ fun CreateTripScreen(
         }
 
         // -----------------------------------------------------
-        // CURRENCY
+        // HOME CURRENCY
         // -----------------------------------------------------
 
-        CurrencyDropdown(
-            selectedCurrency = currency,
-            onCurrencySelected = {
-                currency = it
-            }
+        Text(
+            text = "Home Currency: $homeCurrency"
+        )
+
+        Text(
+            text = "This trip will use your current Home Currency."
         )
 
         // -----------------------------------------------------
@@ -175,7 +178,7 @@ fun CreateTripScreen(
                         name = name,
                         startDate = startDate!!,
                         endDate = endDate!!,
-                        homeCurrency = currency
+                        homeCurrency = homeCurrency
                     )
 
                     onTripCreated()
@@ -272,7 +275,6 @@ fun CreateTripScreen(
 
     if (showEndPicker && startDate != null) {
 
-        // Convert the selected start date into milliseconds.
         val startDateMillis =
             startDate!!
                 .atStartOfDay(
@@ -280,10 +282,6 @@ fun CreateTripScreen(
                 )
                 .toInstant()
                 .toEpochMilli()
-
-        // -----------------------------------------------------
-        // Only dates on or after the start date can be selected.
-        // -----------------------------------------------------
 
         val selectableDates =
             object : SelectableDates {
@@ -307,10 +305,6 @@ fun CreateTripScreen(
                     )
                 }
             }
-
-        // -----------------------------------------------------
-        // Start the calendar on the selected start-date month.
-        // -----------------------------------------------------
 
         val datePickerState =
             rememberDatePickerState(

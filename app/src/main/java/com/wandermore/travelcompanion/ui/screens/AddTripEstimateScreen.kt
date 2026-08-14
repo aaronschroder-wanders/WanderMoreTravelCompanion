@@ -29,6 +29,7 @@ import com.wandermore.travelcompanion.database.TripEstimateEntity
 import com.wandermore.travelcompanion.model.Trip
 import com.wandermore.travelcompanion.ui.components.CategoryDropdown
 import com.wandermore.travelcompanion.ui.components.CurrencyDropdown
+import com.wandermore.travelcompanion.util.formatMoney
 import com.wandermore.travelcompanion.viewmodel.ExchangeRateViewModel
 import com.wandermore.travelcompanion.viewmodel.TripViewModel
 
@@ -132,6 +133,11 @@ fun AddTripEstimateScreen(
         Text(
             text = trip.name,
             style = MaterialTheme.typography.titleMedium
+        )
+
+        Text(
+            text = "Home currency: ${trip.homeCurrency}",
+            style = MaterialTheme.typography.bodyMedium
         )
 
         Spacer(
@@ -272,6 +278,14 @@ fun AddTripEstimateScreen(
 
         // =====================================================
         // CONVERTED AMOUNT PREVIEW
+        //
+        // Convert:
+        //
+        // estimate currency
+        //       ↓
+        //      NZD
+        //       ↓
+        // trip home currency
         // =====================================================
 
         val enteredAmount =
@@ -279,17 +293,31 @@ fun AddTripEstimateScreen(
 
         if (enteredAmount != null) {
 
-            val exchangeRate =
-                exchangeRateViewModel.getRate(currency)
+            val estimateRateToNZD =
+                exchangeRateViewModel
+                    .getRateToNZD(currency)
+
+            val homeRateToNZD =
+                exchangeRateViewModel
+                    .getRateToNZD(trip.homeCurrency)
 
             val convertedAmount =
-                enteredAmount * exchangeRate
+                if (homeRateToNZD != 0.0) {
+                    enteredAmount *
+                            estimateRateToNZD /
+                            homeRateToNZD
+                } else {
+                    0.0
+                }
 
             Text(
                 text =
-                    "≈ NZ$ %.2f".format(
-                        convertedAmount
-                    ),
+                    "≈ ${
+                        formatMoney(
+                            convertedAmount,
+                            trip.homeCurrency
+                        )
+                    }",
                 style =
                     MaterialTheme.typography.bodyMedium
             )
@@ -330,6 +358,7 @@ fun AddTripEstimateScreen(
         ) {
 
             // CANCEL - LEFT
+
             Button(
                 onClick = onBack,
                 modifier = Modifier.weight(1f)
@@ -338,6 +367,7 @@ fun AddTripEstimateScreen(
             }
 
             // SAVE - RIGHT
+
             Button(
                 onClick = {
 
@@ -345,13 +375,24 @@ fun AddTripEstimateScreen(
                         amount.toDoubleOrNull()
                             ?: 0.0
 
-                    val exchangeRate =
-                        exchangeRateViewModel.getRate(
-                            currency
-                        )
+                    val estimateRateToNZD =
+                        exchangeRateViewModel
+                            .getRateToNZD(currency)
+
+                    val homeRateToNZD =
+                        exchangeRateViewModel
+                            .getRateToNZD(
+                                trip.homeCurrency
+                            )
 
                     val convertedAmount =
-                        enteredAmount * exchangeRate
+                        if (homeRateToNZD != 0.0) {
+                            enteredAmount *
+                                    estimateRateToNZD /
+                                    homeRateToNZD
+                        } else {
+                            0.0
+                        }
 
                     val estimate =
                         TripEstimateEntity(
@@ -366,7 +407,8 @@ fun AddTripEstimateScreen(
 
                             currency = currency,
 
-                            convertedAmount = convertedAmount,
+                            convertedAmount =
+                                convertedAmount,
 
                             notes = notes.trim()
                                 .ifBlank {

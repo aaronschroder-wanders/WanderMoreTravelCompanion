@@ -31,8 +31,8 @@ import androidx.compose.ui.unit.dp
 import com.wandermore.travelcompanion.database.ActivityEntity
 import com.wandermore.travelcompanion.ui.components.TripSectionHeader
 import com.wandermore.travelcompanion.util.formatDate
+import com.wandermore.travelcompanion.util.formatMoney
 import com.wandermore.travelcompanion.viewmodel.TripViewModel
-import java.util.Locale
 
 @Composable
 fun ActivitiesScreen(
@@ -93,16 +93,13 @@ fun ActivitiesScreen(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth(),
-                verticalArrangement =
-                    Arrangement.Center,
-                horizontalAlignment =
-                    Alignment.CenterHorizontally
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
 
                 Text(
                     text = "No activities or attractions yet.",
-                    style =
-                        MaterialTheme.typography.titleMedium
+                    style = MaterialTheme.typography.titleMedium
                 )
 
                 Spacer(
@@ -112,11 +109,8 @@ fun ActivitiesScreen(
                 Text(
                     text =
                         "Add places and experiences you may want to visit.",
-                    style =
-                        MaterialTheme.typography.bodyMedium,
-                    color =
-                        MaterialTheme.colorScheme
-                            .onSurfaceVariant
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 
@@ -124,8 +118,7 @@ fun ActivitiesScreen(
 
             LazyColumn(
                 modifier = Modifier.weight(1f),
-                verticalArrangement =
-                    Arrangement.spacedBy(10.dp)
+                verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
 
                 items(
@@ -135,10 +128,9 @@ fun ActivitiesScreen(
 
                     ActivityCard(
                         activity = activity,
+                        tripHomeCurrency = currentTrip.homeCurrency,
                         onClick = {
-                            onEditActivity(
-                                activity.id
-                            )
+                            onEditActivity(activity.id)
                         }
                     )
                 }
@@ -154,27 +146,20 @@ fun ActivitiesScreen(
         // -----------------------------------------------------
 
         Row(
-            modifier =
-                Modifier.fillMaxWidth(),
-            horizontalArrangement =
-                Arrangement.spacedBy(12.dp)
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-
-            // Back is now a standard blue Button,
-            // matching the other screens.
 
             Button(
                 onClick = onBack,
-                modifier =
-                    Modifier.weight(1f)
+                modifier = Modifier.weight(1f)
             ) {
                 Text("Back")
             }
 
             Button(
                 onClick = onAddActivity,
-                modifier =
-                    Modifier.weight(1.5f)
+                modifier = Modifier.weight(1.5f)
             ) {
                 Text("Add Activity")
             }
@@ -190,6 +175,7 @@ fun ActivitiesScreen(
 @Composable
 private fun ActivityCard(
     activity: ActivityEntity,
+    tripHomeCurrency: String,
     onClick: () -> Unit
 ) {
 
@@ -197,18 +183,14 @@ private fun ActivityCard(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick),
-        shape =
-            RoundedCornerShape(12.dp),
-        elevation =
-            CardDefaults.cardElevation(
-                defaultElevation = 2.dp
-            ),
-        colors =
-            CardDefaults.cardColors(
-                containerColor =
-                    MaterialTheme.colorScheme
-                        .surfaceContainer
-            )
+        shape = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = 2.dp
+        ),
+        colors = CardDefaults.cardColors(
+            containerColor =
+                MaterialTheme.colorScheme.surfaceContainer
+        )
     ) {
 
         Column(
@@ -222,41 +204,30 @@ private fun ActivityCard(
             // -----------------------------------------------------
 
             Row(
-                modifier =
-                    Modifier.fillMaxWidth(),
-                verticalAlignment =
-                    Alignment.Top
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.Top
             ) {
 
                 Column(
-                    modifier =
-                        Modifier.weight(1f)
+                    modifier = Modifier.weight(1f)
                 ) {
 
                     Text(
                         text = activity.name,
-                        style =
-                            MaterialTheme.typography
-                                .titleLarge,
-                        fontWeight =
-                            FontWeight.SemiBold
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.SemiBold
                     )
 
                     Spacer(
-                        modifier =
-                            Modifier.height(2.dp)
+                        modifier = Modifier.height(2.dp)
                     )
 
                     if (activity.type.isNotBlank()) {
 
                         Text(
                             text = activity.type,
-                            style =
-                                MaterialTheme.typography
-                                    .bodyMedium,
-                            color =
-                                MaterialTheme.colorScheme
-                                    .primary
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.primary
                         )
                     }
                 }
@@ -268,18 +239,13 @@ private fun ActivityCard(
                         label = {
                             Text(
                                 text = "BOOKED",
-                                fontWeight =
-                                    FontWeight.Bold
+                                fontWeight = FontWeight.Bold
                             )
                         },
-                        colors =
-                            AssistChipDefaults
-                                .assistChipColors(
-                                    containerColor =
-                                        Color(0xFFB6FF00),
-                                    labelColor =
-                                        Color.Black
-                                )
+                        colors = AssistChipDefaults.assistChipColors(
+                            containerColor = Color(0xFFB6FF00),
+                            labelColor = Color.Black
+                        )
                     )
                 }
             }
@@ -291,32 +257,25 @@ private fun ActivityCard(
             if (!activity.location.isNullOrBlank()) {
 
                 Spacer(
-                    modifier =
-                        Modifier.height(10.dp)
+                    modifier = Modifier.height(10.dp)
                 )
 
                 Row(
-                    verticalAlignment =
-                        Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
 
                     Text(
                         text = "📍",
-                        modifier =
-                            Modifier.size(20.dp)
+                        modifier = Modifier.size(20.dp)
                     )
 
                     Spacer(
-                        modifier =
-                            Modifier.size(6.dp)
+                        modifier = Modifier.size(6.dp)
                     )
 
                     Text(
-                        text =
-                            activity.location!!,
-                        style =
-                            MaterialTheme.typography
-                                .bodyMedium
+                        text = activity.location!!,
+                        style = MaterialTheme.typography.bodyMedium
                     )
                 }
             }
@@ -331,36 +290,27 @@ private fun ActivityCard(
             ) {
 
                 Spacer(
-                    modifier =
-                        Modifier.height(7.dp)
+                    modifier = Modifier.height(7.dp)
                 )
 
                 Row(
-                    verticalAlignment =
-                        Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
 
                     Text(
                         text = "📅",
-                        modifier =
-                            Modifier.size(20.dp)
+                        modifier = Modifier.size(20.dp)
                     )
 
                     Spacer(
-                        modifier =
-                            Modifier.size(6.dp)
+                        modifier = Modifier.size(6.dp)
                     )
 
                     if (activity.date != null) {
 
                         Text(
-                            text =
-                                formatDate(
-                                    activity.date
-                                ),
-                            style =
-                                MaterialTheme.typography
-                                    .bodyMedium
+                            text = formatDate(activity.date),
+                            style = MaterialTheme.typography.bodyMedium
                         )
                     }
 
@@ -370,8 +320,7 @@ private fun ActivityCard(
                     ) {
 
                         Spacer(
-                            modifier =
-                                Modifier.size(6.dp)
+                            modifier = Modifier.size(6.dp)
                         )
 
                         Text(
@@ -382,8 +331,7 @@ private fun ActivityCard(
                         )
 
                         Spacer(
-                            modifier =
-                                Modifier.size(6.dp)
+                            modifier = Modifier.size(6.dp)
                         )
                     }
 
@@ -391,22 +339,16 @@ private fun ActivityCard(
 
                         Text(
                             text = "🕐",
-                            modifier =
-                                Modifier.size(20.dp)
+                            modifier = Modifier.size(20.dp)
                         )
 
                         Spacer(
-                            modifier =
-                                Modifier.size(4.dp)
+                            modifier = Modifier.size(4.dp)
                         )
 
                         Text(
-                            text =
-                                activity.startTime
-                                    .toString(),
-                            style =
-                                MaterialTheme.typography
-                                    .bodyMedium
+                            text = activity.startTime.toString(),
+                            style = MaterialTheme.typography.bodyMedium
                         )
                     }
                 }
@@ -419,60 +361,35 @@ private fun ActivityCard(
             if (activity.estimatedCost != null) {
 
                 Spacer(
-                    modifier =
-                        Modifier.height(10.dp)
+                    modifier = Modifier.height(10.dp)
                 )
 
                 Row(
-                    modifier =
-                        Modifier.fillMaxWidth(),
-                    horizontalArrangement =
-                        Arrangement.SpaceBetween,
-                    verticalAlignment =
-                        Alignment.Top
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.Top
                 ) {
 
                     Text(
                         text = "Estimated cost",
-                        style =
-                            MaterialTheme.typography
-                                .titleMedium,
-                        fontWeight =
-                            FontWeight.SemiBold,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold,
                         color =
                             MaterialTheme.colorScheme
                                 .onSurfaceVariant
                     )
 
                     Column(
-                        horizontalAlignment =
-                            Alignment.End
+                        horizontalAlignment = Alignment.End
                     ) {
 
                         Text(
-                            text = buildString {
-
-                                append(
-                                    formatActivityCost(
-                                        activity.estimatedCost,
-                                        activity.currency
-                                    )
-                                )
-
-                                if (
-                                    !activity.currency
-                                        .isNullOrBlank()
-                                ) {
-                                    append(
-                                        " ${activity.currency}"
-                                    )
-                                }
-                            },
-                            style =
-                                MaterialTheme.typography
-                                    .titleMedium,
-                            fontWeight =
-                                FontWeight.SemiBold
+                            text = formatActivityCost(
+                                activity.estimatedCost,
+                                activity.currency
+                            ),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold
                         )
 
                         if (
@@ -481,17 +398,16 @@ private fun ActivityCard(
 
                             Text(
                                 text =
-                                    "≈ NZD ${
-                                        formatNzdAmount(
-                                            activity.convertedAmount
+                                    "≈ ${
+                                        formatMoney(
+                                            activity.convertedAmount,
+                                            tripHomeCurrency
                                         )
                                     }",
                                 style =
-                                    MaterialTheme.typography
-                                        .bodyMedium,
+                                    MaterialTheme.typography.bodyMedium,
                                 color =
-                                    MaterialTheme.colorScheme
-                                        .primary
+                                    MaterialTheme.colorScheme.primary
                             )
                         }
                     }
@@ -505,15 +421,12 @@ private fun ActivityCard(
             if (!activity.notes.isNullOrBlank()) {
 
                 Spacer(
-                    modifier =
-                        Modifier.height(10.dp)
+                    modifier = Modifier.height(10.dp)
                 )
 
                 Text(
                     text = activity.notes!!,
-                    style =
-                        MaterialTheme.typography
-                            .bodySmall,
+                    style = MaterialTheme.typography.bodySmall,
                     color =
                         MaterialTheme.colorScheme
                             .onSurfaceVariant
@@ -533,48 +446,16 @@ private fun formatActivityCost(
     currency: String?
 ): String {
 
-    val noDecimalCurrencies =
-        setOf(
-            "VND",
-            "JPY",
-            "KRW",
-            "IDR",
-            "LAK"
-        )
-
-    return if (
-        currency != null &&
-        currency in noDecimalCurrencies
-    ) {
-
-        String.format(
-            Locale.US,
-            "%,.0f",
-            amount
-        )
-
-    } else {
-
-        String.format(
-            Locale.US,
+    if (currency.isNullOrBlank()) {
+        return String.format(
+            java.util.Locale.US,
             "%,.2f",
             amount
         )
     }
-}
 
-
-// =================================================================
-// NZD DISPLAY FORMATTING
-// =================================================================
-
-private fun formatNzdAmount(
-    amount: Double
-): String {
-
-    return String.format(
-        Locale.US,
-        "%,.2f",
-        amount
+    return formatMoney(
+        amount,
+        currency
     )
 }

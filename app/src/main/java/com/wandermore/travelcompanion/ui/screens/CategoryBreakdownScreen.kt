@@ -40,9 +40,9 @@ fun CategoryBreakdownScreen(
     onBack: () -> Unit
 ) {
 
-// ---------------------------------------------------------
-// LOAD EXPENSES
-// ---------------------------------------------------------
+    // ---------------------------------------------------------
+    // LOAD EXPENSES
+    // ---------------------------------------------------------
 
     val expenses by tripViewModel
         .getExpensesForTrip(tripId)
@@ -50,9 +50,9 @@ fun CategoryBreakdownScreen(
             initial = emptyList()
         )
 
-// ---------------------------------------------------------
-// LOAD ESTIMATES
-// ---------------------------------------------------------
+    // ---------------------------------------------------------
+    // LOAD ESTIMATES
+    // ---------------------------------------------------------
 
     val estimates by tripViewModel
         .getTripEstimatesForTrip(tripId)
@@ -60,9 +60,9 @@ fun CategoryBreakdownScreen(
             initial = emptyList()
         )
 
-// ---------------------------------------------------------
-// LOAD TRIP
-// ---------------------------------------------------------
+    // ---------------------------------------------------------
+    // LOAD TRIP
+    // ---------------------------------------------------------
 
     val tripState by tripViewModel
         .getTripByIdFlow(tripId)
@@ -72,18 +72,18 @@ fun CategoryBreakdownScreen(
 
     val trip = tripState
 
-// ---------------------------------------------------------
-// ACTUAL TOTAL
-// ---------------------------------------------------------
+    // ---------------------------------------------------------
+    // ACTUAL TOTAL
+    // ---------------------------------------------------------
 
     val totalSpent =
         expenses.sumOf {
             it.convertedAmount
         }
 
-// ---------------------------------------------------------
-// TRIP DAYS / NIGHTS
-// ---------------------------------------------------------
+    // ---------------------------------------------------------
+    // TRIP DAYS / NIGHTS
+    // ---------------------------------------------------------
 
     val tripDays =
         if (trip != null) {
@@ -105,9 +105,9 @@ fun CategoryBreakdownScreen(
             0L
         }
 
-// ---------------------------------------------------------
-// ESTIMATED TOTAL
-// ---------------------------------------------------------
+    // ---------------------------------------------------------
+    // ESTIMATED TOTAL
+    // ---------------------------------------------------------
 
     val estimatedTotal =
         estimates.sumOf { estimate ->
@@ -128,14 +128,14 @@ fun CategoryBreakdownScreen(
     val overallDifference =
         estimatedTotal - totalSpent
 
-// ---------------------------------------------------------
-// CATEGORY LIST
-//
-// Include categories appearing in either estimates
-// or actual expenses.
-//
-// Sort by ACTUAL spending, highest first.
-// ---------------------------------------------------------
+    // ---------------------------------------------------------
+    // CATEGORY LIST
+    //
+    // Include categories appearing in either estimates
+    // or actual expenses.
+    //
+    // Sort by ACTUAL spending, highest first.
+    // ---------------------------------------------------------
 
     val categories =
         (
@@ -158,9 +158,9 @@ fun CategoryBreakdownScreen(
                     }
             }
 
-// ---------------------------------------------------------
-// SCREEN
-// ---------------------------------------------------------
+    // ---------------------------------------------------------
+    // SCREEN
+    // ---------------------------------------------------------
 
     Column(
         modifier = Modifier
@@ -211,7 +211,8 @@ fun CategoryBreakdownScreen(
                     SummaryValue(
                         label = "Estimated",
                         value = formatCompactMoney(
-                            estimatedTotal
+                            estimatedTotal,
+                            currency
                         ),
                         modifier = Modifier.weight(1f)
                     )
@@ -219,7 +220,8 @@ fun CategoryBreakdownScreen(
                     SummaryValue(
                         label = "Actual",
                         value = formatCompactMoney(
-                            totalSpent
+                            totalSpent,
+                            currency
                         ),
                         modifier = Modifier.weight(1f)
                     )
@@ -234,7 +236,8 @@ fun CategoryBreakdownScreen(
                         value = formatCompactMoney(
                             kotlin.math.abs(
                                 overallDifference
-                            )
+                            ),
+                            currency
                         ),
                         modifier = Modifier.weight(1f)
                     )
@@ -306,8 +309,7 @@ fun CategoryBreakdownScreen(
 
                 val accommodationNights =
                     if (
-                        categoryName ==
-                        "Accommodation"
+                        categoryName == "Accommodation"
                     ) {
 
                         categoryExpenses.sumOf {
@@ -336,8 +338,7 @@ fun CategoryBreakdownScreen(
 
                 val foodDays =
                     if (
-                        categoryName ==
-                        "Food & Drink" &&
+                        categoryName == "Food & Drink" &&
                         trip != null
                     ) {
 
@@ -357,14 +358,12 @@ fun CategoryBreakdownScreen(
                                     LocalDate.now()
 
                                 if (
-                                    today >=
-                                    trip.startDate
+                                    today >= trip.startDate
                                 ) {
 
                                     val endDate =
                                         if (
-                                            today <
-                                            trip.endDate
+                                            today < trip.endDate
                                         ) {
                                             today
                                         } else {
@@ -392,8 +391,7 @@ fun CategoryBreakdownScreen(
 
                 val foodPerDay =
                     if (
-                        categoryName ==
-                        "Food & Drink" &&
+                        categoryName == "Food & Drink" &&
                         foodDays > 0
                     ) {
 
@@ -457,7 +455,8 @@ fun CategoryBreakdownScreen(
                                         categoryEstimates.isNotEmpty()
                                     ) {
                                         formatCompactMoney(
-                                            categoryEstimated
+                                            categoryEstimated,
+                                            currency
                                         )
                                     } else {
                                         "—"
@@ -470,7 +469,8 @@ fun CategoryBreakdownScreen(
                                 label = "Actual",
                                 value =
                                     formatCompactMoney(
-                                        categoryAmount
+                                        categoryAmount,
+                                        currency
                                     ),
                                 modifier =
                                     Modifier.weight(1f)
@@ -498,7 +498,8 @@ fun CategoryBreakdownScreen(
                                         formatCompactMoney(
                                             kotlin.math.abs(
                                                 categoryDifference
-                                            )
+                                            ),
+                                            currency
                                         )
                                     } else {
                                         "—"
@@ -607,7 +608,6 @@ fun CategoryBreakdownScreen(
             )
         }
     }
-
 }
 
 // =============================================================
@@ -640,7 +640,6 @@ private fun SummaryValue(
             textAlign = TextAlign.Center
         )
     }
-
 }
 
 // =============================================================
@@ -673,7 +672,6 @@ private fun CategoryValue(
             textAlign = TextAlign.Center
         )
     }
-
 }
 
 // =============================================================
@@ -681,12 +679,12 @@ private fun CategoryValue(
 // =============================================================
 
 private fun formatCompactMoney(
-    amount: Double
+    amount: Double,
+    currency: String
 ): String {
 
-    return "%,.0f".format(
-        Locale.US,
-        amount
+    return formatMoney(
+        amount,
+        currency
     )
-
 }

@@ -16,6 +16,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -26,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import com.wandermore.travelcompanion.database.TripEstimateEntity
 import com.wandermore.travelcompanion.ui.components.CategoryDropdown
 import com.wandermore.travelcompanion.ui.components.CurrencyDropdown
+import com.wandermore.travelcompanion.util.formatMoney
 import com.wandermore.travelcompanion.viewmodel.ExchangeRateViewModel
 import com.wandermore.travelcompanion.viewmodel.TripViewModel
 
@@ -38,6 +40,22 @@ fun EditTripEstimateScreen(
     onDeleteEstimate: () -> Unit,
     onBack: () -> Unit
 ) {
+
+    // =========================================================
+    // LOAD TRIP
+    // =========================================================
+
+    val tripState by tripViewModel
+        .getTripByIdFlow(estimate.tripId)
+        .collectAsState(
+            initial = null
+        )
+
+    val trip = tripState ?: return
+
+    // =========================================================
+    // FORM STATE
+    // =========================================================
 
     var category by remember {
         mutableStateOf(estimate.category)
@@ -65,6 +83,10 @@ fun EditTripEstimateScreen(
 
     val scrollState = rememberScrollState()
 
+    // =========================================================
+    // SCREEN
+    // =========================================================
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -77,6 +99,20 @@ fun EditTripEstimateScreen(
         Text(
             text = "Edit Trip Estimate",
             style = MaterialTheme.typography.headlineMedium
+        )
+
+        Spacer(
+            modifier = Modifier.height(4.dp)
+        )
+
+        Text(
+            text = trip.name,
+            style = MaterialTheme.typography.titleMedium
+        )
+
+        Text(
+            text = "Home currency: ${trip.homeCurrency}",
+            style = MaterialTheme.typography.bodyMedium
         )
 
         Spacer(
@@ -216,7 +252,15 @@ fun EditTripEstimateScreen(
         )
 
         // =====================================================
-        // NZD CONVERSION PREVIEW
+        // CONVERTED AMOUNT PREVIEW
+        //
+        // Convert:
+        //
+        // estimate currency
+        //       ↓
+        //      NZD
+        //       ↓
+        // trip home currency
         // =====================================================
 
         val enteredAmount =
@@ -224,19 +268,35 @@ fun EditTripEstimateScreen(
 
         if (enteredAmount != null) {
 
-            val exchangeRate =
-                exchangeRateViewModel.getRate(
-                    currency
-                )
+            val estimateRateToNZD =
+                exchangeRateViewModel
+                    .getRateToNZD(currency)
+
+            val homeRateToNZD =
+                exchangeRateViewModel
+                    .getRateToNZD(trip.homeCurrency)
 
             val convertedAmount =
-                enteredAmount * exchangeRate
+                if (homeRateToNZD != 0.0) {
+
+                    enteredAmount *
+                            estimateRateToNZD /
+                            homeRateToNZD
+
+                } else {
+
+                    0.0
+
+                }
 
             Text(
                 text =
-                    "≈ NZ$ %.2f".format(
-                        convertedAmount
-                    ),
+                    "≈ ${
+                        formatMoney(
+                            convertedAmount,
+                            trip.homeCurrency
+                        )
+                    }",
                 style =
                     MaterialTheme.typography.bodyMedium
             )
@@ -277,6 +337,7 @@ fun EditTripEstimateScreen(
         ) {
 
             // CANCEL - LEFT
+
             Button(
                 onClick = onBack,
                 modifier = Modifier.weight(1f)
@@ -285,6 +346,7 @@ fun EditTripEstimateScreen(
             }
 
             // DELETE - CENTRE
+
             Button(
                 onClick = onDeleteEstimate,
                 modifier = Modifier.weight(1f)
@@ -293,6 +355,7 @@ fun EditTripEstimateScreen(
             }
 
             // SAVE - RIGHT
+
             Button(
                 onClick = {
 
@@ -300,13 +363,28 @@ fun EditTripEstimateScreen(
                         amount.toDoubleOrNull()
                             ?: 0.0
 
-                    val exchangeRate =
-                        exchangeRateViewModel.getRate(
-                            currency
-                        )
+                    val estimateRateToNZD =
+                        exchangeRateViewModel
+                            .getRateToNZD(currency)
+
+                    val homeRateToNZD =
+                        exchangeRateViewModel
+                            .getRateToNZD(
+                                trip.homeCurrency
+                            )
 
                     val convertedAmount =
-                        enteredAmount * exchangeRate
+                        if (homeRateToNZD != 0.0) {
+
+                            enteredAmount *
+                                    estimateRateToNZD /
+                                    homeRateToNZD
+
+                        } else {
+
+                            0.0
+
+                        }
 
                     val updatedEstimate =
                         estimate.copy(

@@ -26,6 +26,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -53,6 +54,33 @@ fun AddActivityScreen(
     onBack: () -> Unit
 ) {
 
+    // =========================================================
+    // LOAD TRIP
+    // =========================================================
+
+    val tripState by tripViewModel
+        .getTripByIdFlow(tripId)
+        .collectAsState(
+            initial = null
+        )
+
+    val trip = tripState ?: return
+
+    // =========================================================
+    // TRIP HOME CURRENCY
+    //
+    // Activities belong to the trip, so their currency
+    // conversion must use the trip's permanent Home Currency,
+    // not the user's current global Home Currency.
+    // =========================================================
+
+    val tripHomeCurrency =
+        trip.homeCurrency
+
+    // =========================================================
+    // FORM STATE
+    // =========================================================
+
     var name by remember {
         mutableStateOf("")
     }
@@ -69,8 +97,8 @@ fun AddActivityScreen(
         mutableStateOf("")
     }
 
-    var currency by remember {
-        mutableStateOf("NZD")
+    var currency by remember(tripHomeCurrency) {
+        mutableStateOf(tripHomeCurrency)
     }
 
     var booked by remember {
@@ -138,17 +166,9 @@ fun AddActivityScreen(
             null
         }
 
-    // ---------------------------------------------------------
+    // =========================================================
     // TIME NORMALISATION
-    //
-    // Accepts:
-    // 9     -> 09:00
-    // 900   -> 09:00
-    // 0900  -> 09:00
-    // 09:00 -> 09:00
-    // 1430  -> 14:30
-    // 14:30 -> 14:30
-    // ---------------------------------------------------------
+    // =========================================================
 
     fun normaliseTime(input: String): String? {
 
@@ -275,14 +295,30 @@ fun AddActivityScreen(
 
         Spacer(
             modifier =
+                Modifier.height(4.dp)
+        )
+
+        Text(
+            text = trip.name,
+            style =
+                MaterialTheme.typography
+                    .titleMedium
+        )
+
+        Text(
+            text = "Home currency: $tripHomeCurrency",
+            style =
+                MaterialTheme.typography
+                    .bodyMedium
+        )
+
+        Spacer(
+            modifier =
                 Modifier.height(12.dp)
         )
 
         // -----------------------------------------------------
         // SCROLLABLE FORM
-        //
-        // imePadding allows the lower fields to move above
-        // the keyboard when it is displayed.
         // -----------------------------------------------------
 
         Column(
@@ -512,6 +548,64 @@ fun AddActivityScreen(
             )
 
             // -------------------------------------------------
+            // CONVERSION PREVIEW
+            //
+            // Activity currency
+            //       ↓
+            //      NZD
+            //       ↓
+            // Trip Home Currency
+            // -------------------------------------------------
+
+            if (parsedCost != null) {
+
+                val activityRateToNZD =
+                    exchangeRateViewModel
+                        .getRateToNZD(
+                            currency
+                        )
+
+                val tripHomeRateToNZD =
+                    exchangeRateViewModel
+                        .getRateToNZD(
+                            tripHomeCurrency
+                        )
+
+                val convertedAmount =
+                    if (
+                        currency ==
+                        tripHomeCurrency
+                    ) {
+
+                        parsedCost
+
+                    } else if (
+                        activityRateToNZD > 0.0 &&
+                        tripHomeRateToNZD > 0.0
+                    ) {
+
+                        parsedCost *
+                                activityRateToNZD /
+                                tripHomeRateToNZD
+
+                    } else {
+
+                        0.0
+                    }
+
+                Text(
+                    text =
+                        "≈ $tripHomeCurrency %.2f"
+                            .format(
+                                convertedAmount
+                            ),
+                    style =
+                        MaterialTheme.typography
+                            .bodyMedium
+                )
+            }
+
+            // -------------------------------------------------
             // BOOKED
             // -------------------------------------------------
 
@@ -675,10 +769,6 @@ fun AddActivityScreen(
                 maxLines = 3
             )
 
-            // Extra space at the bottom of the form.
-            // This gives the last field room to scroll above
-            // the keyboard.
-
             Spacer(
                 modifier =
                     Modifier.height(32.dp)
@@ -721,8 +811,6 @@ fun AddActivityScreen(
 
                     if (name.isNotBlank()) {
 
-                        // Normalise the time before saving.
-
                         val formattedTime =
                             normaliseTime(
                                 startTime
@@ -738,13 +826,16 @@ fun AddActivityScreen(
                         }
 
                         // -------------------------------------------------
-                        // CALCULATE NZD CONVERSION
+                        // CALCULATE CONVERSION
                         //
-                        // The database stores:
-                        // 1 foreign currency = X NZD
+                        // Store convertedAmount in the trip's
+                        // permanent Home Currency.
                         //
-                        // Therefore:
-                        // amount × rateToNZD = NZD amount
+                        // Activity currency
+                        //       ↓
+                        //      NZD
+                        //       ↓
+                        // Trip Home Currency
                         // -------------------------------------------------
 
                         val convertedAmount =
@@ -752,24 +843,41 @@ fun AddActivityScreen(
                                 parsedCost != null
                             ) {
 
-                                val rate =
+                                val activityRateToNZD =
                                     exchangeRateViewModel
-                                        .getRate(
+                                        .getRateToNZD(
                                             currency
                                         )
 
+                                val tripHomeRateToNZD =
+                                    exchangeRateViewModel
+                                        .getRateToNZD(
+                                            tripHomeCurrency
+                                        )
+
                                 if (
-                                    rate > 0.0
+                                    currency ==
+                                    tripHomeCurrency
+                                ) {
+
+                                    parsedCost
+
+                                } else if (
+                                    activityRateToNZD > 0.0 &&
+                                    tripHomeRateToNZD > 0.0
                                 ) {
 
                                     parsedCost *
-                                            rate
+                                            activityRateToNZD /
+                                            tripHomeRateToNZD
 
                                 } else {
+
                                     null
                                 }
 
                             } else {
+
                                 null
                             }
 
