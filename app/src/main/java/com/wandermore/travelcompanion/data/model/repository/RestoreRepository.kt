@@ -6,7 +6,8 @@ import com.wandermore.travelcompanion.database.BackupData
 import kotlinx.serialization.json.Json
 
 class RestoreRepository(
-    private val database: AppDatabase
+    private val database: AppDatabase,
+    private val userSettingsRepository: UserSettingsRepository
 ) {
 
     private val json = Json {
@@ -50,7 +51,9 @@ class RestoreRepository(
             // -----------------------------------------------------
 
             database.exchangeRateDao()
-                .insertRates(backup.exchangeRates)
+                .insertRates(
+                    backup.exchangeRates
+                )
 
 
             // -----------------------------------------------------
@@ -58,8 +61,11 @@ class RestoreRepository(
             // -----------------------------------------------------
 
             backup.trips.forEach { trip ->
+
                 database.tripDao()
-                    .insertTrip(trip)
+                    .insertTrip(
+                        trip
+                    )
             }
 
 
@@ -68,8 +74,11 @@ class RestoreRepository(
             // -----------------------------------------------------
 
             backup.expenses.forEach { expense ->
+
                 database.expenseDao()
-                    .insertExpense(expense)
+                    .insertExpense(
+                        expense
+                    )
             }
 
 
@@ -78,8 +87,11 @@ class RestoreRepository(
             // -----------------------------------------------------
 
             backup.todos.forEach { todo ->
+
                 database.todoDao()
-                    .insertTodo(todo)
+                    .insertTodo(
+                        todo
+                    )
             }
 
 
@@ -88,8 +100,11 @@ class RestoreRepository(
             // -----------------------------------------------------
 
             backup.activities.forEach { activity ->
+
                 database.activityDao()
-                    .insertActivity(activity)
+                    .insertActivity(
+                        activity
+                    )
             }
 
 
@@ -98,8 +113,11 @@ class RestoreRepository(
             // -----------------------------------------------------
 
             backup.itinerary.forEach { itinerary ->
+
                 database.itineraryDao()
-                    .insertItinerary(itinerary)
+                    .insertItinerary(
+                        itinerary
+                    )
             }
 
 
@@ -108,8 +126,11 @@ class RestoreRepository(
             // -----------------------------------------------------
 
             backup.bookings.forEach { booking ->
+
                 database.bookingDao()
-                    .insertBooking(booking)
+                    .insertBooking(
+                        booking
+                    )
             }
 
 
@@ -118,9 +139,24 @@ class RestoreRepository(
             // -----------------------------------------------------
 
             backup.tripEstimates.forEach { estimate ->
+
                 database.tripEstimateDao()
-                    .insertEstimate(estimate)
+                    .insertEstimate(
+                        estimate
+                    )
             }
         }
+
+        // ---------------------------------------------------------
+        // RESTORE USER SETTINGS
+        // ---------------------------------------------------------
+
+        // Home Currency is stored in DataStore rather than Room,
+        // so it must be restored separately from the database
+        // transaction.
+        userSettingsRepository
+            .setHomeCurrency(
+                backup.homeCurrency
+            )
     }
 }

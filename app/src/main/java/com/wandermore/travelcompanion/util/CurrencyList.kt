@@ -29,6 +29,12 @@ val supportedCurrencies = listOf(
     ),
 
     CurrencyItem(
+        "CAD",
+        "Canadian Dollar",
+        "$"
+    ),
+
+    CurrencyItem(
         "EUR",
         "Euro",
         "€"
@@ -38,6 +44,48 @@ val supportedCurrencies = listOf(
         "GBP",
         "British Pound",
         "£"
+    ),
+
+    CurrencyItem(
+        "CHF",
+        "Swiss Franc",
+        "CHF"
+    ),
+
+    CurrencyItem(
+        "AED",
+        "UAE Dirham",
+        "د.إ"
+    ),
+
+    CurrencyItem(
+        "TRY",
+        "Turkish Lira",
+        "₺"
+    ),
+
+    CurrencyItem(
+        "ZAR",
+        "South African Rand",
+        "R"
+    ),
+
+    CurrencyItem(
+        "NOK",
+        "Norwegian Krone",
+        "kr"
+    ),
+
+    CurrencyItem(
+        "SEK",
+        "Swedish Krona",
+        "kr"
+    ),
+
+    CurrencyItem(
+        "DKK",
+        "Danish Krone",
+        "kr"
     ),
 
     CurrencyItem(

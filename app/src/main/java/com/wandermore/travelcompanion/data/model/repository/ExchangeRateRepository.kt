@@ -22,13 +22,11 @@ class ExchangeRateRepository(
     }
 
 
-
     suspend fun getAllRates(): List<ExchangeRateEntity> {
 
         return exchangeRateDao.getAllRates()
 
     }
-
 
 
     suspend fun updateRate(
@@ -41,7 +39,6 @@ class ExchangeRateRepository(
 
 
         if (existingRate != null) {
-
 
             exchangeRateDao.insertRates(
 
@@ -64,26 +61,22 @@ class ExchangeRateRepository(
     }
 
 
-
     suspend fun insertInitialRates() {
-
 
         val existingRates =
             exchangeRateDao.getAllRates()
 
-
-        if (existingRates.isNotEmpty()) {
-
-            return
-
-        }
+        val existingCurrencies =
+            existingRates
+                .map { it.currencyCode }
+                .toSet()
 
 
         val today =
             LocalDate.now()
 
 
-        val rates = listOf(
+        val initialRates = listOf(
 
             ExchangeRateEntity(
                 "NZD",
@@ -179,14 +172,72 @@ class ExchangeRateRepository(
                 "INR",
                 0.019,
                 today
+            ),
+
+            ExchangeRateEntity(
+                "CAD",
+                1.22443,
+                today
+            ),
+
+            ExchangeRateEntity(
+                "CHF",
+                2.09179,
+                today
+            ),
+
+            ExchangeRateEntity(
+                "AED",
+                0.464703,
+                today
+            ),
+
+            ExchangeRateEntity(
+                "TRY",
+                0.0354921,
+                today
+            ),
+
+            ExchangeRateEntity(
+                "ZAR",
+                0.105195,
+                today
+            ),
+
+            ExchangeRateEntity(
+                "NOK",
+                0.179702,
+                today
+            ),
+
+            ExchangeRateEntity(
+                "SEK",
+                0.178423,
+                today
+            ),
+
+            ExchangeRateEntity(
+                "DKK",
+                0.262896,
+                today
             )
 
         )
 
 
-        exchangeRateDao.insertRates(
-            rates
-        )
+        val missingRates =
+            initialRates.filter {
+                it.currencyCode !in existingCurrencies
+            }
+
+
+        if (missingRates.isNotEmpty()) {
+
+            exchangeRateDao.insertRates(
+                missingRates
+            )
+
+        }
 
     }
 

@@ -15,12 +15,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.wandermore.travelcompanion.data.repository.RestoreRepository
+import com.wandermore.travelcompanion.data.repository.UserSettingsRepository
 import com.wandermore.travelcompanion.database.AppDatabase
 import kotlinx.coroutines.launch
 
 @Composable
 fun BackupRestoreScreen(
-    database: AppDatabase
+    database: AppDatabase,
+    userSettingsRepository: UserSettingsRepository
 ) {
 
     val context = LocalContext.current
@@ -35,13 +37,22 @@ fun BackupRestoreScreen(
     }
 
     val restoreRepository =
-        remember(database) {
-            RestoreRepository(database)
+        remember(
+            database,
+            userSettingsRepository
+        ) {
+
+            RestoreRepository(
+                database = database,
+                userSettingsRepository =
+                    userSettingsRepository
+            )
         }
 
     val filePicker =
         rememberLauncherForActivityResult(
-            contract = ActivityResultContracts.OpenDocument()
+            contract =
+                ActivityResultContracts.OpenDocument()
         ) { uri: Uri? ->
 
             if (uri == null) {
@@ -61,9 +72,12 @@ fun BackupRestoreScreen(
                             uri = uri
                         )
 
-                    restoreRepository.restoreBackup(json)
+                    restoreRepository.restoreBackup(
+                        json
+                    )
 
-                    message = "Backup restored successfully."
+                    message =
+                        "Backup restored successfully."
 
                 } catch (e: Exception) {
 
@@ -81,8 +95,10 @@ fun BackupRestoreScreen(
         modifier = Modifier
             .fillMaxSize()
             .padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+        horizontalAlignment =
+            Alignment.CenterHorizontally,
+        verticalArrangement =
+            Arrangement.Center
     ) {
 
         Text(
@@ -91,6 +107,7 @@ fun BackupRestoreScreen(
 
         Button(
             onClick = {
+
                 filePicker.launch(
                     arrayOf(
                         "application/json",
@@ -100,7 +117,10 @@ fun BackupRestoreScreen(
                 )
             },
             enabled = !isRestoring,
-            modifier = Modifier.padding(top = 24.dp)
+            modifier =
+                Modifier.padding(
+                    top = 24.dp
+                )
         ) {
 
             Text(
@@ -116,7 +136,10 @@ fun BackupRestoreScreen(
 
             Text(
                 text = message,
-                modifier = Modifier.padding(top = 24.dp)
+                modifier =
+                    Modifier.padding(
+                        top = 24.dp
+                    )
             )
         }
     }
