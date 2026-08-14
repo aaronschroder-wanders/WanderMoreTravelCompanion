@@ -39,6 +39,11 @@ fun ExchangeRateSettingsScreen(
         .collectAsState()
 
 
+    val homeCurrency by exchangeRateViewModel
+        .homeCurrency
+        .collectAsState()
+
+
     var editingCurrency by remember {
 
         mutableStateOf<String?>(null)
@@ -60,24 +65,27 @@ fun ExchangeRateSettingsScreen(
     }
 
 
-
     fun saveCurrentEdit() {
 
-        val currency = editingCurrency
+        val currency =
+            editingCurrency
 
-        val inverseRate =
+        val homeCurrencyRate =
             editedValue.toDoubleOrNull()
 
 
         if (
             currency != null &&
-            inverseRate != null &&
-            inverseRate > 0
+            homeCurrencyRate != null &&
+            homeCurrencyRate > 0
         ) {
 
             exchangeRateViewModel.updateRate(
+
                 currency,
-                inverseRate
+
+                homeCurrencyRate
+
             )
 
             showUpdatedMessage = true
@@ -88,7 +96,6 @@ fun ExchangeRateSettingsScreen(
         editingCurrency = null
 
     }
-
 
 
     fun exitScreen() {
@@ -104,13 +111,11 @@ fun ExchangeRateSettingsScreen(
     }
 
 
-
     BackHandler {
 
         exitScreen()
 
     }
-
 
 
     Column(
@@ -123,11 +128,50 @@ fun ExchangeRateSettingsScreen(
     ) {
 
 
+        // =========================================================
+        // TITLE
+        // =========================================================
+
         Text(
 
             text = "Currency Exchange Rates",
 
-            style = MaterialTheme.typography.titleLarge,
+            style =
+                MaterialTheme.typography.titleLarge,
+
+            modifier = Modifier.padding(
+                bottom = 8.dp
+            )
+
+        )
+
+
+        // =========================================================
+        // HOME CURRENCY
+        // =========================================================
+
+        Text(
+
+            text =
+                "Home Currency: $homeCurrency",
+
+            style =
+                MaterialTheme.typography.titleMedium,
+
+            modifier = Modifier.padding(
+                bottom = 4.dp
+            )
+
+        )
+
+
+        Text(
+
+            text =
+                "Rates are manually maintained from the Home Currency.",
+
+            style =
+                MaterialTheme.typography.bodyMedium,
 
             modifier = Modifier.padding(
                 bottom = 16.dp
@@ -136,15 +180,18 @@ fun ExchangeRateSettingsScreen(
         )
 
 
+        // =========================================================
+        // UPDATED MESSAGE
+        // =========================================================
 
         if (showUpdatedMessage) {
-
 
             Text(
 
                 text = "✓ Rate updated",
 
-                style = MaterialTheme.typography.bodyMedium,
+                style =
+                    MaterialTheme.typography.bodyMedium,
 
                 modifier = Modifier.padding(
                     bottom = 8.dp
@@ -155,6 +202,9 @@ fun ExchangeRateSettingsScreen(
         }
 
 
+        // =========================================================
+        // RATES
+        // =========================================================
 
         LazyColumn(
 
@@ -163,52 +213,53 @@ fun ExchangeRateSettingsScreen(
                 .fillMaxWidth()
                 .imePadding(),
 
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            verticalArrangement =
+                Arrangement.spacedBy(8.dp)
 
         ) {
 
-
             items(rates) { rate ->
-
 
                 val currency =
                     rate.currencyCode
 
 
-                val rateToNZD =
-                    rate.rateToNZD
+                val isHomeCurrency =
+                    currency == homeCurrency
 
 
+                /*
+                 * This is the rate displayed to the user:
+                 *
+                 * 1 Home Currency = X target currency
+                 *
+                 * The ViewModel calculates this from the
+                 * underlying rates stored in the database.
+                 */
 
-                val currentInverse =
-
-                    if (rateToNZD > 0) {
-
-                        1 / rateToNZD
-
-                    } else {
-
-                        0.0
-
-                    }
-
+                val currentRate =
+                    exchangeRateViewModel
+                        .getRateFromHomeCurrency(currency)
 
 
                 Card(
 
-                    modifier = Modifier
-                        .fillMaxWidth()
+                    modifier =
+                        Modifier.fillMaxWidth()
 
                 ) {
 
-
                     Column(
 
-                        modifier = Modifier
-                            .padding(16.dp)
+                        modifier =
+                            Modifier.padding(16.dp)
 
                     ) {
 
+
+                        // =================================================
+                        // CURRENCY NAME
+                        // =================================================
 
                         Text(
 
@@ -220,23 +271,30 @@ fun ExchangeRateSettingsScreen(
                         )
 
 
-                        Text(
-
-                            text =
-                                "1 $currency = NZ$ %.4f"
-                                    .format(rateToNZD)
-
-                        )
-
+                        // =================================================
+                        // HOME CURRENCY RATE
+                        // =================================================
 
                         Text(
 
                             text =
-                                "1 NZD = %.4f $currency"
-                                    .format(currentInverse)
+                                if (isHomeCurrency) {
+
+                                    "1 $homeCurrency = 1.0000 $currency"
+
+                                } else {
+
+                                    "1 $homeCurrency = %.4f $currency"
+                                        .format(currentRate)
+
+                                }
 
                         )
 
+
+                        // =================================================
+                        // LAST UPDATED
+                        // =================================================
 
                         Text(
 
@@ -249,136 +307,137 @@ fun ExchangeRateSettingsScreen(
                         )
 
 
+                        // =================================================
+                        // HOME CURRENCY CANNOT BE EDITED
+                        // =================================================
 
-                        if (
-                            editingCurrency == currency
-                        ) {
+                        if (!isHomeCurrency) {
 
-
-                            OutlinedTextField(
-
-                                value = editedValue,
-
-                                onValueChange = {
-
-                                    editedValue = it
-
-                                },
-
-                                label = {
-
-                                    Text(
-                                        "1 NZD = $currency"
-                                    )
-
-                                },
-
-                                modifier = Modifier
-                                    .fillMaxWidth()
-
-                            )
-
-
-
-                            Row(
-
-                                modifier = Modifier
-                                    .padding(
-                                        top = 8.dp
-                                    )
-
+                            if (
+                                editingCurrency == currency
                             ) {
+
+
+                                OutlinedTextField(
+
+                                    value =
+                                        editedValue,
+
+                                    onValueChange = {
+
+                                        editedValue = it
+
+                                    },
+
+                                    label = {
+
+                                        Text(
+                                            "1 $homeCurrency = $currency"
+                                        )
+
+                                    },
+
+                                    modifier =
+                                        Modifier.fillMaxWidth()
+
+                                )
+
+
+                                Row(
+
+                                    modifier =
+                                        Modifier.padding(
+                                            top = 8.dp
+                                        )
+
+                                ) {
+
+
+                                    Button(
+
+                                        onClick = {
+
+                                            saveCurrentEdit()
+
+                                        }
+
+                                    ) {
+
+                                        Text(
+                                            "Save"
+                                        )
+
+                                    }
+
+
+                                    Button(
+
+                                        onClick = {
+
+                                            editingCurrency =
+                                                null
+
+                                        },
+
+                                        modifier =
+                                            Modifier.padding(
+                                                start = 8.dp
+                                            )
+
+                                    ) {
+
+                                        Text(
+                                            "Cancel"
+                                        )
+
+                                    }
+
+                                }
+
+
+                            } else {
 
 
                                 Button(
 
                                     onClick = {
 
-                                        saveCurrentEdit()
+                                        showUpdatedMessage =
+                                            false
+
+                                        editedValue =
+                                            "%.4f"
+                                                .format(currentRate)
+
+                                        editingCurrency =
+                                            currency
 
                                     }
 
                                 ) {
 
-
                                     Text(
-                                        "Save"
+                                        "Edit"
                                     )
 
                                 }
 
-
-
-                                Button(
-
-                                    onClick = {
-
-                                        editingCurrency = null
-
-                                    },
-
-                                    modifier = Modifier
-                                        .padding(
-                                            start = 8.dp
-                                        )
-
-                                ) {
-
-
-                                    Text(
-                                        "Cancel"
-                                    )
-
-                                }
-
-
                             }
-
-
-                        } else {
-
-
-                            Button(
-
-                                onClick = {
-
-                                    showUpdatedMessage = false
-
-                                    editedValue =
-                                        "%.4f".format(
-                                            currentInverse
-                                        )
-
-                                    editingCurrency = currency
-
-                                }
-
-                            ) {
-
-
-                                Text(
-                                    "Edit"
-                                )
-
-
-                            }
-
 
                         }
 
-
                     }
-
 
                 }
 
-
             }
-
 
         }
 
 
+        // =========================================================
+        // BACK
+        // =========================================================
 
         Button(
 
@@ -396,14 +455,11 @@ fun ExchangeRateSettingsScreen(
 
         ) {
 
-
             Text(
                 "Back"
             )
 
-
         }
-
 
     }
 

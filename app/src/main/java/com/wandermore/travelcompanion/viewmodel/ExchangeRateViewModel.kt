@@ -90,15 +90,17 @@ class ExchangeRateViewModel(
      *
      * Database rates are stored as:
      *
-     * 1 foreign currency = X NZD
+     * 1 currency = X NZD
      *
      * Therefore:
      *
-     * foreign -> Home Currency
+     * source -> Home Currency
      *
      * is calculated as:
      *
-     * foreign rate to NZD / Home Currency rate to NZD
+     * source rate to NZD / Home Currency rate to NZD
+     *
+     * This is used by the expense conversion system.
      */
     fun getRate(
         currency: String
@@ -145,6 +147,80 @@ class ExchangeRateViewModel(
 
     }
 
+
+    /**
+     * Returns the exchange rate from the user's
+     * Home Currency to the supplied currency.
+     *
+     * This is used for display and editing in the
+     * Currency Exchange Rates screen.
+     *
+     * Database rates are stored as:
+     *
+     * 1 currency = X NZD
+     *
+     * Therefore:
+     *
+     * Home Currency -> target currency
+     *
+     * is calculated as:
+     *
+     * Home Currency rate to NZD / target rate to NZD
+     *
+     * Example:
+     *
+     * Home Currency = NZD
+     * AUD rate = 1.1970 NZD
+     *
+     * 1 NZD = 1.0 / 1.1970
+     *        = 0.8354 AUD
+     */
+    fun getRateFromHomeCurrency(
+        currency: String
+    ): Double {
+
+        val home =
+            _homeCurrency.value
+
+
+        // Same currency requires no conversion.
+        if (currency == home) {
+
+            return 1.0
+
+        }
+
+
+        val homeRate =
+            _rates.value
+                .find {
+                    it.currencyCode == home
+                }
+                ?.rateToNZD
+                ?: return 0.0
+
+
+        val targetRate =
+            _rates.value
+                .find {
+                    it.currencyCode == currency
+                }
+                ?.rateToNZD
+                ?: return 0.0
+
+
+        if (targetRate <= 0.0) {
+
+            return 0.0
+
+        }
+
+
+        return homeRate / targetRate
+
+    }
+
+
     /**
      * Returns the underlying reference exchange rate
      * from the supplied currency to NZD.
@@ -166,36 +242,62 @@ class ExchangeRateViewModel(
             }
             ?.rateToNZD
             ?: 0.0
+
     }
 
+
     /**
-     * Updates a currency rate.
+     * Updates a currency rate using the user's Home Currency
+     * as the reference shown in the UI.
      *
      * The database stores:
      *
-     * 1 foreign currency = X NZD
+     * 1 currency = X NZD
      *
      * The UI supplies:
      *
-     * 1 NZD = X foreign currency
+     * 1 Home Currency = X target currency
      *
-     * so the supplied value is inverted before being
-     * stored in the database.
+     * Therefore:
+     *
+     * target rate to NZD =
+     * Home Currency rate to NZD / Home Currency to target rate
      */
     fun updateRate(
 
         currencyCode: String,
 
-        inverseRate: Double
+        homeCurrencyRate: Double
 
     ) {
 
         viewModelScope.launch {
 
-            if (inverseRate > 0) {
+            if (homeCurrencyRate > 0) {
+
+                val home =
+                    _homeCurrency.value
+
+
+                val homeRateToNZD =
+                    _rates.value
+                        .find {
+                            it.currencyCode == home
+                        }
+                        ?.rateToNZD
+                        ?: return@launch
+
+
+                if (homeRateToNZD <= 0.0) {
+
+                    return@launch
+
+                }
+
 
                 val rateToNZD =
-                    1 / inverseRate
+                    homeRateToNZD / homeCurrencyRate
+
 
                 repository.updateRate(
 
