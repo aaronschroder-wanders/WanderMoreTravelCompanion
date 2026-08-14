@@ -40,11 +40,16 @@ data class ExpenseEntity(
     @Serializable(with = LocalDateSerializer::class)
     val date: LocalDate,
 
-    // Exchange rate used when this expense was entered
+    // Exchange rate used when this expense was entered.
+    // Stored as: 1 expense currency = X Home Currency.
     val exchangeRate: Double = 1.0,
 
-    // Converted value stored for historical accuracy
+    // Converted value stored for historical accuracy.
     val convertedAmount: Double = 0.0,
+
+    // Home Currency used when this expense was entered.
+    // This identifies the currency of convertedAmount.
+    val homeCurrency: String = "NZD",
 
     // Number of nights for accommodation expenses
     val numberOfNights: Int? = null

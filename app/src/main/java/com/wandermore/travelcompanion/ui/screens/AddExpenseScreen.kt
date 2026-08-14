@@ -7,6 +7,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -36,6 +37,11 @@ fun AddExpenseScreen(
     onExpenseAdded: () -> Unit
 ) {
 
+    val homeCurrency by exchangeRateViewModel
+        .homeCurrency
+        .collectAsState()
+
+
     var description by remember {
         mutableStateOf("")
     }
@@ -58,20 +64,16 @@ fun AddExpenseScreen(
     }
 
 
-    var currency by remember {
-        mutableStateOf(
-            trip.homeCurrency
-        )
+    var currency by remember(homeCurrency) {
+        mutableStateOf(homeCurrency)
     }
 
 
-    // Expense date defaults to today but can be changed
     var expenseDate by remember {
         mutableStateOf(
             LocalDate.now()
         )
     }
-
 
 
     val scrollState = rememberScrollState()
@@ -101,7 +103,6 @@ fun AddExpenseScreen(
         )
 
 
-
         OutlinedTextField(
 
             value = description,
@@ -115,7 +116,6 @@ fun AddExpenseScreen(
             }
 
         )
-
 
 
         OutlinedTextField(
@@ -133,7 +133,6 @@ fun AddExpenseScreen(
         )
 
 
-
         CurrencyDropdown(
 
             selectedCurrency = currency,
@@ -147,26 +146,27 @@ fun AddExpenseScreen(
         )
 
 
-
         val previewAmount =
             amount.toDoubleOrNull()
 
 
         if (previewAmount != null) {
 
+            // Rate used only for displaying the expense
+            // in the user's current Home Currency.
             val previewRate =
                 exchangeRateViewModel.getRate(currency)
 
 
-            val previewNZD =
+            val previewHomeCurrency =
                 previewAmount * previewRate
 
 
             Text(
-                text = "≈ NZ$ %.2f".format(previewNZD)
+                text = "≈ $homeCurrency %.2f"
+                    .format(previewHomeCurrency)
             )
         }
-
 
 
         CategoryDropdown(
@@ -180,7 +180,6 @@ fun AddExpenseScreen(
             }
 
         )
-
 
 
         if (category == "Accommodation") {
@@ -201,7 +200,6 @@ fun AddExpenseScreen(
         }
 
 
-
         DatePickerButton(
 
             selectedDate = expenseDate,
@@ -215,54 +213,76 @@ fun AddExpenseScreen(
         )
 
 
-
         Button(
 
             onClick = {
-
 
                 val enteredAmount =
                     amount.toDoubleOrNull()
                         ?: 0.0
 
 
+                // Store the underlying reference rate:
+                //
+                // 1 unit of expense currency = X NZD
+                //
+                // This is deliberately NOT the current
+                // Home Currency conversion rate.
+                val exchangeRateToNZD =
+                    exchangeRateViewModel
+                        .getRateToNZD(currency)
 
-                val exchangeRate =
-                    exchangeRateViewModel.getRate(currency)
 
+                // Calculate the converted value using
+                // the user's current Home Currency.
+                val currentHomeRate =
+                    exchangeRateViewModel
+                        .getRate(currency)
 
 
                 val convertedAmount =
-                    enteredAmount * exchangeRate
+                    enteredAmount * currentHomeRate
 
 
+                val expense =
+                    ExpenseEntity(
 
-                val expense = ExpenseEntity(
+                        tripId = trip.id,
 
-                    tripId = trip.id,
+                        description = description,
 
-                    description = description,
+                        amount = enteredAmount,
 
-                    amount = enteredAmount,
+                        currency = currency,
 
-                    currency = currency,
+                        category = category,
 
-                    category = category,
+                        date = expenseDate,
 
-                    date = expenseDate,
+                        // Store the stable NZD reference rate.
+                        exchangeRate =
+                            exchangeRateToNZD,
 
-                    exchangeRate = exchangeRate,
+                        // Store the value displayed at the
+                        // time the expense was entered.
+                        convertedAmount =
+                            convertedAmount,
 
-                    convertedAmount = convertedAmount,
+                        numberOfNights =
+                            if (
+                                category == "Accommodation"
+                            ) {
 
-                    numberOfNights = if (category == "Accommodation") {
-                        numberOfNights.toIntOrNull()
-                    } else {
-                        null
-                    }
+                                numberOfNights
+                                    .toIntOrNull()
 
-                )
+                            } else {
 
+                                null
+
+                            }
+
+                    )
 
 
                 tripViewModel.addExpense(
@@ -272,19 +292,15 @@ fun AddExpenseScreen(
 
                 onExpenseAdded()
 
-
             }
 
         ) {
-
 
             Text(
                 text = "Save Expense"
             )
 
-
         }
-
 
     }
 

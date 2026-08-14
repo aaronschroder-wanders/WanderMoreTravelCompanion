@@ -17,7 +17,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         BookingEntity::class,
         TripEstimateEntity::class
     ],
-    version = 10,
+    version = 11,
     exportSchema = false
 )
 @TypeConverters(DateConverter::class)
@@ -386,6 +386,137 @@ abstract class AppDatabase : RoomDatabase() {
                     CREATE UNIQUE INDEX IF NOT EXISTS
                     index_trip_estimates_tripId_category
                     ON trip_estimates(tripId, category)
+                    """.trimIndent()
+                )
+            }
+        }
+
+
+        // ---------------------------------------------------------
+        // VERSION 10 → 11
+        // EXPENSE SCHEMA UPDATE
+        //
+        // ExpenseEntity now expects:
+        //
+        // - homeCurrency TEXT NOT NULL
+        // - exchangeRate REAL NOT NULL
+        // - convertedAmount REAL NOT NULL
+        //
+        // The previous schema had SQLite DEFAULT values on
+        // exchangeRate and convertedAmount and did not have
+        // homeCurrency.
+        //
+        // SQLite ALTER TABLE cannot remove those defaults, so
+        // the expenses table must be rebuilt.
+        // ---------------------------------------------------------
+
+        val MIGRATION_10_11 = object : Migration(10, 11) {
+
+            override fun migrate(
+                database: SupportSQLiteDatabase
+            ) {
+
+                // -------------------------------------------------
+                // Create the new expenses table with the exact
+                // schema expected by Room / ExpenseEntity.
+                // -------------------------------------------------
+
+                database.execSQL(
+                    """
+                    CREATE TABLE expenses_new (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        tripId INTEGER NOT NULL,
+                        date TEXT NOT NULL,
+                        category TEXT NOT NULL,
+                        description TEXT NOT NULL,
+                        amount REAL NOT NULL,
+                        currency TEXT NOT NULL,
+                        exchangeRate REAL NOT NULL,
+                        convertedAmount REAL NOT NULL,
+                        homeCurrency TEXT NOT NULL,
+                        numberOfNights INTEGER,
+                        FOREIGN KEY(tripId)
+                            REFERENCES trips(id)
+                            ON DELETE CASCADE
+                    )
+                    """.trimIndent()
+                )
+
+
+                // -------------------------------------------------
+                // Copy existing expenses.
+                //
+                // Existing expenses were stored using NZD as the
+                // application's home currency, so existing rows
+                // are migrated with homeCurrency = NZD.
+                //
+                // The existing exchangeRate and convertedAmount
+                // values are retained.
+                // -------------------------------------------------
+
+                database.execSQL(
+                    """
+                    INSERT INTO expenses_new (
+                        id,
+                        tripId,
+                        date,
+                        category,
+                        description,
+                        amount,
+                        currency,
+                        exchangeRate,
+                        convertedAmount,
+                        homeCurrency,
+                        numberOfNights
+                    )
+                    SELECT
+                        id,
+                        tripId,
+                        date,
+                        category,
+                        description,
+                        amount,
+                        currency,
+                        exchangeRate,
+                        convertedAmount,
+                        'NZD',
+                        numberOfNights
+                    FROM expenses
+                    """.trimIndent()
+                )
+
+
+                // -------------------------------------------------
+                // Remove the old table.
+                // -------------------------------------------------
+
+                database.execSQL(
+                    """
+                    DROP TABLE expenses
+                    """.trimIndent()
+                )
+
+
+                // -------------------------------------------------
+                // Rename the new table.
+                // -------------------------------------------------
+
+                database.execSQL(
+                    """
+                    ALTER TABLE expenses_new
+                    RENAME TO expenses
+                    """.trimIndent()
+                )
+
+
+                // -------------------------------------------------
+                // Recreate the Room-generated index.
+                // -------------------------------------------------
+
+                database.execSQL(
+                    """
+                    CREATE INDEX IF NOT EXISTS index_expenses_tripId
+                    ON expenses(tripId)
                     """.trimIndent()
                 )
             }

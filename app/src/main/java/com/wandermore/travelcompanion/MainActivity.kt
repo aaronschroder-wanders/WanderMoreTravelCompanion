@@ -10,14 +10,15 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
 import com.wandermore.travelcompanion.database.DatabaseProvider
 import com.wandermore.travelcompanion.data.repository.ExchangeRateRepository
+import com.wandermore.travelcompanion.data.repository.UserSettingsRepository
 import com.wandermore.travelcompanion.ui.theme.WanderMoreTravelCompanionTheme
 import com.wandermore.travelcompanion.viewmodel.ExchangeRateViewModel
 import com.wandermore.travelcompanion.viewmodel.ExchangeRateViewModelFactory
 import com.wandermore.travelcompanion.viewmodel.TripViewModel
 import com.wandermore.travelcompanion.viewmodel.TripViewModelFactory
-import com.wandermore.travelcompanion.data.repository.UserSettingsRepository
 import com.wandermore.travelcompanion.viewmodel.UserSettingsViewModel
 import com.wandermore.travelcompanion.viewmodel.UserSettingsViewModelFactory
+
 
 class MainActivity : ComponentActivity() {
 
@@ -36,10 +37,12 @@ class MainActivity : ComponentActivity() {
                 val navController =
                     rememberNavController()
 
+
                 val database =
                     DatabaseProvider.getDatabase(
                         applicationContext
                     )
+
 
                 val tripViewModel: TripViewModel =
                     viewModel(
@@ -53,13 +56,16 @@ class MainActivity : ComponentActivity() {
                         )
                     )
 
+
                 val exchangeRateRepository =
                     remember {
 
                         ExchangeRateRepository(
                             database.exchangeRateDao()
                         )
+
                     }
+
 
                 val userSettingsRepository =
                     remember {
@@ -70,6 +76,7 @@ class MainActivity : ComponentActivity() {
 
                     }
 
+
                 val userSettingsViewModel:
                         UserSettingsViewModel =
                     viewModel(
@@ -79,20 +86,25 @@ class MainActivity : ComponentActivity() {
                             )
                     )
 
+
                 val exchangeRateViewModel:
                         ExchangeRateViewModel =
                     viewModel(
                         factory =
                             ExchangeRateViewModelFactory(
-                                exchangeRateRepository
+                                exchangeRateRepository,
+                                userSettingsRepository
                             )
                     )
+
 
                 LaunchedEffect(Unit) {
 
                     exchangeRateViewModel
                         .initialiseRates()
+
                 }
+
 
                 AppNavigation(
                     navController = navController,
@@ -105,7 +117,11 @@ class MainActivity : ComponentActivity() {
                         userSettingsRepository,
                     database = database
                 )
+
             }
+
         }
+
     }
+
 }
