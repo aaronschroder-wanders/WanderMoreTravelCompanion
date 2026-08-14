@@ -257,6 +257,7 @@ fun TripDetailsScreen(
             totalSpent = total,
             airfareTotal = airfareTotal,
             currency = currentTrip.homeCurrency,
+            tripStatus = currentTrip.status,
             onClick = {
                 onCategoryBreakdown()
             }

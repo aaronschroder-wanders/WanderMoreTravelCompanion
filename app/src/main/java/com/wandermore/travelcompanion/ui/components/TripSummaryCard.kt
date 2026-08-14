@@ -10,6 +10,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.wandermore.travelcompanion.model.TripStatus
 import com.wandermore.travelcompanion.util.formatMoney
 
 @Composable
@@ -20,6 +21,7 @@ fun TripSummaryCard(
     airfareTotal: Double,
     foodDrinkPerDay: Double = 0.0,
     currency: String,
+    tripStatus: TripStatus,
     onClick: () -> Unit
 ) {
 
@@ -43,6 +45,18 @@ fun TripSummaryCard(
     val remaining =
         totalEstimate - totalSpent
 
+    val durationLabel =
+        when (tripStatus) {
+            TripStatus.PLANNED ->
+                "📅 Planned duration"
+
+            TripStatus.CURRENT ->
+                "📅 Days used"
+
+            TripStatus.ARCHIVED ->
+                "📅 Trip duration"
+        }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -62,7 +76,7 @@ fun TripSummaryCard(
             )
 
             Text(
-                text = "📅 Planned duration: $plannedDays days",
+                text = "$durationLabel: $plannedDays days",
                 style = MaterialTheme.typography.bodyMedium
             )
 

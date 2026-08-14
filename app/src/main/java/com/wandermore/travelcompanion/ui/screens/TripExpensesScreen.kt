@@ -220,6 +220,7 @@ fun TripExpensesScreen(
             airfareTotal = airfareTotal,
             foodDrinkPerDay = foodDrinkPerDay,
             currency = currentTrip.homeCurrency,
+            tripStatus = currentTrip.status,
             onClick = onCategoryBreakdown
         )
 
