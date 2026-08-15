@@ -228,70 +228,65 @@ private fun TodoRow(
     onClick: () -> Unit
 ) {
 
-    androidx.compose.material3.TextButton(
+    Card(
         onClick = onClick,
         modifier = Modifier.fillMaxWidth()
     ) {
 
-        Card(
-            modifier = Modifier.fillMaxWidth()
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp)
         ) {
 
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(12.dp)
-            ) {
+            // -------------------------------------------------
+            // TASK
+            // -------------------------------------------------
 
-                // -------------------------------------------------
-                // TASK
-                // -------------------------------------------------
+            Text(
+                text =
+                    if (todo.completed) {
+                        "✓ ${todo.task}"
+                    } else {
+                        "☐ ${todo.task}"
+                    },
+                style =
+                    MaterialTheme.typography
+                        .titleMedium
+            )
 
-                Text(
-                    text =
-                        if (todo.completed) {
-                            "✓ ${todo.task}"
-                        } else {
-                            "☐ ${todo.task}"
-                        },
-                    style =
-                        MaterialTheme.typography
-                            .titleMedium
-                )
+            Spacer(
+                modifier = Modifier.height(4.dp)
+            )
+
+            // -------------------------------------------------
+            // ASSIGNED TO
+            // -------------------------------------------------
+
+            Text(
+                text =
+                    "Assigned to: ${todo.assignedTo}",
+                style =
+                    MaterialTheme.typography
+                        .bodySmall
+            )
+
+            // -------------------------------------------------
+            // NOTES
+            // -------------------------------------------------
+
+            if (!todo.notes.isNullOrBlank()) {
 
                 Spacer(
                     modifier = Modifier.height(4.dp)
                 )
 
-                // -------------------------------------------------
-                // ASSIGNED TO
-                // -------------------------------------------------
-
                 Text(
-                    text =
-                        "Assigned to: ${todo.assignedTo}",
+                    text = todo.notes!!,
                     style =
                         MaterialTheme.typography
-                            .bodySmall
+                            .bodyMedium
                 )
-
-                // -------------------------------------------------
-                // NOTES
-                // -------------------------------------------------
-
-                if (!todo.notes.isNullOrBlank()) {
-
-                    Spacer(
-                        modifier = Modifier.height(4.dp)
-                    )
-
-                    Text(
-                        text = todo.notes!!,
-                        style =
-                            MaterialTheme.typography
-                                .bodyMedium
-                    )
-                }
             }
         }
     }

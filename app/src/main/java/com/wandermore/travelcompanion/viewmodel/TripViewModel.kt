@@ -253,7 +253,13 @@ class TripViewModel(
         viewModelScope.launch {
 
             todoDao.updateTodo(
-                todo
+                todo.copy(
+                    dueDate = if (todo.completed) {
+                        null
+                    } else {
+                        todo.dueDate
+                    }
+                )
             )
         }
     }
