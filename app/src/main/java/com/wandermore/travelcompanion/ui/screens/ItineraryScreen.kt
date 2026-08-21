@@ -17,11 +17,16 @@ import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -61,11 +66,51 @@ fun ItineraryScreen(
         .collectAsState(initial = emptyList())
 
     // ---------------------------------------------------------
+    // FILTER
+    // ---------------------------------------------------------
+
+    var selectedFilter by remember {
+        mutableStateOf("All")
+    }
+
+    val filteredItinerary =
+        when (selectedFilter) {
+
+            "Accom." ->
+                itinerary.filter {
+                    it.type.equals(
+                        "Accommodation",
+                        ignoreCase = true
+                    )
+                }
+
+            "Travel" ->
+                itinerary.filter {
+                    it.type.equals(
+                        "Travel",
+                        ignoreCase = true
+                    )
+                }
+
+            "Others" ->
+                itinerary.filter {
+                    it.type.equals("Activity", ignoreCase = true) ||
+                            it.type.equals("Attraction", ignoreCase = true) ||
+                            it.type.equals("Arrival", ignoreCase = true) ||
+                            it.type.equals("Departure", ignoreCase = true) ||
+                            it.type.equals("Other", ignoreCase = true)
+                }
+
+            else ->
+                itinerary
+        }
+
+    // ---------------------------------------------------------
     // SORT
     // ---------------------------------------------------------
 
     val sortedItinerary =
-        itinerary.sortedWith(
+        filteredItinerary.sortedWith(
             compareBy<ItineraryEntity> {
                 it.date
             }.thenBy {
@@ -104,6 +149,75 @@ fun ItineraryScreen(
             icon = "🗓️"
         )
 
+        Spacer(
+            modifier = Modifier.height(10.dp)
+        )
+
+        // -----------------------------------------------------
+        // FILTER CHIPS
+        // -----------------------------------------------------
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement =
+                Arrangement.spacedBy(6.dp),
+            verticalAlignment =
+                Alignment.CenterVertically
+        ) {
+
+            FilterChip(
+                selected = selectedFilter == "All",
+                onClick = {
+                    selectedFilter = "All"
+                },
+                label = {
+                    Text("All")
+                },
+                modifier = Modifier.weight(1f),
+                colors = FilterChipDefaults.filterChipColors()
+            )
+
+            FilterChip(
+                selected = selectedFilter == "Accom.",
+                onClick = {
+                    selectedFilter = "Accom."
+                },
+                label = {
+                    Text("Accom.")
+                },
+                modifier = Modifier.weight(1f),
+                colors = FilterChipDefaults.filterChipColors()
+            )
+
+            FilterChip(
+                selected = selectedFilter == "Travel",
+                onClick = {
+                    selectedFilter = "Travel"
+                },
+                label = {
+                    Text("Travel")
+                },
+                modifier = Modifier.weight(1f),
+                colors = FilterChipDefaults.filterChipColors()
+            )
+
+            FilterChip(
+                selected = selectedFilter == "Others",
+                onClick = {
+                    selectedFilter = "Others"
+                },
+                label = {
+                    Text("Others")
+                },
+                modifier = Modifier.weight(1f),
+                colors = FilterChipDefaults.filterChipColors()
+            )
+        }
+
+        Spacer(
+            modifier = Modifier.height(10.dp)
+        )
+
         // -----------------------------------------------------
         // ITINERARY LIST
         // -----------------------------------------------------
@@ -121,7 +235,12 @@ fun ItineraryScreen(
             ) {
 
                 Text(
-                    text = "No itinerary items yet.",
+                    text =
+                        if (itinerary.isEmpty()) {
+                            "No itinerary items yet."
+                        } else {
+                            "No items in this category."
+                        },
                     style =
                         MaterialTheme.typography.titleMedium
                 )
@@ -132,7 +251,11 @@ fun ItineraryScreen(
 
                 Text(
                     text =
-                        "Add your travel plans, accommodation and other key events.",
+                        if (itinerary.isEmpty()) {
+                            "Add your travel plans, accommodation and other key events."
+                        } else {
+                            "Try selecting a different filter."
+                        },
                     style =
                         MaterialTheme.typography.bodyMedium,
                     color =
