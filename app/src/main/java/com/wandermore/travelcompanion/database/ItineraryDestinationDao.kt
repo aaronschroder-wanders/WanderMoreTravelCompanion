@@ -1,0 +1,81 @@
+package com.wandermore.travelcompanion.database
+
+import androidx.room.Dao
+import androidx.room.Insert
+import androidx.room.Query
+
+@Dao
+interface ItineraryDestinationDao {
+
+    // ---------------------------------------------------------
+    // GET DESTINATIONS FOR AN ITINERARY ITEM
+    // ---------------------------------------------------------
+
+    @Query(
+        """
+        SELECT d.*
+        FROM destinations d
+        INNER JOIN itinerary_destinations id
+            ON d.id = id.destinationId
+        WHERE id.itineraryId = :itineraryId
+        ORDER BY d.name COLLATE NOCASE ASC
+        """
+    )
+    suspend fun getDestinationsForItinerary(
+        itineraryId: Long
+    ): List<DestinationEntity>
+
+    // ---------------------------------------------------------
+    // GET DESTINATION IDS FOR AN ITINERARY ITEM
+    // ---------------------------------------------------------
+
+    @Query(
+        """
+        SELECT destinationId
+        FROM itinerary_destinations
+        WHERE itineraryId = :itineraryId
+        """
+    )
+    suspend fun getDestinationIdsForItinerary(
+        itineraryId: Long
+    ): List<Long>
+
+    // ---------------------------------------------------------
+    // ADD DESTINATION
+    // ---------------------------------------------------------
+
+    @Insert
+    suspend fun insertItineraryDestination(
+        itineraryDestination: ItineraryDestinationEntity
+    )
+
+    // ---------------------------------------------------------
+    // REMOVE DESTINATION
+    // ---------------------------------------------------------
+
+    @Query(
+        """
+        DELETE FROM itinerary_destinations
+        WHERE itineraryId = :itineraryId
+        AND destinationId = :destinationId
+        """
+    )
+    suspend fun deleteItineraryDestination(
+        itineraryId: Long,
+        destinationId: Long
+    )
+
+    // ---------------------------------------------------------
+    // REMOVE ALL DESTINATIONS
+    // ---------------------------------------------------------
+
+    @Query(
+        """
+        DELETE FROM itinerary_destinations
+        WHERE itineraryId = :itineraryId
+        """
+    )
+    suspend fun deleteDestinationsForItinerary(
+        itineraryId: Long
+    )
+}

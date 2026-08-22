@@ -14,6 +14,11 @@ import com.wandermore.travelcompanion.database.TodoEntity
 import com.wandermore.travelcompanion.database.TripDao
 import com.wandermore.travelcompanion.database.TripEstimateDao
 import com.wandermore.travelcompanion.database.TripEstimateEntity
+import com.wandermore.travelcompanion.database.DestinationDao
+import com.wandermore.travelcompanion.database.DestinationEntity
+import com.wandermore.travelcompanion.database.ItineraryDestinationDao
+import com.wandermore.travelcompanion.database.ItineraryDestinationEntity
+import com.wandermore.travelcompanion.database.ActivityDestinationDao
 import com.wandermore.travelcompanion.model.Trip
 import com.wandermore.travelcompanion.model.TripStatus
 import kotlinx.coroutines.flow.Flow
@@ -26,7 +31,10 @@ class TripViewModel(
     private val todoDao: TodoDao,
     private val activityDao: ActivityDao,
     private val itineraryDao: ItineraryDao,
-    private val tripEstimateDao: TripEstimateDao
+    private val tripEstimateDao: TripEstimateDao,
+    private val destinationDao: DestinationDao,
+    private val itineraryDestinationDao: ItineraryDestinationDao,
+    private val activityDestinationDao: ActivityDestinationDao
 ) : ViewModel() {
 
     private val repository = TripRepository(
@@ -558,9 +566,65 @@ class TripViewModel(
 
         viewModelScope.launch {
 
-            itineraryDao.insertItinerary(
-                itinerary
-            )
+            // -------------------------------------------------
+            // SAVE THE ITINERARY ITEM
+            // -------------------------------------------------
+
+            val itineraryId =
+                itineraryDao.insertItinerary(
+                    itinerary
+                )
+
+            // -------------------------------------------------
+            // CREATE / FIND DESTINATION
+            //
+            // The existing Location field is used as the
+            // destination name for now.
+            //
+            // Blank locations are simply ignored.
+            // -------------------------------------------------
+
+            val location =
+                itinerary.location
+                    ?.trim()
+                    ?.takeIf {
+                        it.isNotBlank()
+                    }
+
+            if (location != null) {
+
+                // -------------------------------------------------
+                // LOOK FOR AN EXISTING DESTINATION
+                // -------------------------------------------------
+
+                val existingDestination =
+                    destinationDao.getDestinationByName(
+                        location
+                    )
+
+                // -------------------------------------------------
+                // USE EXISTING DESTINATION OR CREATE A NEW ONE
+                // -------------------------------------------------
+
+                val destinationId =
+                    existingDestination?.id
+                        ?: destinationDao.insertDestination(
+                            DestinationEntity(
+                                name = location
+                            )
+                        )
+
+                // -------------------------------------------------
+                // LINK ITINERARY → DESTINATION
+                // -------------------------------------------------
+
+                itineraryDestinationDao.insertItineraryDestination(
+                    ItineraryDestinationEntity(
+                        itineraryId = itineraryId,
+                        destinationId = destinationId
+                    )
+                )
+            }
         }
     }
 
@@ -597,6 +661,48 @@ class TripViewModel(
             )
 
             // -------------------------------------------------
+            // UPDATE DESTINATION RELATIONSHIP
+            //
+            // The Location field is used as the destination name.
+            // If the location has changed, remove the old
+            // destination links and create/find the new one.
+            // -------------------------------------------------
+
+            itineraryDestinationDao.deleteDestinationsForItinerary(
+                itinerary.id
+            )
+
+            val location =
+                itinerary.location
+                    ?.trim()
+                    ?.takeIf {
+                        it.isNotBlank()
+                    }
+
+            if (location != null) {
+
+                val existingDestination =
+                    destinationDao.getDestinationByName(
+                        location
+                    )
+
+                val destinationId =
+                    existingDestination?.id
+                        ?: destinationDao.insertDestination(
+                            DestinationEntity(
+                                name = location
+                            )
+                        )
+
+                itineraryDestinationDao.insertItineraryDestination(
+                    ItineraryDestinationEntity(
+                        itineraryId = itinerary.id,
+                        destinationId = destinationId
+                    )
+                )
+            }
+
+            // -------------------------------------------------
             // SYNC BACK TO LINKED ACTIVITY
             //
             // Only itinerary items created from an Activity
@@ -631,23 +737,19 @@ class TripViewModel(
                             date =
                                 itinerary.date,
 
-                            // Itinerary time → Activity
-                            // start time.
+                            // Itinerary time → Activity start time
                             startTime =
                                 itinerary.time,
 
-                            // Itinerary location →
-                            // Activity location.
+                            // Itinerary location → Activity location
                             location =
                                 itinerary.location,
 
-                            // Itinerary notes →
-                            // Activity notes.
+                            // Itinerary notes → Activity notes
                             notes =
                                 itinerary.notes,
 
-                            // Itinerary booked →
-                            // Activity booked.
+                            // Itinerary booked → Activity booked
                             booked =
                                 itinerary.booked
                         )
@@ -657,12 +759,9 @@ class TripViewModel(
                     )
 
                     // -------------------------------------------------
-                    // IMPORTANT
-                    //
                     // If the Activity has just been marked as
-                    // unbooked, the normal Activity → Itinerary
-                    // synchronisation will remove this itinerary
-                    // item. That is intentional.
+                    // unbooked, normal Activity → Itinerary
+                    // synchronisation will remove this itinerary item.
                     // -------------------------------------------------
 
                     syncActivityToItinerary(
@@ -707,9 +806,21 @@ class TripViewModel(
                 }
             }
 
+            // -------------------------------------------------
+            // REMOVE ITINERARY → DESTINATION RELATIONSHIP
+            // -------------------------------------------------
+
+            itineraryDestinationDao.deleteDestinationsForItinerary(
+                itinerary.id
+            )
+
+            // -------------------------------------------------
+            // DELETE THE ITINERARY ITEM
+            // -------------------------------------------------
+
             itineraryDao.deleteItinerary(
                 itinerary
             )
         }
     }
-}
+    }

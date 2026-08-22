@@ -15,9 +15,13 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         ActivityEntity::class,
         ItineraryEntity::class,
         BookingEntity::class,
-        TripEstimateEntity::class
+        TripEstimateEntity::class,
+        DestinationEntity::class,
+        TripDestinationEntity::class,
+        ItineraryDestinationEntity::class,
+        ActivityDestinationEntity::class
     ],
-    version = 11,
+    version = 12,
     exportSchema = false
 )
 @TypeConverters(DateConverter::class)
@@ -38,6 +42,14 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun tripEstimateDao(): TripEstimateDao
 
     abstract fun bookingDao(): BookingDao
+
+    abstract fun destinationDao(): DestinationDao
+
+    abstract fun tripDestinationDao(): TripDestinationDao
+
+    abstract fun itineraryDestinationDao(): ItineraryDestinationDao
+
+    abstract fun activityDestinationDao(): ActivityDestinationDao
 
 
     companion object {
@@ -517,6 +529,272 @@ abstract class AppDatabase : RoomDatabase() {
                     """
                     CREATE INDEX IF NOT EXISTS index_expenses_tripId
                     ON expenses(tripId)
+                    """.trimIndent()
+                )
+            }
+        }
+
+
+        // ---------------------------------------------------------
+        // VERSION 11 → 12
+        // DESTINATIONS
+        //
+        // Introduces reusable Destinations and many-to-many
+        // relationships with Trips, Itinerary items and Activities.
+        //
+        // Existing Location values are migrated into Destinations.
+        // ---------------------------------------------------------
+
+        val MIGRATION_11_12 = object : Migration(11, 12) {
+
+            override fun migrate(
+                database: SupportSQLiteDatabase
+            ) {
+
+                // -------------------------------------------------
+                // DESTINATIONS
+                // -------------------------------------------------
+
+                database.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS destinations (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        name TEXT NOT NULL
+                    )
+                    """.trimIndent()
+                )
+
+                database.execSQL(
+                    """
+                    CREATE UNIQUE INDEX IF NOT EXISTS
+                    index_destinations_name
+                    ON destinations(name COLLATE NOCASE)
+                    """.trimIndent()
+                )
+
+
+                // -------------------------------------------------
+                // TRIP ↔ DESTINATION
+                // -------------------------------------------------
+
+                database.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS trip_destinations (
+                        tripId INTEGER NOT NULL,
+                        destinationId INTEGER NOT NULL,
+                        PRIMARY KEY(tripId, destinationId),
+                        FOREIGN KEY(tripId)
+                            REFERENCES trips(id)
+                            ON DELETE CASCADE,
+                        FOREIGN KEY(destinationId)
+                            REFERENCES destinations(id)
+                            ON DELETE CASCADE
+                    )
+                    """.trimIndent()
+                )
+
+                database.execSQL(
+                    """
+                    CREATE INDEX IF NOT EXISTS
+                    index_trip_destinations_tripId
+                    ON trip_destinations(tripId)
+                    """.trimIndent()
+                )
+
+                database.execSQL(
+                    """
+                    CREATE INDEX IF NOT EXISTS
+                    index_trip_destinations_destinationId
+                    ON trip_destinations(destinationId)
+                    """.trimIndent()
+                )
+
+
+                // -------------------------------------------------
+                // ITINERARY ↔ DESTINATION
+                // -------------------------------------------------
+
+                database.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS itinerary_destinations (
+                        itineraryId INTEGER NOT NULL,
+                        destinationId INTEGER NOT NULL,
+                        PRIMARY KEY(itineraryId, destinationId),
+                        FOREIGN KEY(itineraryId)
+                            REFERENCES itinerary(id)
+                            ON DELETE CASCADE,
+                        FOREIGN KEY(destinationId)
+                            REFERENCES destinations(id)
+                            ON DELETE CASCADE
+                    )
+                    """.trimIndent()
+                )
+
+                database.execSQL(
+                    """
+                    CREATE INDEX IF NOT EXISTS
+                    index_itinerary_destinations_itineraryId
+                    ON itinerary_destinations(itineraryId)
+                    """.trimIndent()
+                )
+
+                database.execSQL(
+                    """
+                    CREATE INDEX IF NOT EXISTS
+                    index_itinerary_destinations_destinationId
+                    ON itinerary_destinations(destinationId)
+                    """.trimIndent()
+                )
+
+
+                // -------------------------------------------------
+                // ACTIVITY ↔ DESTINATION
+                // -------------------------------------------------
+
+                database.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS activity_destinations (
+                        activityId INTEGER NOT NULL,
+                        destinationId INTEGER NOT NULL,
+                        PRIMARY KEY(activityId, destinationId),
+                        FOREIGN KEY(activityId)
+                            REFERENCES activities(id)
+                            ON DELETE CASCADE,
+                        FOREIGN KEY(destinationId)
+                            REFERENCES destinations(id)
+                            ON DELETE CASCADE
+                    )
+                    """.trimIndent()
+                )
+
+                database.execSQL(
+                    """
+                    CREATE INDEX IF NOT EXISTS
+                    index_activity_destinations_activityId
+                    ON activity_destinations(activityId)
+                    """.trimIndent()
+                )
+
+                database.execSQL(
+                    """
+                    CREATE INDEX IF NOT EXISTS
+                    index_activity_destinations_destinationId
+                    ON activity_destinations(destinationId)
+                    """.trimIndent()
+                )
+
+
+                // -------------------------------------------------
+                // MIGRATE EXISTING ITINERARY LOCATIONS
+                // -------------------------------------------------
+
+                database.execSQL(
+                    """
+                    INSERT OR IGNORE INTO destinations (name)
+                    SELECT DISTINCT TRIM(location)
+                    FROM itinerary
+                    WHERE location IS NOT NULL
+                      AND TRIM(location) != ''
+                    """.trimIndent()
+                )
+
+
+                // -------------------------------------------------
+                // MIGRATE EXISTING ACTIVITY LOCATIONS
+                // -------------------------------------------------
+
+                database.execSQL(
+                    """
+                    INSERT OR IGNORE INTO destinations (name)
+                    SELECT DISTINCT TRIM(location)
+                    FROM activities
+                    WHERE location IS NOT NULL
+                      AND TRIM(location) != ''
+                    """.trimIndent()
+                )
+
+
+                // -------------------------------------------------
+                // LINK EXISTING ITINERARY LOCATIONS
+                // TO DESTINATIONS
+                // -------------------------------------------------
+
+                database.execSQL(
+                    """
+                    INSERT OR IGNORE INTO itinerary_destinations (
+                        itineraryId,
+                        destinationId
+                    )
+                    SELECT
+                        i.id,
+                        d.id
+                    FROM itinerary i
+                    INNER JOIN destinations d
+                        ON TRIM(i.location) = d.name COLLATE NOCASE
+                    WHERE i.location IS NOT NULL
+                      AND TRIM(i.location) != ''
+                    """.trimIndent()
+                )
+
+
+                // -------------------------------------------------
+                // LINK EXISTING ACTIVITY LOCATIONS
+                // TO DESTINATIONS
+                // -------------------------------------------------
+
+                database.execSQL(
+                    """
+                    INSERT OR IGNORE INTO activity_destinations (
+                        activityId,
+                        destinationId
+                    )
+                    SELECT
+                        a.id,
+                        d.id
+                    FROM activities a
+                    INNER JOIN destinations d
+                        ON TRIM(a.location) = d.name COLLATE NOCASE
+                    WHERE a.location IS NOT NULL
+                      AND TRIM(a.location) != ''
+                    """.trimIndent()
+                )
+
+
+                // -------------------------------------------------
+                // LINK DESTINATIONS TO THEIR TRIPS
+                //
+                // A destination becomes part of a trip if it is
+                // associated with an itinerary item or activity
+                // belonging to that trip.
+                // -------------------------------------------------
+
+                database.execSQL(
+                    """
+                    INSERT OR IGNORE INTO trip_destinations (
+                        tripId,
+                        destinationId
+                    )
+                    SELECT DISTINCT
+                        i.tripId,
+                        id.destinationId
+                    FROM itinerary i
+                    INNER JOIN itinerary_destinations id
+                        ON i.id = id.itineraryId
+                    """.trimIndent()
+                )
+
+                database.execSQL(
+                    """
+                    INSERT OR IGNORE INTO trip_destinations (
+                        tripId,
+                        destinationId
+                    )
+                    SELECT DISTINCT
+                        a.tripId,
+                        ad.destinationId
+                    FROM activities a
+                    INNER JOIN activity_destinations ad
+                        ON a.id = ad.activityId
                     """.trimIndent()
                 )
             }
