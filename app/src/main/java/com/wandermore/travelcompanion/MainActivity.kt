@@ -8,9 +8,10 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
-import com.wandermore.travelcompanion.database.DatabaseProvider
 import com.wandermore.travelcompanion.data.repository.ExchangeRateRepository
 import com.wandermore.travelcompanion.data.repository.UserSettingsRepository
+import com.wandermore.travelcompanion.data.service.CurrencyRateService
+import com.wandermore.travelcompanion.database.DatabaseProvider
 import com.wandermore.travelcompanion.ui.theme.WanderMoreTravelCompanionTheme
 import com.wandermore.travelcompanion.viewmodel.ExchangeRateViewModel
 import com.wandermore.travelcompanion.viewmodel.ExchangeRateViewModelFactory
@@ -57,11 +58,20 @@ class MainActivity : ComponentActivity() {
                     )
 
 
+                val currencyRateService =
+                    remember {
+
+                        CurrencyRateService()
+
+                    }
+
+
                 val exchangeRateRepository =
                     remember {
 
                         ExchangeRateRepository(
-                            database.exchangeRateDao()
+                            database.exchangeRateDao(),
+                            currencyRateService
                         )
 
                     }
@@ -101,7 +111,7 @@ class MainActivity : ComponentActivity() {
                 LaunchedEffect(Unit) {
 
                     exchangeRateViewModel
-                        .initialiseRates()
+                        .refreshRates()
 
                 }
 

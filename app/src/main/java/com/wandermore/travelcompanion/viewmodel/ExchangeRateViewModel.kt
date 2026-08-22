@@ -52,11 +52,39 @@ class ExchangeRateViewModel(
     }
 
 
+    /**
+     * Initialises the exchange-rate data.
+     *
+     * If the database does not contain any rates, the repository
+     * will retrieve current rates from the currency service.
+     *
+     * If rates already exist, they are loaded from Room so the
+     * application remains immediately usable offline.
+     */
     fun initialiseRates() {
 
         viewModelScope.launch {
 
             repository.insertInitialRates()
+
+            loadRates()
+
+        }
+
+    }
+
+
+    /**
+     * Retrieves current exchange rates from the currency service.
+     *
+     * If the service is unavailable, existing Room rates are
+     * retained and the application continues to work offline.
+     */
+    fun refreshRates() {
+
+        viewModelScope.launch {
+
+            repository.refreshRates()
 
             loadRates()
 
@@ -152,9 +180,6 @@ class ExchangeRateViewModel(
      * Returns the exchange rate from the user's
      * Home Currency to the supplied currency.
      *
-     * This is used for display and editing in the
-     * Currency Exchange Rates screen.
-     *
      * Database rates are stored as:
      *
      * 1 currency = X NZD
@@ -167,13 +192,8 @@ class ExchangeRateViewModel(
      *
      * Home Currency rate to NZD / target rate to NZD
      *
-     * Example:
-     *
-     * Home Currency = NZD
-     * AUD rate = 1.1970 NZD
-     *
-     * 1 NZD = 1.0 / 1.1970
-     *        = 0.8354 AUD
+     * This is used for display and editing in the
+     * Currency Exchange Rates screen.
      */
     fun getRateFromHomeCurrency(
         currency: String
@@ -316,6 +336,10 @@ class ExchangeRateViewModel(
     }
 
 
+    /**
+     * Diagnostic function for checking the rates and the
+     * date actually stored in Room.
+     */
     fun checkRates() {
 
         viewModelScope.launch {
@@ -327,9 +351,9 @@ class ExchangeRateViewModel(
             rates.forEach {
 
                 println(
-
-                    "RATE CHECK: ${it.currencyCode} = ${it.rateToNZD}"
-
+                    "RATE CHECK: " +
+                            "${it.currencyCode} = ${it.rateToNZD}, " +
+                            "updated = ${it.lastUpdated}"
                 )
 
             }

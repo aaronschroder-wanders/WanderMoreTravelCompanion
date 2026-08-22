@@ -65,6 +65,13 @@ fun ExchangeRateSettingsScreen(
     }
 
 
+    var showRefreshMessage by remember {
+
+        mutableStateOf(false)
+
+    }
+
+
     fun saveCurrentEdit() {
 
         val currency =
@@ -168,27 +175,79 @@ fun ExchangeRateSettingsScreen(
         Text(
 
             text =
-                "Rates are manually maintained from the Home Currency.",
+                "Rates are automatically updated from the currency service.",
 
             style =
                 MaterialTheme.typography.bodyMedium,
 
             modifier = Modifier.padding(
-                bottom = 16.dp
+                bottom = 12.dp
             )
 
         )
 
 
         // =========================================================
-        // UPDATED MESSAGE
+        // REFRESH BUTTON
         // =========================================================
+
+        Button(
+
+            onClick = {
+
+                showRefreshMessage = false
+                showUpdatedMessage = false
+
+                exchangeRateViewModel.refreshRates()
+
+                showRefreshMessage = true
+
+            },
+
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(
+                    bottom = 8.dp
+                )
+
+        ) {
+
+            Text(
+                "Refresh Rates"
+            )
+
+        }
+
+
+        // =========================================================
+        // UPDATED MESSAGES
+        // =========================================================
+
+        if (showRefreshMessage) {
+
+            Text(
+
+                text =
+                    "✓ Rates refreshed",
+
+                style =
+                    MaterialTheme.typography.bodyMedium,
+
+                modifier = Modifier.padding(
+                    bottom = 4.dp
+                )
+
+            )
+
+        }
+
 
         if (showUpdatedMessage) {
 
             Text(
 
-                text = "✓ Rate updated",
+                text =
+                    "✓ Rate updated",
 
                 style =
                     MaterialTheme.typography.bodyMedium,
@@ -403,6 +462,9 @@ fun ExchangeRateSettingsScreen(
                                     onClick = {
 
                                         showUpdatedMessage =
+                                            false
+
+                                        showRefreshMessage =
                                             false
 
                                         editedValue =
