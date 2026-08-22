@@ -56,7 +56,7 @@ class ExchangeRateViewModel(
      * Initialises the exchange-rate data.
      *
      * If the database does not contain any rates, the repository
-     * will retrieve current rates from the currency service.
+     * retrieves current rates from the currency service.
      *
      * If rates already exist, they are loaded from Room so the
      * application remains immediately usable offline.
@@ -75,24 +75,36 @@ class ExchangeRateViewModel(
 
 
     /**
-     * Retrieves current exchange rates from the currency service.
+     * Refreshes exchange rates from the currency service.
      *
-     * If the service is unavailable, existing Room rates are
-     * retained and the application continues to work offline.
+     * Returns true if the refresh was successful.
+     *
+     * Returns false if the currency service could not be reached
+     * or did not return valid rate data.
+     *
+     * Existing Room rates are retained when the refresh fails.
      */
-    fun refreshRates() {
+    fun refreshRates(
+        onResult: (Boolean) -> Unit
+    ) {
 
         viewModelScope.launch {
 
-            repository.refreshRates()
+            val success =
+                repository.refreshRates()
 
             loadRates()
+
+            onResult(success)
 
         }
 
     }
 
 
+    /**
+     * Loads the current exchange rates from Room.
+     */
     fun loadRates() {
 
         viewModelScope.launch {
@@ -127,8 +139,6 @@ class ExchangeRateViewModel(
      * is calculated as:
      *
      * source rate to NZD / Home Currency rate to NZD
-     *
-     * This is used by the expense conversion system.
      */
     fun getRate(
         currency: String
@@ -191,9 +201,6 @@ class ExchangeRateViewModel(
      * is calculated as:
      *
      * Home Currency rate to NZD / target rate to NZD
-     *
-     * This is used for display and editing in the
-     * Currency Exchange Rates screen.
      */
     fun getRateFromHomeCurrency(
         currency: String
@@ -337,8 +344,8 @@ class ExchangeRateViewModel(
 
 
     /**
-     * Diagnostic function for checking the rates and the
-     * date actually stored in Room.
+     * Diagnostic function used during development
+     * to print the current database rates to Logcat.
      */
     fun checkRates() {
 
@@ -351,9 +358,9 @@ class ExchangeRateViewModel(
             rates.forEach {
 
                 println(
-                    "RATE CHECK: " +
-                            "${it.currencyCode} = ${it.rateToNZD}, " +
-                            "updated = ${it.lastUpdated}"
+
+                    "RATE CHECK: ${it.currencyCode} = ${it.rateToNZD}"
+
                 )
 
             }

@@ -58,16 +58,9 @@ fun ExchangeRateSettingsScreen(
     }
 
 
-    var showUpdatedMessage by remember {
+    var refreshMessage by remember {
 
-        mutableStateOf(false)
-
-    }
-
-
-    var showRefreshMessage by remember {
-
-        mutableStateOf(false)
+        mutableStateOf<String?>(null)
 
     }
 
@@ -95,7 +88,8 @@ fun ExchangeRateSettingsScreen(
 
             )
 
-            showUpdatedMessage = true
+            refreshMessage =
+                "✓ Rate updated"
 
         }
 
@@ -175,79 +169,27 @@ fun ExchangeRateSettingsScreen(
         Text(
 
             text =
-                "Rates are automatically updated from the currency service.",
+                "Rates are manually maintained from the Home Currency.",
 
             style =
                 MaterialTheme.typography.bodyMedium,
 
             modifier = Modifier.padding(
-                bottom = 12.dp
+                bottom = 16.dp
             )
 
         )
 
 
         // =========================================================
-        // REFRESH BUTTON
+        // REFRESH MESSAGE
         // =========================================================
 
-        Button(
-
-            onClick = {
-
-                showRefreshMessage = false
-                showUpdatedMessage = false
-
-                exchangeRateViewModel.refreshRates()
-
-                showRefreshMessage = true
-
-            },
-
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(
-                    bottom = 8.dp
-                )
-
-        ) {
-
-            Text(
-                "Refresh Rates"
-            )
-
-        }
-
-
-        // =========================================================
-        // UPDATED MESSAGES
-        // =========================================================
-
-        if (showRefreshMessage) {
+        refreshMessage?.let { message ->
 
             Text(
 
-                text =
-                    "✓ Rates refreshed",
-
-                style =
-                    MaterialTheme.typography.bodyMedium,
-
-                modifier = Modifier.padding(
-                    bottom = 4.dp
-                )
-
-            )
-
-        }
-
-
-        if (showUpdatedMessage) {
-
-            Text(
-
-                text =
-                    "✓ Rate updated",
+                text = message,
 
                 style =
                     MaterialTheme.typography.bodyMedium,
@@ -461,11 +403,8 @@ fun ExchangeRateSettingsScreen(
 
                                     onClick = {
 
-                                        showUpdatedMessage =
-                                            false
-
-                                        showRefreshMessage =
-                                            false
+                                        refreshMessage =
+                                            null
 
                                         editedValue =
                                             "%.4f"
@@ -493,6 +432,49 @@ fun ExchangeRateSettingsScreen(
                 }
 
             }
+
+        }
+
+
+        // =========================================================
+        // REFRESH RATES
+        // =========================================================
+
+        Button(
+
+            onClick = {
+
+                refreshMessage =
+                    null
+
+                exchangeRateViewModel.refreshRates { success ->
+
+                    refreshMessage =
+                        if (success) {
+
+                            "✓ Rates refreshed"
+
+                        } else {
+
+                            "⚠ Unable to refresh rates. Existing rates are being used."
+
+                        }
+
+                }
+
+            },
+
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(
+                    top = 8.dp
+                )
+
+        ) {
+
+            Text(
+                "Refresh Rates"
+            )
 
         }
 
