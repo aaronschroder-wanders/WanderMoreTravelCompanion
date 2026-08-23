@@ -41,6 +41,20 @@ interface ActivityDestinationDao {
         activityId: Long
     ): List<Long>
 
+    // ---------------------------------------------------------
+    // GET ACTIVITY IDS FOR A DESTINATION
+    // ---------------------------------------------------------
+
+    @Query(
+        """
+        SELECT activityId
+        FROM activity_destinations
+        WHERE destinationId = :destinationId
+        """
+    )
+    suspend fun getActivityIdsForDestination(
+        destinationId: Long
+    ): List<Long>
 
     // ---------------------------------------------------------
     // COUNT ACTIVITIES USING A DESTINATION

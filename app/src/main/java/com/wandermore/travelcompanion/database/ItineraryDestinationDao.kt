@@ -41,6 +41,20 @@ interface ItineraryDestinationDao {
         itineraryId: Long
     ): List<Long>
 
+    // ---------------------------------------------------------
+    // GET ITINERARY IDS FOR A DESTINATION
+    // ---------------------------------------------------------
+
+    @Query(
+        """
+        SELECT itineraryId
+        FROM itinerary_destinations
+        WHERE destinationId = :destinationId
+        """
+    )
+    suspend fun getItineraryIdsForDestination(
+        destinationId: Long
+    ): List<Long>
 
     // ---------------------------------------------------------
     // COUNT ITINERARIES USING A DESTINATION
