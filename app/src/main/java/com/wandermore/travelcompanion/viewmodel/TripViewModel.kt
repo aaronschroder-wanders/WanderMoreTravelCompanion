@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.wandermore.travelcompanion.data.repository.TripRepository
 import com.wandermore.travelcompanion.database.ActivityDao
 import com.wandermore.travelcompanion.database.ActivityDestinationDao
+import com.wandermore.travelcompanion.database.ActivityDestinationEntity
 import com.wandermore.travelcompanion.database.ActivityEntity
 import com.wandermore.travelcompanion.database.DestinationDao
 import com.wandermore.travelcompanion.database.DestinationEntity
@@ -44,9 +45,9 @@ class TripViewModel(
 
     private val repository = TripRepository(tripDao)
 
-    // ---------------------------------------------------------
+    // =========================================================
     // TRIP FUNCTIONS
-    // ---------------------------------------------------------
+    // =========================================================
 
     fun getTrips(): Flow<List<Trip>> {
         return repository.getTrips()
@@ -82,9 +83,9 @@ class TripViewModel(
         }
     }
 
-    // ---------------------------------------------------------
+    // =========================================================
     // TRIP STATUS FUNCTIONS
-    // ---------------------------------------------------------
+    // =========================================================
 
     fun startTrip(tripId: Long) {
         viewModelScope.launch {
@@ -139,11 +140,9 @@ class TripViewModel(
         }
     }
 
-    // ---------------------------------------------------------
+    // =========================================================
     // DESTINATION FUNCTIONS
-    //
-    // Destinations are GLOBAL and reusable across trips.
-    // ---------------------------------------------------------
+    // =========================================================
 
     fun getAllActiveDestinations(): Flow<List<DestinationEntity>> {
         return destinationDao.getActiveDestinations()
@@ -186,9 +185,9 @@ class TripViewModel(
         return destinationDao.getDestinationByName(name)
     }
 
-    // ---------------------------------------------------------
+    // =========================================================
     // ADD GLOBAL DESTINATION
-    // ---------------------------------------------------------
+    // =========================================================
 
     fun addDestination(
         name: String,
@@ -229,9 +228,53 @@ class TripViewModel(
         }
     }
 
-    // ---------------------------------------------------------
+    // =========================================================
+    // ADD GLOBAL DESTINATION AND RETURN ITS ID
+    // =========================================================
+
+    fun addDestinationAndReturnId(
+        name: String,
+        onResult: (Long?) -> Unit
+    ) {
+
+        viewModelScope.launch {
+
+            val trimmedName =
+                name.trim()
+
+            if (trimmedName.isBlank()) {
+
+                onResult(null)
+
+                return@launch
+            }
+
+            val existing =
+                destinationDao.getDestinationByName(
+                    trimmedName
+                )
+
+            if (existing != null) {
+
+                onResult(existing.id)
+
+                return@launch
+            }
+
+            val destinationId =
+                destinationDao.insertDestination(
+                    DestinationEntity(
+                        name = trimmedName
+                    )
+                )
+
+            onResult(destinationId)
+        }
+    }
+
+    // =========================================================
     // ADD DESTINATION TO TRIP
-    // ---------------------------------------------------------
+    // =========================================================
 
     suspend fun addDestinationToTrip(
         tripId: Long,
@@ -246,9 +289,9 @@ class TripViewModel(
         )
     }
 
-    // ---------------------------------------------------------
+    // =========================================================
     // REMOVE DESTINATION FROM TRIP
-    // ---------------------------------------------------------
+    // =========================================================
 
     suspend fun removeDestinationFromTrip(
         tripId: Long,
@@ -263,9 +306,9 @@ class TripViewModel(
         cleanupOrphanedDestination(destinationId)
     }
 
-    // ---------------------------------------------------------
+    // =========================================================
     // REMOVE ALL DESTINATIONS FROM TRIP
-    // ---------------------------------------------------------
+    // =========================================================
 
     suspend fun removeAllDestinationsFromTrip(
         tripId: Long
@@ -276,16 +319,18 @@ class TripViewModel(
                 .getDestinationIdsForTrip(tripId)
                 .distinct()
 
-        tripDestinationDao.deleteDestinationsForTrip(tripId)
+        tripDestinationDao.deleteDestinationsForTrip(
+            tripId
+        )
 
         for (destinationId in destinationIds) {
             cleanupOrphanedDestination(destinationId)
         }
     }
 
-    // ---------------------------------------------------------
+    // =========================================================
     // ARCHIVE / UNARCHIVE DESTINATION
-    // ---------------------------------------------------------
+    // =========================================================
 
     fun setDestinationActive(
         destinationId: Long,
@@ -301,14 +346,9 @@ class TripViewModel(
         }
     }
 
-    // ---------------------------------------------------------
+    // =========================================================
     // RENAME DESTINATION
-    //
-    // IMPORTANT:
-    // This updates the existing row rather than creating a new
-    // destination. All existing Activity / Itinerary / Trip
-    // references therefore remain attached to the same ID.
-    // ---------------------------------------------------------
+    // =========================================================
 
     fun updateDestination(
         destination: DestinationEntity
@@ -322,14 +362,9 @@ class TripViewModel(
         }
     }
 
-    // ---------------------------------------------------------
+    // =========================================================
     // DELETE DESTINATION FROM SETTINGS
-    //
-    // A destination can only be manually deleted when there
-    // are NO remaining Activity, Itinerary or Trip references.
-    //
-    // Before checking, stale trip references are cleaned up.
-    // ---------------------------------------------------------
+    // =========================================================
 
     fun deleteDestinationFromSettings(
         destinationId: Long,
@@ -339,7 +374,9 @@ class TripViewModel(
 
         viewModelScope.launch {
 
-            cleanupStaleTripReferences(destinationId)
+            cleanupStaleTripReferences(
+                destinationId
+            )
 
             val activityCount =
                 activityDestinationDao
@@ -412,9 +449,59 @@ class TripViewModel(
         }
     }
 
-    // ---------------------------------------------------------
+    // =========================================================
+    // ACTIVITY DESTINATIONS
+    // =========================================================
+
+    fun getDestinationIdsForActivityFlow(
+        activityId: Long
+    ): Flow<List<Long>> = flow {
+
+        emit(
+            activityDestinationDao
+                .getDestinationIdsForActivity(
+                    activityId
+                )
+        )
+    }
+
+    suspend fun getDestinationIdsForActivity(
+        activityId: Long
+    ): List<Long> {
+        return activityDestinationDao
+            .getDestinationIdsForActivity(
+                activityId
+            )
+    }
+
+    // =========================================================
+    // ITINERARY DESTINATIONS
+    // =========================================================
+
+    fun getDestinationIdsForItineraryFlow(
+        itineraryId: Long
+    ): Flow<List<Long>> = flow {
+
+        emit(
+            itineraryDestinationDao
+                .getDestinationIdsForItinerary(
+                    itineraryId
+                )
+        )
+    }
+
+    suspend fun getDestinationIdsForItinerary(
+        itineraryId: Long
+    ): List<Long> {
+        return itineraryDestinationDao
+            .getDestinationIdsForItinerary(
+                itineraryId
+            )
+    }
+
+    // =========================================================
     // ACTIVITIES FOR DESTINATION
-    // ---------------------------------------------------------
+    // =========================================================
 
     suspend fun getActivitiesForDestination(
         tripId: Long,
@@ -436,9 +523,9 @@ class TripViewModel(
         }
     }
 
-    // ---------------------------------------------------------
+    // =========================================================
     // ITINERARY FOR DESTINATION
-    // ---------------------------------------------------------
+    // =========================================================
 
     suspend fun getItineraryForDestination(
         tripId: Long,
@@ -460,9 +547,9 @@ class TripViewModel(
         }
     }
 
-    // ---------------------------------------------------------
+    // =========================================================
     // EXPENSE FUNCTIONS
-    // ---------------------------------------------------------
+    // =========================================================
 
     fun addExpense(expense: ExpenseEntity) {
 
@@ -497,9 +584,9 @@ class TripViewModel(
         }
     }
 
-    // ---------------------------------------------------------
+    // =========================================================
     // TO DO FUNCTIONS
-    // ---------------------------------------------------------
+    // =========================================================
 
     fun addTodo(todo: TodoEntity) {
 
@@ -544,24 +631,58 @@ class TripViewModel(
         }
     }
 
-    // ---------------------------------------------------------
+    // =========================================================
     // ACTIVITY FUNCTIONS
-    // ---------------------------------------------------------
+    // =========================================================
 
-    fun addActivity(activity: ActivityEntity) {
+    /*
+     * destinationIds:
+     *
+     * null  = use the Activity's Location as the legacy
+     *         automatic destination.
+     *
+     * non-null = use the destinations explicitly selected by
+     *            DestinationSelector.
+     *
+     * This distinction is important because an empty Set means
+     * the user deliberately selected no destinations.
+     */
+
+    fun addActivity(
+        activity: ActivityEntity,
+        destinationIds: Set<Long>? = null
+    ) {
 
         viewModelScope.launch {
 
             val activityId =
-                activityDao.insertActivity(activity)
+                activityDao.insertActivity(
+                    activity
+                )
 
             val savedActivity =
-                activity.copy(id = activityId)
+                activity.copy(
+                    id = activityId
+                )
 
-            syncActivityToDestination(savedActivity)
+            if (destinationIds == null) {
+
+                syncActivityToDestination(
+                    savedActivity
+                )
+
+            } else {
+
+                syncActivityToExplicitDestinations(
+                    savedActivity,
+                    destinationIds
+                )
+            }
 
             if (savedActivity.booked) {
-                syncActivityToItinerary(savedActivity)
+                syncActivityToItinerary(
+                    savedActivity
+                )
             }
         }
     }
@@ -578,7 +699,10 @@ class TripViewModel(
         return activityDao.getActivityById(activityId)
     }
 
-    fun updateActivity(activity: ActivityEntity) {
+    fun updateActivity(
+        activity: ActivityEntity,
+        destinationIds: Set<Long>? = null
+    ) {
 
         viewModelScope.launch {
 
@@ -588,13 +712,32 @@ class TripViewModel(
                         activity.id
                     )
 
-            activityDao.updateActivity(activity)
+            activityDao.updateActivity(
+                activity
+            )
 
-            syncActivityToDestination(activity)
-            syncActivityToItinerary(activity)
+            if (destinationIds == null) {
+
+                syncActivityToDestination(
+                    activity
+                )
+
+            } else {
+
+                syncActivityToExplicitDestinations(
+                    activity,
+                    destinationIds
+                )
+            }
+
+            syncActivityToItinerary(
+                activity
+            )
 
             for (destinationId in oldDestinationIds) {
-                cleanupOrphanedDestination(destinationId)
+                cleanupOrphanedDestination(
+                    destinationId
+                )
             }
         }
     }
@@ -616,15 +759,17 @@ class TripViewModel(
 
             val oldItineraryDestinationIds =
                 if (existingItinerary != null) {
+
                     itineraryDestinationDao
                         .getDestinationIdsForItinerary(
                             existingItinerary.id
                         )
+
                 } else {
+
                     emptyList()
                 }
 
-            // Remove the automatically-created itinerary first.
             if (existingItinerary != null) {
 
                 itineraryDestinationDao
@@ -637,27 +782,98 @@ class TripViewModel(
                 )
             }
 
-            // Remove the Activity's destination references.
             activityDestinationDao
                 .deleteDestinationsForActivity(
                     activity.id
                 )
 
-            // Finally remove the Activity itself.
-            activityDao.deleteActivity(activity)
+            activityDao.deleteActivity(
+                activity
+            )
 
-            // Clean every destination that may now be orphaned.
-            for (destinationId in
-            (oldActivityDestinationIds + oldItineraryDestinationIds).distinct()
+            for (
+            destinationId in
+            (
+                    oldActivityDestinationIds +
+                            oldItineraryDestinationIds
+                    ).distinct()
             ) {
-                cleanupOrphanedDestination(destinationId)
+                cleanupOrphanedDestination(
+                    destinationId
+                )
             }
         }
     }
 
-    // ---------------------------------------------------------
+    // =========================================================
+    // ACTIVITY → EXPLICIT DESTINATIONS
+    // =========================================================
+
+    private suspend fun syncActivityToExplicitDestinations(
+        activity: ActivityEntity,
+        destinationIds: Set<Long>
+    ) {
+
+        val oldDestinationIds =
+            activityDestinationDao
+                .getDestinationIdsForActivity(
+                    activity.id
+                )
+
+        activityDestinationDao
+            .deleteDestinationsForActivity(
+                activity.id
+            )
+
+        for (destinationId in destinationIds.distinct()) {
+
+            val destination =
+                destinationDao.getDestinationById(
+                    destinationId
+                )
+
+            if (destination != null) {
+
+                activityDestinationDao
+                    .insertActivityDestination(
+                        ActivityDestinationEntity(
+                            activityId =
+                                activity.id,
+                            destinationId =
+                                destinationId
+                        )
+                    )
+
+                tripDestinationDao
+                    .insertTripDestination(
+                        TripDestinationEntity(
+                            tripId =
+                                activity.tripId,
+                            destinationId =
+                                destinationId
+                        )
+                    )
+            }
+        }
+
+        for (oldDestinationId in oldDestinationIds) {
+
+            if (
+                oldDestinationId !in
+                destinationIds
+            ) {
+                cleanupOrphanedDestination(
+                    oldDestinationId
+                )
+            }
+        }
+    }
+
+    // =========================================================
     // ACTIVITY → DESTINATION
-    // ---------------------------------------------------------
+    //
+    // LEGACY LOCATION FALLBACK
+    // =========================================================
 
     private suspend fun syncActivityToDestination(
         activity: ActivityEntity
@@ -677,19 +893,26 @@ class TripViewModel(
         val location =
             activity.location
                 ?.trim()
-                ?.takeIf { it.isNotBlank() }
+                ?.takeIf {
+                    it.isNotBlank()
+                }
 
         if (location == null) {
 
             for (destinationId in oldDestinationIds) {
-                cleanupOrphanedDestination(destinationId)
+
+                cleanupOrphanedDestination(
+                    destinationId
+                )
             }
 
             return
         }
 
         val existingDestination =
-            destinationDao.getDestinationByName(location)
+            destinationDao.getDestinationByName(
+                location
+            )
 
         val destinationId =
             existingDestination?.id
@@ -701,22 +924,30 @@ class TripViewModel(
 
         activityDestinationDao
             .insertActivityDestination(
-                com.wandermore.travelcompanion.database
-                    .ActivityDestinationEntity(
-                        activityId = activity.id,
-                        destinationId = destinationId
-                    )
+                ActivityDestinationEntity(
+                    activityId =
+                        activity.id,
+                    destinationId =
+                        destinationId
+                )
             )
 
-        tripDestinationDao.insertTripDestination(
-            TripDestinationEntity(
-                tripId = activity.tripId,
-                destinationId = destinationId
+        tripDestinationDao
+            .insertTripDestination(
+                TripDestinationEntity(
+                    tripId =
+                        activity.tripId,
+                    destinationId =
+                        destinationId
+                )
             )
-        )
 
         for (oldDestinationId in oldDestinationIds) {
-            if (oldDestinationId != destinationId) {
+
+            if (
+                oldDestinationId !=
+                destinationId
+            ) {
                 cleanupOrphanedDestination(
                     oldDestinationId
                 )
@@ -724,9 +955,17 @@ class TripViewModel(
         }
     }
 
-    // ---------------------------------------------------------
+    // =========================================================
     // ACTIVITY → ITINERARY
-    // ---------------------------------------------------------
+    //
+    // IMPORTANT:
+    //
+    // When an Activity has explicit destinations, its linked
+    // itinerary item receives those same destinations.
+    //
+    // We therefore do NOT derive the itinerary destination
+    // from Activity.location here.
+    // =========================================================
 
     private suspend fun syncActivityToItinerary(
         activity: ActivityEntity
@@ -757,7 +996,10 @@ class TripViewModel(
                 )
 
                 for (destinationId in oldDestinationIds) {
-                    cleanupOrphanedDestination(destinationId)
+
+                    cleanupOrphanedDestination(
+                        destinationId
+                    )
                 }
             }
 
@@ -784,7 +1026,10 @@ class TripViewModel(
                 )
 
                 for (destinationId in oldDestinationIds) {
-                    cleanupOrphanedDestination(destinationId)
+
+                    cleanupOrphanedDestination(
+                        destinationId
+                    )
                 }
             }
 
@@ -795,29 +1040,47 @@ class TripViewModel(
             if (existingItinerary == null) {
 
                 ItineraryEntity(
-                    tripId = activity.tripId,
-                    date = activity.date,
-                    time = activity.startTime,
-                    title = activity.name,
-                    type = activity.type,
-                    location = activity.location,
-                    notes = activity.notes,
-                    activityId = activity.id,
-                    booked = true
+                    tripId =
+                        activity.tripId,
+                    date =
+                        activity.date,
+                    time =
+                        activity.startTime,
+                    title =
+                        activity.name,
+                    type =
+                        activity.type,
+                    location =
+                        activity.location,
+                    notes =
+                        activity.notes,
+                    activityId =
+                        activity.id,
+                    booked =
+                        true
                 )
 
             } else {
 
                 existingItinerary.copy(
-                    tripId = activity.tripId,
-                    date = activity.date,
-                    time = activity.startTime,
-                    title = activity.name,
-                    type = activity.type,
-                    location = activity.location,
-                    notes = activity.notes,
-                    activityId = activity.id,
-                    booked = true
+                    tripId =
+                        activity.tripId,
+                    date =
+                        activity.date,
+                    time =
+                        activity.startTime,
+                    title =
+                        activity.name,
+                    type =
+                        activity.type,
+                    location =
+                        activity.location,
+                    notes =
+                        activity.notes,
+                    activityId =
+                        activity.id,
+                    booked =
+                        true
                 )
             }
 
@@ -828,10 +1091,14 @@ class TripViewModel(
                     itineraryItem
                 )
 
-            syncItineraryToDestination(
+            val savedItinerary =
                 itineraryItem.copy(
                     id = itineraryId
                 )
+
+            syncItineraryToActivityDestinations(
+                savedItinerary,
+                activity.id
             )
 
         } else {
@@ -846,19 +1113,94 @@ class TripViewModel(
                 itineraryItem
             )
 
-            syncItineraryToDestination(
-                itineraryItem
+            syncItineraryToActivityDestinations(
+                itineraryItem,
+                activity.id
             )
 
             for (destinationId in oldDestinationIds) {
-                cleanupOrphanedDestination(destinationId)
+
+                cleanupOrphanedDestination(
+                    destinationId
+                )
             }
         }
     }
 
-    // ---------------------------------------------------------
+    // =========================================================
+    // ACTIVITY DESTINATIONS → ITINERARY DESTINATIONS
+    // =========================================================
+
+    private suspend fun syncItineraryToActivityDestinations(
+        itinerary: ItineraryEntity,
+        activityId: Long
+    ) {
+
+        val oldDestinationIds =
+            itineraryDestinationDao
+                .getDestinationIdsForItinerary(
+                    itinerary.id
+                )
+
+        val activityDestinationIds =
+            activityDestinationDao
+                .getDestinationIdsForActivity(
+                    activityId
+                )
+
+        itineraryDestinationDao
+            .deleteDestinationsForItinerary(
+                itinerary.id
+            )
+
+        for (destinationId in activityDestinationIds.distinct()) {
+
+            val destination =
+                destinationDao.getDestinationById(
+                    destinationId
+                )
+
+            if (destination != null) {
+
+                itineraryDestinationDao
+                    .insertItineraryDestination(
+                        ItineraryDestinationEntity(
+                            itineraryId =
+                                itinerary.id,
+                            destinationId =
+                                destinationId
+                        )
+                    )
+
+                tripDestinationDao
+                    .insertTripDestination(
+                        TripDestinationEntity(
+                            tripId =
+                                itinerary.tripId,
+                            destinationId =
+                                destinationId
+                        )
+                    )
+            }
+        }
+
+        for (oldDestinationId in oldDestinationIds) {
+
+            if (
+                oldDestinationId !in
+                activityDestinationIds
+            ) {
+
+                cleanupOrphanedDestination(
+                    oldDestinationId
+                )
+            }
+        }
+    }
+
+    // =========================================================
     // TRIP ESTIMATE FUNCTIONS
-    // ---------------------------------------------------------
+    // =========================================================
 
     fun addTripEstimate(
         estimate: TripEstimateEntity,
@@ -892,7 +1234,9 @@ class TripViewModel(
     fun getTripEstimatesForTrip(
         tripId: Long
     ): Flow<List<TripEstimateEntity>> {
-        return tripEstimateDao.getEstimatesForTrip(tripId)
+        return tripEstimateDao.getEstimatesForTrip(
+            tripId
+        )
     }
 
     suspend fun getTripEstimate(
@@ -918,6 +1262,7 @@ class TripViewModel(
     ) {
 
         viewModelScope.launch {
+
             tripEstimateDao.updateEstimate(
                 estimate
             )
@@ -929,6 +1274,7 @@ class TripViewModel(
     ) {
 
         viewModelScope.launch {
+
             tripEstimateDao.deleteEstimate(
                 estimate
             )
@@ -940,15 +1286,16 @@ class TripViewModel(
     ) {
 
         viewModelScope.launch {
+
             tripEstimateDao.deleteEstimatesForTrip(
                 tripId
             )
         }
     }
 
-    // ---------------------------------------------------------
+    // =========================================================
     // ITINERARY FUNCTIONS
-    // ---------------------------------------------------------
+    // =========================================================
 
     fun addItinerary(
         itinerary: ItineraryEntity
@@ -1022,13 +1369,20 @@ class TripViewModel(
 
                     val updatedActivity =
                         existingActivity.copy(
-                            name = itinerary.title,
-                            type = itinerary.type,
-                            date = itinerary.date,
-                            startTime = itinerary.time,
-                            location = itinerary.location,
-                            notes = itinerary.notes,
-                            booked = itinerary.booked
+                            name =
+                                itinerary.title,
+                            type =
+                                itinerary.type,
+                            date =
+                                itinerary.date,
+                            startTime =
+                                itinerary.time,
+                            location =
+                                itinerary.location,
+                            notes =
+                                itinerary.notes,
+                            booked =
+                                itinerary.booked
                         )
 
                     val oldActivityDestinationIds =
@@ -1041,6 +1395,13 @@ class TripViewModel(
                         updatedActivity
                     )
 
+                    /*
+                     * A manually edited itinerary item still uses
+                     * its own destination/location workflow.
+                     *
+                     * This preserves the existing behaviour for
+                     * standalone itinerary items.
+                     */
                     syncActivityToDestination(
                         updatedActivity
                     )
@@ -1061,6 +1422,7 @@ class TripViewModel(
             }
 
             for (destinationId in oldDestinationIds) {
+
                 cleanupOrphanedDestination(
                     destinationId
                 )
@@ -1113,6 +1475,7 @@ class TripViewModel(
                     destinationId
                     in activityDestinationIds
                     ) {
+
                         cleanupOrphanedDestination(
                             destinationId
                         )
@@ -1130,6 +1493,7 @@ class TripViewModel(
             )
 
             for (destinationId in oldDestinationIds) {
+
                 cleanupOrphanedDestination(
                     destinationId
                 )
@@ -1137,9 +1501,13 @@ class TripViewModel(
         }
     }
 
-    // ---------------------------------------------------------
+    // =========================================================
     // ITINERARY → DESTINATION
-    // ---------------------------------------------------------
+    //
+    // LEGACY LOCATION FALLBACK
+    //
+    // Used for manually-created standalone itinerary items.
+    // =========================================================
 
     private suspend fun syncItineraryToDestination(
         itinerary: ItineraryEntity
@@ -1159,11 +1527,14 @@ class TripViewModel(
         val location =
             itinerary.location
                 ?.trim()
-                ?.takeIf { it.isNotBlank() }
+                ?.takeIf {
+                    it.isNotBlank()
+                }
 
         if (location == null) {
 
             for (destinationId in oldDestinationIds) {
+
                 cleanupOrphanedDestination(
                     destinationId
                 )
@@ -1188,20 +1559,30 @@ class TripViewModel(
         itineraryDestinationDao
             .insertItineraryDestination(
                 ItineraryDestinationEntity(
-                    itineraryId = itinerary.id,
-                    destinationId = destinationId
+                    itineraryId =
+                        itinerary.id,
+                    destinationId =
+                        destinationId
                 )
             )
 
-        tripDestinationDao.insertTripDestination(
-            TripDestinationEntity(
-                tripId = itinerary.tripId,
-                destinationId = destinationId
+        tripDestinationDao
+            .insertTripDestination(
+                TripDestinationEntity(
+                    tripId =
+                        itinerary.tripId,
+                    destinationId =
+                        destinationId
+                )
             )
-        )
 
         for (oldDestinationId in oldDestinationIds) {
-            if (oldDestinationId != destinationId) {
+
+            if (
+                oldDestinationId !=
+                destinationId
+            ) {
+
                 cleanupOrphanedDestination(
                     oldDestinationId
                 )
@@ -1209,17 +1590,9 @@ class TripViewModel(
         }
     }
 
-    // ---------------------------------------------------------
+    // =========================================================
     // REMOVE STALE TRIP REFERENCES
-    //
-    // A trip_destinations row is only meaningful when that
-    // destination is actually used by an Activity or Itinerary
-    // belonging to the trip.
-    //
-    // This repairs the exact situation where an Activity has
-    // been deleted but its old trip/destination association
-    // remains behind.
-    // ---------------------------------------------------------
+    // =========================================================
 
     private suspend fun cleanupStaleTripReferences(
         destinationId: Long
@@ -1285,21 +1658,14 @@ class TripViewModel(
         }
     }
 
-    // ---------------------------------------------------------
+    // =========================================================
     // GLOBAL ORPHAN DESTINATION CLEANUP
-    //
-    // A destination is considered genuinely in use only when
-    // there is an Activity or Itinerary reference.
-    //
-    // Stale trip-only references are removed first.
-    // ---------------------------------------------------------
+    // =========================================================
 
     private suspend fun cleanupOrphanedDestination(
         destinationId: Long
     ) {
 
-        // First remove trip references that no longer represent
-        // real Activity/Itinerary usage.
         cleanupStaleTripReferences(
             destinationId
         )
@@ -1324,7 +1690,6 @@ class TripViewModel(
             return
         }
 
-        // At this point there should be no trip references left.
         val tripIds =
             tripDestinationDao
                 .getTripIdsForDestination(

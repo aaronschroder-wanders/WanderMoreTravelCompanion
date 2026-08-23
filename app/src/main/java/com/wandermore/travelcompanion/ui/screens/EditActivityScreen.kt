@@ -30,18 +30,22 @@ import androidx.compose.material3.TimePickerDialog
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.wandermore.travelcompanion.database.ActivityEntity
+import com.wandermore.travelcompanion.ui.components.DestinationSelector
 import com.wandermore.travelcompanion.viewmodel.ExchangeRateViewModel
 import com.wandermore.travelcompanion.viewmodel.TripViewModel
+import kotlinx.coroutines.launch
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
@@ -60,9 +64,6 @@ fun EditActivityScreen(
 
     // =========================================================
     // LOAD TRIP
-    //
-    // The trip contains the permanent home currency that
-    // belongs to this activity.
     // =========================================================
 
     val tripState by tripViewModel
@@ -73,9 +74,61 @@ fun EditActivityScreen(
 
     val trip = tripState ?: return
 
-    // ---------------------------------------------------------
+    // =========================================================
+    // LOAD DESTINATIONS FOR THIS TRIP
+    // =========================================================
+
+    val destinations by tripViewModel
+        .getDestinationsForTrip(activity.tripId)
+        .collectAsState(
+            initial = emptyList()
+        )
+
+    // =========================================================
+    // EXISTING ACTIVITY DESTINATIONS
+    //
+    // We deliberately use a separate loading flag because an
+    // empty set is a valid selection. It means the user has
+    // deliberately chosen no destinations.
+    // =========================================================
+
+    var selectedDestinationIds by remember(
+        activity.id
+    ) {
+        mutableStateOf<Set<Long>>(emptySet())
+    }
+
+    var destinationsLoaded by remember(
+        activity.id
+    ) {
+        mutableStateOf(false)
+    }
+
+    LaunchedEffect(activity.id) {
+
+        selectedDestinationIds =
+            tripViewModel
+                .getDestinationIdsForActivity(
+                    activity.id
+                )
+                .toSet()
+
+        destinationsLoaded = true
+    }
+
+    // =========================================================
+    // COROUTINE SCOPE
+    //
+    // Used when a new destination is created so that it can
+    // immediately be associated with this trip and selected.
+    // =========================================================
+
+    val coroutineScope =
+        rememberCoroutineScope()
+
+    // =========================================================
     // FORM STATE
-    // ---------------------------------------------------------
+    // =========================================================
 
     var name by remember {
         mutableStateOf(activity.name)
@@ -180,7 +233,7 @@ fun EditActivityScreen(
             null
         }
 
-    // ---------------------------------------------------------
+    // =========================================================
     // TIME NORMALISATION
     //
     // Accepts:
@@ -190,7 +243,7 @@ fun EditActivityScreen(
     // 09:00 -> 09:00
     // 1430  -> 14:30
     // 14:30 -> 14:30
-    // ---------------------------------------------------------
+    // =========================================================
 
     fun normaliseTime(input: String): String? {
 
@@ -303,9 +356,9 @@ fun EditActivityScreen(
             )
     ) {
 
-        // -----------------------------------------------------
+        // =====================================================
         // TITLE
-        // -----------------------------------------------------
+        // =====================================================
 
         Text(
             text = "Edit Activity",
@@ -334,9 +387,9 @@ fun EditActivityScreen(
             modifier = Modifier.height(12.dp)
         )
 
-        // -----------------------------------------------------
+        // =====================================================
         // SCROLLABLE FORM
-        // -----------------------------------------------------
+        // =====================================================
 
         Column(
             modifier = Modifier
@@ -349,9 +402,9 @@ fun EditActivityScreen(
                 )
         ) {
 
-            // -------------------------------------------------
+            // =================================================
             // NAME
-            // -------------------------------------------------
+            // =================================================
 
             OutlinedTextField(
                 value = name,
@@ -370,9 +423,9 @@ fun EditActivityScreen(
                 modifier = Modifier.height(10.dp)
             )
 
-            // -------------------------------------------------
+            // =================================================
             // TYPE + LOCATION
-            // -------------------------------------------------
+            // =================================================
 
             Row(
                 modifier =
@@ -460,9 +513,73 @@ fun EditActivityScreen(
                 modifier = Modifier.height(10.dp)
             )
 
-            // -------------------------------------------------
+            // =================================================
+            // DESTINATION
+            // =================================================
+
+            if (destinationsLoaded) {
+
+                DestinationSelector(
+                    destinations =
+                        destinations,
+
+                    selectedDestinationIds =
+                        selectedDestinationIds,
+
+                    onSelectionChanged = {
+                        selectedDestinationIds =
+                            it
+                    },
+
+                    onAddDestination = {
+                            destinationName,
+                            onResult ->
+
+                        tripViewModel.addDestination(
+                            destinationName
+                        ) { success ->
+
+                            if (success) {
+
+                                coroutineScope.launch {
+
+                                    val newDestination =
+                                        tripViewModel
+                                            .getDestinationByName(
+                                                destinationName
+                                            )
+
+                                    if (
+                                        newDestination !=
+                                        null
+                                    ) {
+
+                                        tripViewModel
+                                            .addDestinationToTrip(
+                                                activity.tripId,
+                                                newDestination.id
+                                            )
+
+                                        selectedDestinationIds =
+                                            selectedDestinationIds +
+                                                    newDestination.id
+                                    }
+                                }
+                            }
+
+                            onResult(success)
+                        }
+                    }
+                )
+            }
+
+            Spacer(
+                modifier = Modifier.height(10.dp)
+            )
+
+            // =================================================
             // ESTIMATED COST + CURRENCY
-            // -------------------------------------------------
+            // =================================================
 
             Row(
                 modifier =
@@ -556,9 +673,9 @@ fun EditActivityScreen(
                 modifier = Modifier.height(8.dp)
             )
 
-            // -------------------------------------------------
+            // =================================================
             // BOOKED
-            // -------------------------------------------------
+            // =================================================
 
             Row(
                 modifier =
@@ -585,9 +702,9 @@ fun EditActivityScreen(
                 modifier = Modifier.height(8.dp)
             )
 
-            // -------------------------------------------------
+            // =================================================
             // WEBSITE
-            // -------------------------------------------------
+            // =================================================
 
             OutlinedTextField(
                 value = website,
@@ -606,9 +723,9 @@ fun EditActivityScreen(
                 modifier = Modifier.height(10.dp)
             )
 
-            // -------------------------------------------------
+            // =================================================
             // DATE + START TIME
-            // -------------------------------------------------
+            // =================================================
 
             Row(
                 modifier =
@@ -617,7 +734,9 @@ fun EditActivityScreen(
                     Arrangement.spacedBy(8.dp)
             ) {
 
+                // -------------------------------------------------
                 // DATE
+                // -------------------------------------------------
 
                 OutlinedTextField(
                     value = date,
@@ -653,7 +772,9 @@ fun EditActivityScreen(
                         Modifier.weight(1f)
                 )
 
+                // -------------------------------------------------
                 // START TIME
+                // -------------------------------------------------
 
                 OutlinedTextField(
                     value =
@@ -706,9 +827,9 @@ fun EditActivityScreen(
                 modifier = Modifier.height(10.dp)
             )
 
-            // -------------------------------------------------
+            // =================================================
             // NOTES
-            // -------------------------------------------------
+            // =================================================
 
             OutlinedTextField(
                 value = notes,
@@ -729,9 +850,9 @@ fun EditActivityScreen(
             )
         }
 
-        // -----------------------------------------------------
+        // =====================================================
         // FIXED BOTTOM BUTTONS
-        // -----------------------------------------------------
+        // =====================================================
 
         Row(
             modifier = Modifier
@@ -744,7 +865,9 @@ fun EditActivityScreen(
                 Arrangement.spacedBy(8.dp)
         ) {
 
+            // -------------------------------------------------
             // BACK
+            // -------------------------------------------------
 
             Button(
                 onClick = onBack,
@@ -754,7 +877,9 @@ fun EditActivityScreen(
                 Text("Back")
             }
 
+            // -------------------------------------------------
             // DELETE
+            // -------------------------------------------------
 
             Button(
                 onClick = {
@@ -767,32 +892,31 @@ fun EditActivityScreen(
                 Text("Delete")
             }
 
+            // -------------------------------------------------
             // SAVE
+            // -------------------------------------------------
 
             Button(
                 onClick = {
 
-                    if (name.isNotBlank()) {
+                    if (
+                        name.isNotBlank() &&
+                        destinationsLoaded
+                    ) {
 
-                        // -------------------------------------------------
+                        // =================================================
                         // CALCULATE CONVERSION
                         //
-                        // The database stores:
+                        // Database rates are stored as:
                         //
-                        // 1 unit of activity currency = X NZD
+                        // 1 unit of currency = X NZD
                         //
-                        // Convert:
-                        //
-                        // activity currency
+                        // Activity currency
                         //        ↓
                         //       NZD
                         //        ↓
-                        // trip home currency
-                        //
-                        // This deliberately does NOT use getRate(),
-                        // because getRate() uses the user's current
-                        // global Home Currency.
-                        // -------------------------------------------------
+                        // Trip home currency
+                        // =================================================
 
                         val convertedAmount =
                             if (parsedCost != null) {
@@ -883,8 +1007,20 @@ fun EditActivityScreen(
                                     startTime
                             )
 
+                        // =================================================
+                        // IMPORTANT
+                        //
+                        // Passing selectedDestinationIds, including an
+                        // empty set, tells TripViewModel that the user has
+                        // explicitly managed destinations.
+                        //
+                        // Therefore Location will NOT automatically create
+                        // a destination.
+                        // =================================================
+
                         tripViewModel.updateActivity(
-                            updatedActivity
+                            updatedActivity,
+                            selectedDestinationIds
                         )
 
                         onActivityUpdated()
@@ -898,9 +1034,9 @@ fun EditActivityScreen(
         }
     }
 
-    // ---------------------------------------------------------
+    // =========================================================
     // DATE PICKER
-    // ---------------------------------------------------------
+    // =========================================================
 
     if (showDatePicker) {
 
@@ -975,9 +1111,9 @@ fun EditActivityScreen(
         }
     }
 
-    // ---------------------------------------------------------
+    // =========================================================
     // TIME PICKER
-    // ---------------------------------------------------------
+    // =========================================================
 
     if (showTimePicker) {
 
@@ -1025,9 +1161,9 @@ fun EditActivityScreen(
         }
     }
 
-    // ---------------------------------------------------------
+    // =========================================================
     // DELETE CONFIRMATION
-    // ---------------------------------------------------------
+    // =========================================================
 
     if (showDeleteConfirmation) {
 
