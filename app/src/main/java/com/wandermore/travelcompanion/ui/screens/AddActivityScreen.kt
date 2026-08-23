@@ -104,10 +104,6 @@ fun AddActivityScreen(
         mutableStateOf("")
     }
 
-    var location by remember {
-        mutableStateOf("")
-    }
-
     var estimatedCost by remember {
         mutableStateOf("")
     }
@@ -514,31 +510,6 @@ fun AddActivityScreen(
                             }
                         }
                 }
-            )
-
-            Spacer(
-                modifier =
-                    Modifier.height(10.dp)
-            )
-
-            // =================================================
-            // LOCATION
-            //
-            // Kept as descriptive information.
-            // It is NO LONGER used to determine Destination.
-            // =================================================
-
-            OutlinedTextField(
-                value = location,
-                onValueChange = {
-                    location = it
-                },
-                label = {
-                    Text("Location")
-                },
-                modifier =
-                    Modifier.fillMaxWidth(),
-                singleLine = true
             )
 
             Spacer(
@@ -1018,6 +989,10 @@ fun AddActivityScreen(
 
                         // -----------------------------------------
                         // CREATE ACTIVITY
+                        //
+                        // Location is intentionally not collected
+                        // by the UI anymore. The legacy database
+                        // field remains available for existing data.
                         // -----------------------------------------
 
                         val activity =
@@ -1033,11 +1008,7 @@ fun AddActivityScreen(
                                     type,
 
                                 location =
-                                    location
-                                        .trim()
-                                        .ifBlank {
-                                            null
-                                        },
+                                    null,
 
                                 estimatedCost =
                                     parsedCost,

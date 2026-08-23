@@ -76,6 +76,10 @@ fun EditActivityScreen(
 
     // =========================================================
     // LOAD DESTINATIONS FOR THIS TRIP
+    //
+    // Destinations are currently trip-specific.
+    // Only destinations already associated with this trip
+    // are offered by the selector.
     // =========================================================
 
     val destinations by tripViewModel
@@ -87,9 +91,9 @@ fun EditActivityScreen(
     // =========================================================
     // EXISTING ACTIVITY DESTINATIONS
     //
-    // We deliberately use a separate loading flag because an
-    // empty set is a valid selection. It means the user has
-    // deliberately chosen no destinations.
+    // An empty set is valid. Therefore we use a separate
+    // loading flag so that an empty selection is not confused
+    // with destinations that have not loaded yet.
     // =========================================================
 
     var selectedDestinationIds by remember(
@@ -137,6 +141,14 @@ fun EditActivityScreen(
     var type by remember {
         mutableStateOf(activity.type)
     }
+
+    // ---------------------------------------------------------
+    // LOCATION
+    //
+    // Retained internally for backwards compatibility and
+    // existing database records, but deliberately hidden from
+    // the user interface.
+    // ---------------------------------------------------------
 
     var location by remember {
         mutableStateOf(activity.location ?: "")
@@ -192,12 +204,20 @@ fun EditActivityScreen(
         mutableStateOf(false)
     }
 
+    // =========================================================
+    // ACTIVITY TYPES
+    // =========================================================
+
     val activityTypes = listOf(
         "Attraction",
         "Tour",
         "Activity",
         "Other"
     )
+
+    // =========================================================
+    // CURRENCIES
+    // =========================================================
 
     val currencies = listOf(
         "NZD",
@@ -219,17 +239,28 @@ fun EditActivityScreen(
         mutableStateOf(false)
     }
 
+    // =========================================================
+    // PARSED COST
+    // =========================================================
+
     val parsedCost =
         estimatedCost.toDoubleOrNull()
 
+    // =========================================================
+    // PARSED DATE
+    // =========================================================
+
     val parsedDate =
         try {
+
             if (date.isBlank()) {
                 null
             } else {
                 LocalDate.parse(date)
             }
+
         } catch (_: Exception) {
+
             null
         }
 
@@ -237,15 +268,18 @@ fun EditActivityScreen(
     // TIME NORMALISATION
     //
     // Accepts:
-    // 9     -> 09:00
-    // 900   -> 09:00
-    // 0900  -> 09:00
-    // 09:00 -> 09:00
-    // 1430  -> 14:30
-    // 14:30 -> 14:30
+    // 9      -> 09:00
+    // 09     -> 09:00
+    // 900    -> 09:00
+    // 0900   -> 09:00
+    // 09:00  -> 09:00
+    // 1430   -> 14:30
+    // 14:30  -> 14:30
     // =========================================================
 
-    fun normaliseTime(input: String): String? {
+    fun normaliseTime(
+        input: String
+    ): String? {
 
         val value =
             input.trim()
@@ -363,28 +397,33 @@ fun EditActivityScreen(
         Text(
             text = "Edit Activity",
             style =
-                MaterialTheme.typography.headlineMedium
+                MaterialTheme.typography
+                    .headlineMedium
         )
 
         Spacer(
-            modifier = Modifier.height(4.dp)
+            modifier =
+                Modifier.height(4.dp)
         )
 
         Text(
             text = trip.name,
             style =
-                MaterialTheme.typography.titleMedium
+                MaterialTheme.typography
+                    .titleMedium
         )
 
         Text(
             text =
                 "Home currency: ${trip.homeCurrency}",
             style =
-                MaterialTheme.typography.bodyMedium
+                MaterialTheme.typography
+                    .bodyMedium
         )
 
         Spacer(
-            modifier = Modifier.height(12.dp)
+            modifier =
+                Modifier.height(12.dp)
         )
 
         // =====================================================
@@ -394,6 +433,7 @@ fun EditActivityScreen(
         Column(
             modifier = Modifier
                 .weight(1f)
+                .fillMaxWidth()
                 .verticalScroll(
                     rememberScrollState()
                 )
@@ -408,113 +448,109 @@ fun EditActivityScreen(
 
             OutlinedTextField(
                 value = name,
+
                 onValueChange = {
                     name = it
                 },
+
                 label = {
                     Text("Name")
                 },
+
                 modifier =
                     Modifier.fillMaxWidth(),
+
                 singleLine = true
             )
 
             Spacer(
-                modifier = Modifier.height(10.dp)
+                modifier =
+                    Modifier.height(10.dp)
             )
 
             // =================================================
-            // TYPE + LOCATION
+            // TYPE
             // =================================================
 
-            Row(
+            ExposedDropdownMenuBox(
+                expanded =
+                    typeExpanded,
+
+                onExpandedChange = {
+                    typeExpanded =
+                        !typeExpanded
+                },
+
                 modifier =
-                    Modifier.fillMaxWidth(),
-                horizontalArrangement =
-                    Arrangement.spacedBy(8.dp)
+                    Modifier.fillMaxWidth()
             ) {
 
-                ExposedDropdownMenuBox(
-                    expanded = typeExpanded,
-                    onExpandedChange = {
-                        typeExpanded =
-                            !typeExpanded
+                OutlinedTextField(
+                    value = type,
+
+                    onValueChange = {},
+
+                    readOnly = true,
+
+                    label = {
+                        Text("Type")
                     },
+
+                    trailingIcon = {
+
+                        ExposedDropdownMenuDefaults
+                            .TrailingIcon(
+                                expanded =
+                                    typeExpanded
+                            )
+                    },
+
                     modifier =
-                        Modifier.weight(1f)
+                        Modifier
+                            .menuAnchor()
+                            .fillMaxWidth()
+                )
+
+                ExposedDropdownMenu(
+                    expanded =
+                        typeExpanded,
+
+                    onDismissRequest = {
+                        typeExpanded =
+                            false
+                    }
                 ) {
 
-                    OutlinedTextField(
-                        value = type,
-                        onValueChange = {},
-                        readOnly = true,
-                        label = {
-                            Text("Type")
-                        },
-                        trailingIcon = {
-                            ExposedDropdownMenuDefaults
-                                .TrailingIcon(
-                                    expanded =
-                                        typeExpanded
+                    activityTypes.forEach {
+                            activityType ->
+
+                        DropdownMenuItem(
+                            text = {
+                                Text(
+                                    activityType
                                 )
-                        },
-                        modifier =
-                            Modifier
-                                .menuAnchor()
-                                .fillMaxWidth()
-                    )
+                            },
 
-                    ExposedDropdownMenu(
-                        expanded =
-                            typeExpanded,
-                        onDismissRequest = {
-                            typeExpanded =
-                                false
-                        }
-                    ) {
+                            onClick = {
 
-                        activityTypes.forEach {
-                                activityType ->
+                                type =
+                                    activityType
 
-                            DropdownMenuItem(
-                                text = {
-                                    Text(
-                                        activityType
-                                    )
-                                },
-                                onClick = {
-
-                                    type =
-                                        activityType
-
-                                    typeExpanded =
-                                        false
-                                }
-                            )
-                        }
+                                typeExpanded =
+                                    false
+                            }
+                        )
                     }
                 }
-
-                OutlinedTextField(
-                    value = location,
-                    onValueChange = {
-                        location = it
-                    },
-                    label = {
-                        Text("Location")
-                    },
-                    modifier =
-                        Modifier.weight(1f),
-                    singleLine = true
-                )
             }
 
             Spacer(
-                modifier = Modifier.height(10.dp)
+                modifier =
+                    Modifier.height(10.dp)
             )
 
             // =================================================
-            // DESTINATION
+            // DESTINATIONS
             // =================================================
 
             if (destinationsLoaded) {
@@ -527,8 +563,10 @@ fun EditActivityScreen(
                         selectedDestinationIds,
 
                     onSelectionChanged = {
+                            updatedSelection ->
+
                         selectedDestinationIds =
-                            it
+                            updatedSelection
                     },
 
                     onAddDestination = {
@@ -574,7 +612,8 @@ fun EditActivityScreen(
             }
 
             Spacer(
-                modifier = Modifier.height(10.dp)
+                modifier =
+                    Modifier.height(10.dp)
             )
 
             // =================================================
@@ -584,21 +623,28 @@ fun EditActivityScreen(
             Row(
                 modifier =
                     Modifier.fillMaxWidth(),
+
                 horizontalArrangement =
                     Arrangement.spacedBy(8.dp)
             ) {
 
                 OutlinedTextField(
-                    value = estimatedCost,
+                    value =
+                        estimatedCost,
+
                     onValueChange = {
                         estimatedCost = it
                     },
+
                     label = {
                         Text("Estimated Cost")
                     },
+
                     modifier =
                         Modifier.weight(1f),
+
                     singleLine = true,
+
                     keyboardOptions =
                         KeyboardOptions(
                             keyboardType =
@@ -609,28 +655,37 @@ fun EditActivityScreen(
                 ExposedDropdownMenuBox(
                     expanded =
                         currencyExpanded,
+
                     onExpandedChange = {
                         currencyExpanded =
                             !currencyExpanded
                     },
+
                     modifier =
                         Modifier.weight(1f)
                 ) {
 
                     OutlinedTextField(
-                        value = currency,
+                        value =
+                            currency,
+
                         onValueChange = {},
+
                         readOnly = true,
+
                         label = {
                             Text("Currency")
                         },
+
                         trailingIcon = {
+
                             ExposedDropdownMenuDefaults
                                 .TrailingIcon(
                                     expanded =
                                         currencyExpanded
                                 )
                         },
+
                         modifier =
                             Modifier
                                 .menuAnchor()
@@ -640,6 +695,7 @@ fun EditActivityScreen(
                     ExposedDropdownMenu(
                         expanded =
                             currencyExpanded,
+
                         onDismissRequest = {
                             currencyExpanded =
                                 false
@@ -655,6 +711,7 @@ fun EditActivityScreen(
                                         currencyCode
                                     )
                                 },
+
                                 onClick = {
 
                                     currency =
@@ -670,8 +727,62 @@ fun EditActivityScreen(
             }
 
             Spacer(
-                modifier = Modifier.height(8.dp)
+                modifier =
+                    Modifier.height(8.dp)
             )
+
+            // =================================================
+            // CONVERSION PREVIEW
+            // =================================================
+
+            if (parsedCost != null) {
+
+                val activityRateToNZD =
+                    exchangeRateViewModel
+                        .getRateToNZD(
+                            currency
+                        )
+
+                val tripHomeRateToNZD =
+                    exchangeRateViewModel
+                        .getRateToNZD(
+                            trip.homeCurrency
+                        )
+
+                val convertedAmount =
+                    if (
+                        currency ==
+                        trip.homeCurrency
+                    ) {
+
+                        parsedCost
+
+                    } else if (
+                        activityRateToNZD > 0.0 &&
+                        tripHomeRateToNZD > 0.0
+                    ) {
+
+                        parsedCost *
+                                activityRateToNZD /
+                                tripHomeRateToNZD
+
+                    } else {
+
+                        0.0
+                    }
+
+                Text(
+                    text =
+                        "≈ ${trip.homeCurrency} %.2f"
+                            .format(
+                                convertedAmount
+                            ),
+
+                    style =
+                        MaterialTheme.typography
+                            .bodyMedium
+                )
+            }
 
             // =================================================
             // BOOKED
@@ -680,8 +791,10 @@ fun EditActivityScreen(
             Row(
                 modifier =
                     Modifier.fillMaxWidth(),
+
                 horizontalArrangement =
                     Arrangement.SpaceBetween,
+
                 verticalAlignment =
                     Alignment.CenterVertically
             ) {
@@ -692,6 +805,7 @@ fun EditActivityScreen(
 
                 Switch(
                     checked = booked,
+
                     onCheckedChange = {
                         booked = it
                     }
@@ -699,7 +813,8 @@ fun EditActivityScreen(
             }
 
             Spacer(
-                modifier = Modifier.height(8.dp)
+                modifier =
+                    Modifier.height(8.dp)
             )
 
             // =================================================
@@ -708,19 +823,24 @@ fun EditActivityScreen(
 
             OutlinedTextField(
                 value = website,
+
                 onValueChange = {
                     website = it
                 },
+
                 label = {
                     Text("Website")
                 },
+
                 modifier =
                     Modifier.fillMaxWidth(),
+
                 singleLine = true
             )
 
             Spacer(
-                modifier = Modifier.height(10.dp)
+                modifier =
+                    Modifier.height(10.dp)
             )
 
             // =================================================
@@ -730,6 +850,7 @@ fun EditActivityScreen(
             Row(
                 modifier =
                     Modifier.fillMaxWidth(),
+
                 horizontalArrangement =
                     Arrangement.spacedBy(8.dp)
             ) {
@@ -740,14 +861,19 @@ fun EditActivityScreen(
 
                 OutlinedTextField(
                     value = date,
+
                     onValueChange = {},
+
                     readOnly = true,
+
                     label = {
                         Text("Date")
                     },
+
                     placeholder = {
                         Text("Select")
                     },
+
                     trailingIcon = {
 
                         TextButton(
@@ -768,6 +894,7 @@ fun EditActivityScreen(
                             )
                         }
                     },
+
                     modifier =
                         Modifier.weight(1f)
                 )
@@ -785,6 +912,7 @@ fun EditActivityScreen(
                                 it.minute
                             )
                         } ?: "",
+
                     onValueChange = {
 
                         val formatted =
@@ -794,10 +922,13 @@ fun EditActivityScreen(
 
                             startTime =
                                 try {
+
                                     LocalTime.parse(
                                         formatted
                                     )
+
                                 } catch (_: Exception) {
+
                                     null
                                 }
 
@@ -806,15 +937,20 @@ fun EditActivityScreen(
                             startTime = null
                         }
                     },
+
                     label = {
                         Text("Start Time")
                     },
+
                     placeholder = {
                         Text("HH:MM")
                     },
+
                     modifier =
                         Modifier.weight(1f),
+
                     singleLine = true,
+
                     keyboardOptions =
                         KeyboardOptions(
                             keyboardType =
@@ -824,7 +960,8 @@ fun EditActivityScreen(
             }
 
             Spacer(
-                modifier = Modifier.height(10.dp)
+                modifier =
+                    Modifier.height(10.dp)
             )
 
             // =================================================
@@ -833,20 +970,26 @@ fun EditActivityScreen(
 
             OutlinedTextField(
                 value = notes,
+
                 onValueChange = {
                     notes = it
                 },
+
                 label = {
                     Text("Notes")
                 },
+
                 modifier =
                     Modifier.fillMaxWidth(),
+
                 minLines = 3,
+
                 maxLines = 3
             )
 
             Spacer(
-                modifier = Modifier.height(20.dp)
+                modifier =
+                    Modifier.height(20.dp)
             )
         }
 
@@ -861,6 +1004,7 @@ fun EditActivityScreen(
                     top = 8.dp,
                     bottom = 8.dp
                 ),
+
             horizontalArrangement =
                 Arrangement.spacedBy(8.dp)
         ) {
@@ -871,9 +1015,11 @@ fun EditActivityScreen(
 
             Button(
                 onClick = onBack,
+
                 modifier =
                     Modifier.weight(1f)
             ) {
+
                 Text("Back")
             }
 
@@ -886,9 +1032,11 @@ fun EditActivityScreen(
                     showDeleteConfirmation =
                         true
                 },
+
                 modifier =
                     Modifier.weight(1f)
             ) {
+
                 Text("Delete")
             }
 
@@ -904,19 +1052,9 @@ fun EditActivityScreen(
                         destinationsLoaded
                     ) {
 
-                        // =================================================
+                        // -----------------------------------------
                         // CALCULATE CONVERSION
-                        //
-                        // Database rates are stored as:
-                        //
-                        // 1 unit of currency = X NZD
-                        //
-                        // Activity currency
-                        //        ↓
-                        //       NZD
-                        //        ↓
-                        // Trip home currency
-                        // =================================================
+                        // -----------------------------------------
 
                         val convertedAmount =
                             if (parsedCost != null) {
@@ -934,6 +1072,13 @@ fun EditActivityScreen(
                                         )
 
                                 if (
+                                    currency ==
+                                    trip.homeCurrency
+                                ) {
+
+                                    parsedCost
+
+                                } else if (
                                     activityRateToNZD > 0.0 &&
                                     tripHomeRateToNZD > 0.0
                                 ) {
@@ -951,6 +1096,14 @@ fun EditActivityScreen(
 
                                 null
                             }
+
+                        // -----------------------------------------
+                        // CREATE UPDATED ACTIVITY
+                        //
+                        // Location is deliberately preserved from
+                        // the existing record because the field is
+                        // currently hidden from the UI.
+                        // -----------------------------------------
 
                         val updatedActivity =
                             activity.copy(
@@ -1007,16 +1160,13 @@ fun EditActivityScreen(
                                     startTime
                             )
 
-                        // =================================================
-                        // IMPORTANT
+                        // -----------------------------------------
+                        // SAVE ACTIVITY + DESTINATIONS
                         //
-                        // Passing selectedDestinationIds, including an
-                        // empty set, tells TripViewModel that the user has
-                        // explicitly managed destinations.
-                        //
-                        // Therefore Location will NOT automatically create
-                        // a destination.
-                        // =================================================
+                        // selectedDestinationIds is passed even
+                        // when empty so that an empty selection is
+                        // treated as intentional.
+                        // -----------------------------------------
 
                         tripViewModel.updateActivity(
                             updatedActivity,
@@ -1026,9 +1176,11 @@ fun EditActivityScreen(
                         onActivityUpdated()
                     }
                 },
+
                 modifier =
                     Modifier.weight(1f)
             ) {
+
                 Text("Save")
             }
         }
@@ -1055,6 +1207,7 @@ fun EditActivityScreen(
             )
 
         DatePickerDialog(
+
             onDismissRequest = {
                 showDatePicker = false
             },
@@ -1087,6 +1240,7 @@ fun EditActivityScreen(
                             false
                     }
                 ) {
+
                     Text("OK")
                 }
             },
@@ -1099,6 +1253,7 @@ fun EditActivityScreen(
                             false
                     }
                 ) {
+
                     Text("Cancel")
                 }
             }
@@ -1121,11 +1276,13 @@ fun EditActivityScreen(
             rememberTimePickerState(
                 initialHour =
                     startTime?.hour ?: 12,
+
                 initialMinute =
                     startTime?.minute ?: 0
             )
 
         TimePickerDialog(
+
             onDismissRequest = {
                 showTimePicker = false
             },
@@ -1145,6 +1302,7 @@ fun EditActivityScreen(
                             false
                     }
                 ) {
+
                     Text("OK")
                 }
             },
@@ -1168,6 +1326,7 @@ fun EditActivityScreen(
     if (showDeleteConfirmation) {
 
         AlertDialog(
+
             onDismissRequest = {
                 showDeleteConfirmation =
                     false
@@ -1196,6 +1355,7 @@ fun EditActivityScreen(
                         onDeleteActivity()
                     }
                 ) {
+
                     Text("Delete")
                 }
             },
@@ -1208,6 +1368,7 @@ fun EditActivityScreen(
                             false
                     }
                 ) {
+
                     Text("Cancel")
                 }
             }
