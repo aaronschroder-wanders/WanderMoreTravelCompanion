@@ -1198,6 +1198,23 @@ fun AppNavigation(
                         tripViewModel =
                             tripViewModel,
 
+                        navBackStackEntry =
+                            entry,
+
+                        onActivityClick = { activityId ->
+
+                            navController.navigate(
+                                "editActivity/$activityId"
+                            )
+                        },
+
+                        onItineraryClick = { itineraryId ->
+
+                            navController.navigate(
+                                "editItinerary/$itineraryId"
+                            )
+                        },
+
                         onBack = {
 
                             navController.popBackStack()
