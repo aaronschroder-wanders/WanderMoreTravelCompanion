@@ -21,7 +21,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         ItineraryDestinationEntity::class,
         ActivityDestinationEntity::class
     ],
-    version = 12,
+    version = 13,
     exportSchema = false
 )
 @TypeConverters(DateConverter::class)
@@ -796,6 +796,30 @@ abstract class AppDatabase : RoomDatabase() {
                     INNER JOIN activity_destinations ad
                         ON a.id = ad.activityId
                     """.trimIndent()
+                )
+            }
+        }
+
+        // ---------------------------------------------------------
+// VERSION 12 → 13
+// DESTINATION ACTIVE / ARCHIVED STATUS
+//
+// Destinations are global and reusable across trips.
+// The active flag allows destinations to be temporarily
+// archived without deleting them.
+// ---------------------------------------------------------
+
+        val MIGRATION_12_13 = object : Migration(12, 13) {
+
+            override fun migrate(
+                database: SupportSQLiteDatabase
+            ) {
+
+                database.execSQL(
+                    """
+            ALTER TABLE destinations
+            ADD COLUMN active INTEGER NOT NULL DEFAULT 1
+            """.trimIndent()
                 )
             }
         }

@@ -1127,6 +1127,41 @@ fun AppNavigation(
                 }
             }
 
+            // =========================================================
+// GLOBAL DESTINATIONS
+// =========================================================
+// Used by Settings.
+//
+// No trip is associated with this screen, so it displays
+// the global list of active saved destinations.
+// =========================================================
+
+            composable(
+                "destinations"
+            ) {
+
+                DestinationsScreen(
+
+                    tripId = null,
+
+                    tripViewModel =
+                        tripViewModel,
+
+                    onDestinationClick = { _ ->
+
+                        // Global Settings destinations currently have
+                        // no destination-details screen because
+                        // DestinationDetailsScreen requires a tripId.
+
+                    },
+
+                    onBack = {
+
+                        navController.popBackStack()
+                    }
+                )
+            }
+
 // =========================================================
 // DESTINATIONS
 // =========================================================

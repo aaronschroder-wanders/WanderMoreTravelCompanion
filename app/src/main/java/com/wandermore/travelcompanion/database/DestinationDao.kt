@@ -10,7 +10,23 @@ import kotlinx.coroutines.flow.Flow
 interface DestinationDao {
 
     // ---------------------------------------------------------
+    // GET ALL ACTIVE DESTINATIONS
+    // ---------------------------------------------------------
+
+    @Query(
+        """
+        SELECT *
+        FROM destinations
+        WHERE active = 1
+        ORDER BY name COLLATE NOCASE ASC
+        """
+    )
+    fun getActiveDestinations(): Flow<List<DestinationEntity>>
+
+    // ---------------------------------------------------------
     // GET ALL DESTINATIONS
+    //
+    // Includes archived destinations.
     // ---------------------------------------------------------
 
     @Query(
@@ -74,7 +90,26 @@ interface DestinationDao {
     )
 
     // ---------------------------------------------------------
+    // SET ACTIVE / ARCHIVED
+    // ---------------------------------------------------------
+
+    @Query(
+        """
+        UPDATE destinations
+        SET active = :active
+        WHERE id = :destinationId
+        """
+    )
+    suspend fun setDestinationActive(
+        destinationId: Long,
+        active: Boolean
+    )
+
+    // ---------------------------------------------------------
     // DELETE
+    //
+    // Used only after confirming that the destination has
+    // no remaining references anywhere in the database.
     // ---------------------------------------------------------
 
     @Query(

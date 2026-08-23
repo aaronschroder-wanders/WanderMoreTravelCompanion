@@ -46,16 +46,6 @@ class TripViewModel(
         tripDao
     )
 
-    init {
-
-        // Clean up any destination records which are no longer
-        // referenced anywhere in the application.
-        viewModelScope.launch {
-
-            cleanupOrphanDestinations()
-        }
-    }
-
     // ---------------------------------------------------------
     // Trip functions
     // ---------------------------------------------------------
@@ -170,18 +160,48 @@ class TripViewModel(
 
             if (trip != null) {
 
+                // Capture the destinations used by this trip
+                // BEFORE the trip is deleted.
+                val destinationIds =
+                    tripDestinationDao
+                        .getDestinationIdsForTrip(
+                            id
+                        )
+                        .distinct()
+
+                // Room will cascade-delete the trip's child
+                // relationship records.
                 repository.deleteTrip(
                     trip
                 )
 
-                cleanupOrphanDestinations()
+                // Now check each destination. If nothing anywhere
+                // still references it, remove the global destination.
+                for (destinationId in destinationIds) {
+
+                    cleanupOrphanedDestination(
+                        destinationId
+                    )
+                }
             }
         }
     }
 
     // ---------------------------------------------------------
     // Destination functions
+    //
+    // Destinations are GLOBAL and reusable across trips.
     // ---------------------------------------------------------
+
+    fun getAllActiveDestinations(): Flow<List<DestinationEntity>> {
+
+        return destinationDao.getActiveDestinations()
+    }
+
+    fun getAllDestinations(): Flow<List<DestinationEntity>> {
+
+        return destinationDao.getAllDestinations()
+    }
 
     fun getDestinationsForTrip(
         tripId: Long
@@ -203,6 +223,15 @@ class TripViewModel(
         )
     }
 
+    suspend fun getDestinationById(
+        destinationId: Long
+    ): DestinationEntity? {
+
+        return destinationDao.getDestinationById(
+            destinationId
+        )
+    }
+
     suspend fun getDestinationIdsForTrip(
         tripId: Long
     ): List<Long> {
@@ -210,6 +239,121 @@ class TripViewModel(
         return tripDestinationDao.getDestinationIdsForTrip(
             tripId
         )
+    }
+
+    suspend fun getDestinationByName(
+        name: String
+    ): DestinationEntity? {
+
+        return destinationDao.getDestinationByName(
+            name
+        )
+    }
+
+    suspend fun addDestination(
+        name: String
+    ): Long? {
+
+        val trimmedName =
+            name.trim()
+
+        if (trimmedName.isBlank()) {
+
+            return null
+        }
+
+        val existing =
+            destinationDao.getDestinationByName(
+                trimmedName
+            )
+
+        if (existing != null) {
+
+            return existing.id
+        }
+
+        return destinationDao.insertDestination(
+            DestinationEntity(
+                name = trimmedName
+            )
+        )
+    }
+
+    suspend fun addDestinationToTrip(
+        tripId: Long,
+        destinationId: Long
+    ) {
+
+        tripDestinationDao.insertTripDestination(
+            TripDestinationEntity(
+                tripId = tripId,
+                destinationId = destinationId
+            )
+        )
+    }
+
+    suspend fun removeDestinationFromTrip(
+        tripId: Long,
+        destinationId: Long
+    ) {
+
+        tripDestinationDao.deleteTripDestination(
+            tripId,
+            destinationId
+        )
+
+        cleanupOrphanedDestination(
+            destinationId
+        )
+    }
+
+    suspend fun removeAllDestinationsFromTrip(
+        tripId: Long
+    ) {
+
+        val destinationIds =
+            tripDestinationDao
+                .getDestinationIdsForTrip(
+                    tripId
+                )
+                .distinct()
+
+        tripDestinationDao.deleteDestinationsForTrip(
+            tripId
+        )
+
+        for (destinationId in destinationIds) {
+
+            cleanupOrphanedDestination(
+                destinationId
+            )
+        }
+    }
+
+    fun setDestinationActive(
+        destinationId: Long,
+        active: Boolean
+    ) {
+
+        viewModelScope.launch {
+
+            destinationDao.setDestinationActive(
+                destinationId,
+                active
+            )
+        }
+    }
+
+    fun updateDestination(
+        destination: DestinationEntity
+    ) {
+
+        viewModelScope.launch {
+
+            destinationDao.updateDestination(
+                destination
+            )
+        }
     }
 
     suspend fun getActivitiesForDestination(
@@ -254,43 +398,6 @@ class TripViewModel(
                             itinerary.id
                         )
         }
-    }
-
-    suspend fun addDestinationToTrip(
-        tripId: Long,
-        destinationId: Long
-    ) {
-
-        tripDestinationDao.insertTripDestination(
-            TripDestinationEntity(
-                tripId = tripId,
-                destinationId = destinationId
-            )
-        )
-    }
-
-    suspend fun removeDestinationFromTrip(
-        tripId: Long,
-        destinationId: Long
-    ) {
-
-        tripDestinationDao.deleteTripDestination(
-            tripId,
-            destinationId
-        )
-
-        cleanupOrphanDestinations()
-    }
-
-    suspend fun removeAllDestinationsFromTrip(
-        tripId: Long
-    ) {
-
-        tripDestinationDao.deleteDestinationsForTrip(
-            tripId
-        )
-
-        cleanupOrphanDestinations()
     }
 
     // ---------------------------------------------------------
@@ -492,9 +599,8 @@ class TripViewModel(
 
             for (destinationId in oldDestinationIds) {
 
-                cleanupOldDestination(
-                    tripId = activity.tripId,
-                    destinationId = destinationId
+                cleanupOrphanedDestination(
+                    destinationId
                 )
             }
         }
@@ -527,13 +633,10 @@ class TripViewModel(
 
             for (destinationId in oldDestinationIds) {
 
-                cleanupOldDestination(
-                    tripId = activity.tripId,
-                    destinationId = destinationId
+                cleanupOrphanedDestination(
+                    destinationId
                 )
             }
-
-            cleanupOrphanDestinations()
         }
     }
 
@@ -609,9 +712,27 @@ class TripViewModel(
 
             if (existingItinerary != null) {
 
+                val oldDestinationIds =
+                    itineraryDestinationDao
+                        .getDestinationIdsForItinerary(
+                            existingItinerary.id
+                        )
+
+                itineraryDestinationDao
+                    .deleteDestinationsForItinerary(
+                        existingItinerary.id
+                    )
+
                 itineraryDao.deleteItinerary(
                     existingItinerary
                 )
+
+                for (destinationId in oldDestinationIds) {
+
+                    cleanupOrphanedDestination(
+                        destinationId
+                    )
+                }
             }
 
             return
@@ -621,9 +742,27 @@ class TripViewModel(
 
             if (existingItinerary != null) {
 
+                val oldDestinationIds =
+                    itineraryDestinationDao
+                        .getDestinationIdsForItinerary(
+                            existingItinerary.id
+                        )
+
+                itineraryDestinationDao
+                    .deleteDestinationsForItinerary(
+                        existingItinerary.id
+                    )
+
                 itineraryDao.deleteItinerary(
                     existingItinerary
                 )
+
+                for (destinationId in oldDestinationIds) {
+
+                    cleanupOrphanedDestination(
+                        destinationId
+                    )
+                }
             }
 
             return
@@ -674,6 +813,12 @@ class TripViewModel(
 
         } else {
 
+            val oldDestinationIds =
+                itineraryDestinationDao
+                    .getDestinationIdsForItinerary(
+                        existingItinerary.id
+                    )
+
             itineraryDao.updateItinerary(
                 itineraryItem
             )
@@ -681,6 +826,13 @@ class TripViewModel(
             syncItineraryToDestination(
                 itineraryItem
             )
+
+            for (destinationId in oldDestinationIds) {
+
+                cleanupOrphanedDestination(
+                    destinationId
+                )
+            }
         }
     }
 
@@ -869,6 +1021,12 @@ class TripViewModel(
                             booked = itinerary.booked
                         )
 
+                    val oldActivityDestinationIds =
+                        activityDestinationDao
+                            .getDestinationIdsForActivity(
+                                updatedActivity.id
+                            )
+
                     activityDao.updateActivity(
                         updatedActivity
                     )
@@ -880,14 +1038,20 @@ class TripViewModel(
                     syncActivityToItinerary(
                         updatedActivity
                     )
+
+                    for (destinationId in oldActivityDestinationIds) {
+
+                        cleanupOrphanedDestination(
+                            destinationId
+                        )
+                    }
                 }
             }
 
             for (destinationId in oldDestinationIds) {
 
-                cleanupOldDestination(
-                    tripId = itinerary.tripId,
-                    destinationId = destinationId
+                cleanupOrphanedDestination(
+                    destinationId
                 )
             }
         }
@@ -917,6 +1081,12 @@ class TripViewModel(
 
                 if (activity != null) {
 
+                    val activityDestinationIds =
+                        activityDestinationDao
+                            .getDestinationIdsForActivity(
+                                activity.id
+                            )
+
                     activityDao.updateActivity(
                         activity.copy(
                             booked = false
@@ -927,6 +1097,13 @@ class TripViewModel(
                         .deleteDestinationsForActivity(
                             activity.id
                         )
+
+                    for (destinationId in activityDestinationIds) {
+
+                        cleanupOrphanedDestination(
+                            destinationId
+                        )
+                    }
                 }
             }
 
@@ -941,13 +1118,10 @@ class TripViewModel(
 
             for (destinationId in oldDestinationIds) {
 
-                cleanupOldDestination(
-                    tripId = itinerary.tripId,
-                    destinationId = destinationId
+                cleanupOrphanedDestination(
+                    destinationId
                 )
             }
-
-            cleanupOrphanDestinations()
         }
     }
 
@@ -1006,143 +1180,55 @@ class TripViewModel(
     }
 
     // ---------------------------------------------------------
-    // Destination cleanup
+    // GLOBAL ORPHAN DESTINATION CLEANUP
+    //
+    // A destination is deleted only when it has NO references
+    // remaining in:
+    //
+    // 1. activity_destinations
+    // 2. itinerary_destinations
+    // 3. trip_destinations
+    //
+    // This means destinations remain safely reusable while
+    // anything in the database still references them.
     // ---------------------------------------------------------
 
-    private suspend fun cleanupOldDestination(
-        tripId: Long,
+    private suspend fun cleanupOrphanedDestination(
         destinationId: Long
     ) {
 
-        val activities =
-            activityDao
-                .getActivitiesForTrip(
-                    tripId
+        val activityCount =
+            activityDestinationDao
+                .countActivitiesForDestination(
+                    destinationId
                 )
-                .first()
 
-        for (activity in activities) {
-
-            val ids =
-                activityDestinationDao
-                    .getDestinationIdsForActivity(
-                        activity.id
-                    )
-
-            if (destinationId in ids) {
-
-                return
-            }
-        }
-
-        val itineraries =
-            itineraryDao
-                .getItineraryForTrip(
-                    tripId
-                )
-                .first()
-
-        for (itinerary in itineraries) {
-
-            val ids =
-                itineraryDestinationDao
-                    .getDestinationIdsForItinerary(
-                        itinerary.id
-                    )
-
-            if (destinationId in ids) {
-
-                return
-            }
-        }
-
-        tripDestinationDao.deleteTripDestination(
-            tripId,
-            destinationId
-        )
-
-        cleanupOrphanDestinations()
-    }
-
-    // ---------------------------------------------------------
-    // Global orphan destination cleanup
-    // ---------------------------------------------------------
-
-    private suspend fun cleanupOrphanDestinations() {
-
-        val destinations =
-            destinationDao
-                .getAllDestinations()
-                .first()
-
-        if (destinations.isEmpty()) {
-
+        if (activityCount > 0) {
             return
         }
 
-        val trips =
-            repository
-                .getTrips()
-                .first()
-
-        val referencedDestinationIds =
-            mutableSetOf<Long>()
-
-        for (trip in trips) {
-
-            referencedDestinationIds.addAll(
-                tripDestinationDao
-                    .getDestinationIdsForTrip(
-                        trip.id
-                    )
-            )
-
-            val activities =
-                activityDao
-                    .getActivitiesForTrip(
-                        trip.id
-                    )
-                    .first()
-
-            for (activity in activities) {
-
-                referencedDestinationIds.addAll(
-                    activityDestinationDao
-                        .getDestinationIdsForActivity(
-                            activity.id
-                        )
+        val itineraryCount =
+            itineraryDestinationDao
+                .countItinerariesForDestination(
+                    destinationId
                 )
-            }
 
-            val itineraries =
-                itineraryDao
-                    .getItineraryForTrip(
-                        trip.id
-                    )
-                    .first()
-
-            for (itinerary in itineraries) {
-
-                referencedDestinationIds.addAll(
-                    itineraryDestinationDao
-                        .getDestinationIdsForItinerary(
-                            itinerary.id
-                        )
-                )
-            }
+        if (itineraryCount > 0) {
+            return
         }
 
-        for (destination in destinations) {
-
-            if (
-                destination.id !in
-                referencedDestinationIds
-            ) {
-
-                destinationDao.deleteDestination(
-                    destination.id
+        val tripIds =
+            tripDestinationDao
+                .getTripIdsForDestination(
+                    destinationId
                 )
-            }
+
+        if (tripIds.isNotEmpty()) {
+            return
         }
+
+        destinationDao.deleteDestination(
+            destinationId
+        )
     }
 }

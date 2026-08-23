@@ -38,17 +38,38 @@ private data class DestinationSummary(
 
 @Composable
 fun DestinationsScreen(
-    tripId: Long,
+    tripId: Long?,
     tripViewModel: TripViewModel,
     onDestinationClick: (Long) -> Unit,
     onBack: () -> Unit
 ) {
 
-    val destinations by tripViewModel
-        .getDestinationsForTrip(tripId)
-        .collectAsState(
-            initial = emptyList()
-        )
+    // =========================================================
+    // DESTINATIONS
+    //
+    // Trip mode:
+    // Show destinations associated with this trip.
+    //
+    // Settings mode:
+    // Show all active global destinations.
+    // =========================================================
+
+    val destinations by if (tripId != null) {
+
+        tripViewModel
+            .getDestinationsForTrip(tripId)
+            .collectAsState(
+                initial = emptyList()
+            )
+
+    } else {
+
+        tripViewModel
+            .getAllActiveDestinations()
+            .collectAsState(
+                initial = emptyList()
+            )
+    }
 
     var summaries by remember {
         mutableStateOf(
@@ -56,46 +77,80 @@ fun DestinationsScreen(
         )
     }
 
-    // ---------------------------------------------------------
+    // =========================================================
     // LOAD DESTINATION SUMMARY COUNTS
-    // ---------------------------------------------------------
+    // =========================================================
 
     LaunchedEffect(
         tripId,
         destinations
     ) {
 
-        val newSummaries =
-            destinations.associate { destination ->
+        if (tripId != null) {
 
-                val activities =
-                    tripViewModel.getActivitiesForDestination(
-                        tripId,
-                        destination.id
+            val newSummaries =
+                destinations.associate { destination ->
+
+                    val activities =
+                        tripViewModel.getActivitiesForDestination(
+                            tripId,
+                            destination.id
+                        )
+
+                    val itineraryItems =
+                        tripViewModel.getItineraryForDestination(
+                            tripId,
+                            destination.id
+                        )
+
+                    destination.id to DestinationSummary(
+                        activityCount = activities.size,
+                        itineraryCount = itineraryItems.size
                     )
+                }
 
-                val itineraryItems =
-                    tripViewModel.getItineraryForDestination(
-                        tripId,
-                        destination.id
-                    )
+            summaries = newSummaries
 
-                destination.id to DestinationSummary(
-                    activityCount =
-                        activities.size,
+        } else {
 
-                    itineraryCount =
-                        itineraryItems.size
-                )
-            }
-
-        summaries = newSummaries
+            summaries = emptyMap()
+        }
     }
 
+    // =========================================================
+    // FILTER TRIP DESTINATIONS
+    //
+    // A destination only appears in the trip list if it is
+    // actually being used by an Activity or Itinerary item.
+    //
+    // The global DestinationEntity is NOT deleted.
+    // =========================================================
+
+    val visibleDestinations =
+        if (tripId != null) {
+
+            destinations.filter { destination ->
+
+                val summary =
+                    summaries[destination.id]
+
+                summary != null &&
+                        (
+                                summary.activityCount > 0 ||
+                                        summary.itineraryCount > 0
+                                )
+            }
+
+        } else {
+
+            destinations
+        }
+
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .padding(16.dp),
 
         verticalArrangement =
             Arrangement.spacedBy(16.dp)
@@ -131,13 +186,18 @@ fun DestinationsScreen(
 
                 Text(
                     text =
-                        "Places you're visiting on this trip",
+                        if (tripId != null) {
+                            "Places you're visiting on this trip"
+                        } else {
+                            "Your saved travel destinations"
+                        },
 
                     style =
                         MaterialTheme.typography.bodyMedium,
 
                     color =
-                        MaterialTheme.colorScheme.onSurfaceVariant,
+                        MaterialTheme.colorScheme
+                            .onSurfaceVariant,
 
                     modifier =
                         Modifier.padding(
@@ -151,7 +211,7 @@ fun DestinationsScreen(
         // DESTINATION LIST
         // =====================================================
 
-        if (destinations.isEmpty()) {
+        if (visibleDestinations.isEmpty()) {
 
             Column(
                 modifier =
@@ -174,7 +234,11 @@ fun DestinationsScreen(
 
                 Text(
                     text =
-                        "No destinations yet",
+                        if (tripId != null) {
+                            "No destinations yet"
+                        } else {
+                            "No destinations saved"
+                        },
 
                     style =
                         MaterialTheme.typography.titleMedium,
@@ -187,21 +251,25 @@ fun DestinationsScreen(
 
                 Text(
                     text =
-                        "Destinations will appear here when you add a location to an activity or itinerary item.",
+                        if (tripId != null) {
+                            "Destinations will appear here when you add a location to an activity or itinerary item."
+                        } else {
+                            "Destinations will appear here when you add locations to your trips."
+                        },
 
                     style =
                         MaterialTheme.typography.bodyMedium,
 
                     color =
-                        MaterialTheme.colorScheme.onSurfaceVariant,
+                        MaterialTheme.colorScheme
+                            .onSurfaceVariant,
 
                     modifier =
-                        Modifier
-                            .padding(
-                                top = 6.dp,
-                                start = 24.dp,
-                                end = 24.dp
-                            )
+                        Modifier.padding(
+                            top = 6.dp,
+                            start = 24.dp,
+                            end = 24.dp
+                        )
                 )
             }
 
@@ -216,23 +284,32 @@ fun DestinationsScreen(
             ) {
 
                 items(
-                    items = destinations,
+                    items = visibleDestinations,
+
                     key = {
                         it.id
                     }
                 ) { destination ->
+
+                    val summary =
+                        summaries[destination.id]
+                            ?: DestinationSummary()
 
                     DestinationCard(
                         destination =
                             destination,
 
                         summary =
-                            summaries[
-                                destination.id
-                            ]
-                                ?: DestinationSummary(),
+                            summary,
+
+                        showSummary =
+                            tripId != null,
+
+                        clickable =
+                            tripId != null,
 
                         onClick = {
+
                             onDestinationClick(
                                 destination.id
                             )
@@ -269,6 +346,8 @@ fun DestinationsScreen(
 private fun DestinationCard(
     destination: DestinationEntity,
     summary: DestinationSummary,
+    showSummary: Boolean,
+    clickable: Boolean,
     onClick: () -> Unit
 ) {
 
@@ -276,8 +355,14 @@ private fun DestinationCard(
         modifier =
             Modifier
                 .fillMaxWidth()
-                .clickable(
-                    onClick = onClick
+                .then(
+                    if (clickable) {
+                        Modifier.clickable(
+                            onClick = onClick
+                        )
+                    } else {
+                        Modifier
+                    }
                 ),
 
         shape =
@@ -286,7 +371,8 @@ private fun DestinationCard(
         colors =
             CardDefaults.cardColors(
                 containerColor =
-                    MaterialTheme.colorScheme.surfaceVariant
+                    MaterialTheme.colorScheme
+                        .surfaceVariant
             ),
 
         elevation =
@@ -319,6 +405,7 @@ private fun DestinationCard(
 
                 Text(
                     text = "📍",
+
                     style =
                         MaterialTheme.typography.headlineSmall
                 )
@@ -345,67 +432,82 @@ private fun DestinationCard(
                         MaterialTheme.typography.titleLarge
                 )
 
-                Spacer(
-                    modifier =
-                        Modifier.size(5.dp)
-                )
+                // -------------------------------------------------
+                // TRIP-SPECIFIC SUMMARY
+                // -------------------------------------------------
 
-                Row(
-                    horizontalArrangement =
-                        Arrangement.spacedBy(14.dp)
-                ) {
+                if (showSummary) {
 
-                    Text(
-                        text =
-                            "⭐ ${summary.activityCount} " +
-                                    if (
-                                        summary.activityCount == 1
-                                    ) {
-                                        "Activity"
-                                    } else {
-                                        "Activities"
-                                    },
-
-                        style =
-                            MaterialTheme.typography.bodyMedium,
-
-                        color =
-                            MaterialTheme.colorScheme.onSurfaceVariant
+                    Spacer(
+                        modifier =
+                            Modifier.size(5.dp)
                     )
 
-                    Text(
-                        text =
-                            "🗓️ ${summary.itineraryCount} " +
-                                    if (
-                                        summary.itineraryCount == 1
-                                    ) {
-                                        "Itinerary"
-                                    } else {
-                                        "Itinerary items"
-                                    },
+                    Row(
+                        horizontalArrangement =
+                            Arrangement.spacedBy(14.dp)
+                    ) {
 
-                        style =
-                            MaterialTheme.typography.bodyMedium,
+                        Text(
+                            text =
+                                "⭐ ${summary.activityCount} " +
+                                        if (
+                                            summary.activityCount == 1
+                                        ) {
+                                            "Activity"
+                                        } else {
+                                            "Activities"
+                                        },
 
-                        color =
-                            MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                            style =
+                                MaterialTheme.typography.bodyMedium,
+
+                            color =
+                                MaterialTheme.colorScheme
+                                    .onSurfaceVariant
+                        )
+
+                        Text(
+                            text =
+                                "🗓️ ${summary.itineraryCount} " +
+                                        if (
+                                            summary.itineraryCount == 1
+                                        ) {
+                                            "Itinerary"
+                                        } else {
+                                            "Itinerary items"
+                                        },
+
+                            style =
+                                MaterialTheme.typography.bodyMedium,
+
+                            color =
+                                MaterialTheme.colorScheme
+                                    .onSurfaceVariant
+                        )
+                    }
                 }
             }
 
             // -------------------------------------------------
             // CHEVRON
+            //
+            // Only shown for trip-specific destinations.
             // -------------------------------------------------
 
-            Text(
-                text = "›",
+            if (clickable) {
 
-                style =
-                    MaterialTheme.typography.headlineMedium,
+                Text(
+                    text = "›",
 
-                color =
-                    MaterialTheme.colorScheme.onSurfaceVariant
-            )
+                    style =
+                        MaterialTheme.typography.headlineMedium,
+
+                    color =
+                        MaterialTheme.colorScheme
+                            .onSurfaceVariant
+                )
+            }
         }
     }
 }
