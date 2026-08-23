@@ -4,24 +4,28 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.wandermore.travelcompanion.data.repository.TripRepository
 import com.wandermore.travelcompanion.database.ActivityDao
+import com.wandermore.travelcompanion.database.ActivityDestinationDao
 import com.wandermore.travelcompanion.database.ActivityEntity
+import com.wandermore.travelcompanion.database.DestinationDao
+import com.wandermore.travelcompanion.database.DestinationEntity
 import com.wandermore.travelcompanion.database.ExpenseDao
 import com.wandermore.travelcompanion.database.ExpenseEntity
 import com.wandermore.travelcompanion.database.ItineraryDao
+import com.wandermore.travelcompanion.database.ItineraryDestinationDao
+import com.wandermore.travelcompanion.database.ItineraryDestinationEntity
 import com.wandermore.travelcompanion.database.ItineraryEntity
 import com.wandermore.travelcompanion.database.TodoDao
 import com.wandermore.travelcompanion.database.TodoEntity
 import com.wandermore.travelcompanion.database.TripDao
+import com.wandermore.travelcompanion.database.TripDestinationDao
+import com.wandermore.travelcompanion.database.TripDestinationEntity
 import com.wandermore.travelcompanion.database.TripEstimateDao
 import com.wandermore.travelcompanion.database.TripEstimateEntity
-import com.wandermore.travelcompanion.database.DestinationDao
-import com.wandermore.travelcompanion.database.DestinationEntity
-import com.wandermore.travelcompanion.database.ItineraryDestinationDao
-import com.wandermore.travelcompanion.database.ItineraryDestinationEntity
-import com.wandermore.travelcompanion.database.ActivityDestinationDao
 import com.wandermore.travelcompanion.model.Trip
 import com.wandermore.travelcompanion.model.TripStatus
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 
@@ -34,12 +38,23 @@ class TripViewModel(
     private val tripEstimateDao: TripEstimateDao,
     private val destinationDao: DestinationDao,
     private val itineraryDestinationDao: ItineraryDestinationDao,
-    private val activityDestinationDao: ActivityDestinationDao
+    private val activityDestinationDao: ActivityDestinationDao,
+    private val tripDestinationDao: TripDestinationDao
 ) : ViewModel() {
 
     private val repository = TripRepository(
         tripDao
     )
+
+    init {
+
+        // Clean up any destination records which are no longer
+        // referenced anywhere in the application.
+        viewModelScope.launch {
+
+            cleanupOrphanDestinations()
+        }
+    }
 
     // ---------------------------------------------------------
     // Trip functions
@@ -158,8 +173,124 @@ class TripViewModel(
                 repository.deleteTrip(
                     trip
                 )
+
+                cleanupOrphanDestinations()
             }
         }
+    }
+
+    // ---------------------------------------------------------
+    // Destination functions
+    // ---------------------------------------------------------
+
+    fun getDestinationsForTrip(
+        tripId: Long
+    ): Flow<List<DestinationEntity>> {
+
+        return tripDestinationDao.getDestinationsForTrip(
+            tripId
+        )
+    }
+
+    fun getDestinationByIdFlow(
+        destinationId: Long
+    ): Flow<DestinationEntity?> = flow {
+
+        emit(
+            destinationDao.getDestinationById(
+                destinationId
+            )
+        )
+    }
+
+    suspend fun getDestinationIdsForTrip(
+        tripId: Long
+    ): List<Long> {
+
+        return tripDestinationDao.getDestinationIdsForTrip(
+            tripId
+        )
+    }
+
+    suspend fun getActivitiesForDestination(
+        tripId: Long,
+        destinationId: Long
+    ): List<ActivityEntity> {
+
+        val activities =
+            activityDao
+                .getActivitiesForTrip(
+                    tripId
+                )
+                .first()
+
+        return activities.filter { activity ->
+
+            destinationId in
+                    activityDestinationDao
+                        .getDestinationIdsForActivity(
+                            activity.id
+                        )
+        }
+    }
+
+    suspend fun getItineraryForDestination(
+        tripId: Long,
+        destinationId: Long
+    ): List<ItineraryEntity> {
+
+        val itineraryItems =
+            itineraryDao
+                .getItineraryForTrip(
+                    tripId
+                )
+                .first()
+
+        return itineraryItems.filter { itinerary ->
+
+            destinationId in
+                    itineraryDestinationDao
+                        .getDestinationIdsForItinerary(
+                            itinerary.id
+                        )
+        }
+    }
+
+    suspend fun addDestinationToTrip(
+        tripId: Long,
+        destinationId: Long
+    ) {
+
+        tripDestinationDao.insertTripDestination(
+            TripDestinationEntity(
+                tripId = tripId,
+                destinationId = destinationId
+            )
+        )
+    }
+
+    suspend fun removeDestinationFromTrip(
+        tripId: Long,
+        destinationId: Long
+    ) {
+
+        tripDestinationDao.deleteTripDestination(
+            tripId,
+            destinationId
+        )
+
+        cleanupOrphanDestinations()
+    }
+
+    suspend fun removeAllDestinationsFromTrip(
+        tripId: Long
+    ) {
+
+        tripDestinationDao.deleteDestinationsForTrip(
+            tripId
+        )
+
+        cleanupOrphanDestinations()
     }
 
     // ---------------------------------------------------------
@@ -299,12 +430,19 @@ class TripViewModel(
                     activity
                 )
 
-            if (activity.booked) {
+            val savedActivity =
+                activity.copy(
+                    id = activityId
+                )
+
+            syncActivityToDestination(
+                savedActivity
+            )
+
+            if (savedActivity.booked) {
 
                 syncActivityToItinerary(
-                    activity.copy(
-                        id = activityId
-                    )
+                    savedActivity
                 )
             }
         }
@@ -334,13 +472,31 @@ class TripViewModel(
 
         viewModelScope.launch {
 
+            val oldDestinationIds =
+                activityDestinationDao
+                    .getDestinationIdsForActivity(
+                        activity.id
+                    )
+
             activityDao.updateActivity(
+                activity
+            )
+
+            syncActivityToDestination(
                 activity
             )
 
             syncActivityToItinerary(
                 activity
             )
+
+            for (destinationId in oldDestinationIds) {
+
+                cleanupOldDestination(
+                    tripId = activity.tripId,
+                    destinationId = destinationId
+                )
+            }
         }
     }
 
@@ -350,18 +506,94 @@ class TripViewModel(
 
         viewModelScope.launch {
 
+            val oldDestinationIds =
+                activityDestinationDao
+                    .getDestinationIdsForActivity(
+                        activity.id
+                    )
+
             itineraryDao.deleteItineraryByActivityId(
                 activity.id
             )
 
+            activityDestinationDao
+                .deleteDestinationsForActivity(
+                    activity.id
+                )
+
             activityDao.deleteActivity(
                 activity
             )
+
+            for (destinationId in oldDestinationIds) {
+
+                cleanupOldDestination(
+                    tripId = activity.tripId,
+                    destinationId = destinationId
+                )
+            }
+
+            cleanupOrphanDestinations()
         }
     }
 
     // ---------------------------------------------------------
-    // ACTIVITY → ITINERARY SYNCHRONISATION
+    // Activity → Destination synchronisation
+    // ---------------------------------------------------------
+
+    private suspend fun syncActivityToDestination(
+        activity: ActivityEntity
+    ) {
+
+        activityDestinationDao
+            .deleteDestinationsForActivity(
+                activity.id
+            )
+
+        val location =
+            activity.location
+                ?.trim()
+                ?.takeIf {
+                    it.isNotBlank()
+                }
+
+        if (location == null) {
+
+            return
+        }
+
+        val existingDestination =
+            destinationDao.getDestinationByName(
+                location
+            )
+
+        val destinationId =
+            existingDestination?.id
+                ?: destinationDao.insertDestination(
+                    DestinationEntity(
+                        name = location
+                    )
+                )
+
+        activityDestinationDao
+            .insertActivityDestination(
+                com.wandermore.travelcompanion.database
+                    .ActivityDestinationEntity(
+                        activityId = activity.id,
+                        destinationId = destinationId
+                    )
+            )
+
+        tripDestinationDao.insertTripDestination(
+            TripDestinationEntity(
+                tripId = activity.tripId,
+                destinationId = destinationId
+            )
+        )
+    }
+
+    // ---------------------------------------------------------
+    // Activity → Itinerary synchronisation
     // ---------------------------------------------------------
 
     private suspend fun syncActivityToItinerary(
@@ -372,10 +604,6 @@ class TripViewModel(
             itineraryDao.getItineraryByActivityId(
                 activity.id
             )
-
-        // -----------------------------------------------------
-        // ACTIVITY IS NOT BOOKED
-        // -----------------------------------------------------
 
         if (!activity.booked) {
 
@@ -389,10 +617,6 @@ class TripViewModel(
             return
         }
 
-        // -----------------------------------------------------
-        // ACTIVITY IS BOOKED BUT HAS NO DATE
-        // -----------------------------------------------------
-
         if (activity.date == null) {
 
             if (existingItinerary != null) {
@@ -404,10 +628,6 @@ class TripViewModel(
 
             return
         }
-
-        // -----------------------------------------------------
-        // CREATE / UPDATE ITINERARY ITEM
-        // -----------------------------------------------------
 
         val itineraryItem =
             if (existingItinerary == null) {
@@ -441,13 +661,24 @@ class TripViewModel(
 
         if (existingItinerary == null) {
 
-            itineraryDao.insertItinerary(
-                itineraryItem
+            val itineraryId =
+                itineraryDao.insertItinerary(
+                    itineraryItem
+                )
+
+            syncItineraryToDestination(
+                itineraryItem.copy(
+                    id = itineraryId
+                )
             )
 
         } else {
 
             itineraryDao.updateItinerary(
+                itineraryItem
+            )
+
+            syncItineraryToDestination(
                 itineraryItem
             )
         }
@@ -486,7 +717,6 @@ class TripViewModel(
         }
     }
 
-
     fun getTripEstimatesForTrip(
         tripId: Long
     ): Flow<List<TripEstimateEntity>> {
@@ -495,7 +725,6 @@ class TripViewModel(
             tripId
         )
     }
-
 
     suspend fun getTripEstimate(
         tripId: Long,
@@ -529,7 +758,6 @@ class TripViewModel(
         }
     }
 
-
     fun deleteTripEstimate(
         estimate: TripEstimateEntity
     ) {
@@ -541,7 +769,6 @@ class TripViewModel(
             )
         }
     }
-
 
     fun deleteTripEstimatesForTrip(
         tripId: Long
@@ -555,7 +782,6 @@ class TripViewModel(
         }
     }
 
-
     // ---------------------------------------------------------
     // Itinerary functions
     // ---------------------------------------------------------
@@ -566,65 +792,19 @@ class TripViewModel(
 
         viewModelScope.launch {
 
-            // -------------------------------------------------
-            // SAVE THE ITINERARY ITEM
-            // -------------------------------------------------
-
             val itineraryId =
                 itineraryDao.insertItinerary(
                     itinerary
                 )
 
-            // -------------------------------------------------
-            // CREATE / FIND DESTINATION
-            //
-            // The existing Location field is used as the
-            // destination name for now.
-            //
-            // Blank locations are simply ignored.
-            // -------------------------------------------------
-
-            val location =
-                itinerary.location
-                    ?.trim()
-                    ?.takeIf {
-                        it.isNotBlank()
-                    }
-
-            if (location != null) {
-
-                // -------------------------------------------------
-                // LOOK FOR AN EXISTING DESTINATION
-                // -------------------------------------------------
-
-                val existingDestination =
-                    destinationDao.getDestinationByName(
-                        location
-                    )
-
-                // -------------------------------------------------
-                // USE EXISTING DESTINATION OR CREATE A NEW ONE
-                // -------------------------------------------------
-
-                val destinationId =
-                    existingDestination?.id
-                        ?: destinationDao.insertDestination(
-                            DestinationEntity(
-                                name = location
-                            )
-                        )
-
-                // -------------------------------------------------
-                // LINK ITINERARY → DESTINATION
-                // -------------------------------------------------
-
-                itineraryDestinationDao.insertItineraryDestination(
-                    ItineraryDestinationEntity(
-                        itineraryId = itineraryId,
-                        destinationId = destinationId
-                    )
+            val savedItinerary =
+                itinerary.copy(
+                    id = itineraryId
                 )
-            }
+
+            syncItineraryToDestination(
+                savedItinerary
+            )
         }
     }
 
@@ -652,62 +832,19 @@ class TripViewModel(
 
         viewModelScope.launch {
 
-            // -------------------------------------------------
-            // SAVE THE ITINERARY ITEM
-            // -------------------------------------------------
+            val oldDestinationIds =
+                itineraryDestinationDao
+                    .getDestinationIdsForItinerary(
+                        itinerary.id
+                    )
 
             itineraryDao.updateItinerary(
                 itinerary
             )
 
-            // -------------------------------------------------
-            // UPDATE DESTINATION RELATIONSHIP
-            //
-            // The Location field is used as the destination name.
-            // If the location has changed, remove the old
-            // destination links and create/find the new one.
-            // -------------------------------------------------
-
-            itineraryDestinationDao.deleteDestinationsForItinerary(
-                itinerary.id
+            syncItineraryToDestination(
+                itinerary
             )
-
-            val location =
-                itinerary.location
-                    ?.trim()
-                    ?.takeIf {
-                        it.isNotBlank()
-                    }
-
-            if (location != null) {
-
-                val existingDestination =
-                    destinationDao.getDestinationByName(
-                        location
-                    )
-
-                val destinationId =
-                    existingDestination?.id
-                        ?: destinationDao.insertDestination(
-                            DestinationEntity(
-                                name = location
-                            )
-                        )
-
-                itineraryDestinationDao.insertItineraryDestination(
-                    ItineraryDestinationEntity(
-                        itineraryId = itinerary.id,
-                        destinationId = destinationId
-                    )
-                )
-            }
-
-            // -------------------------------------------------
-            // SYNC BACK TO LINKED ACTIVITY
-            //
-            // Only itinerary items created from an Activity
-            // have an activityId.
-            // -------------------------------------------------
 
             val activityId =
                 itinerary.activityId
@@ -723,51 +860,35 @@ class TripViewModel(
 
                     val updatedActivity =
                         existingActivity.copy(
-
-                            // Itinerary title → Activity name
-                            name =
-                                itinerary.title,
-
-                            // Keep the activity type
-                            // in step with the itinerary.
-                            type =
-                                itinerary.type,
-
-                            // Itinerary date → Activity date
-                            date =
-                                itinerary.date,
-
-                            // Itinerary time → Activity start time
-                            startTime =
-                                itinerary.time,
-
-                            // Itinerary location → Activity location
-                            location =
-                                itinerary.location,
-
-                            // Itinerary notes → Activity notes
-                            notes =
-                                itinerary.notes,
-
-                            // Itinerary booked → Activity booked
-                            booked =
-                                itinerary.booked
+                            name = itinerary.title,
+                            type = itinerary.type,
+                            date = itinerary.date,
+                            startTime = itinerary.time,
+                            location = itinerary.location,
+                            notes = itinerary.notes,
+                            booked = itinerary.booked
                         )
 
                     activityDao.updateActivity(
                         updatedActivity
                     )
 
-                    // -------------------------------------------------
-                    // If the Activity has just been marked as
-                    // unbooked, normal Activity → Itinerary
-                    // synchronisation will remove this itinerary item.
-                    // -------------------------------------------------
+                    syncActivityToDestination(
+                        updatedActivity
+                    )
 
                     syncActivityToItinerary(
                         updatedActivity
                     )
                 }
+            }
+
+            for (destinationId in oldDestinationIds) {
+
+                cleanupOldDestination(
+                    tripId = itinerary.tripId,
+                    destinationId = destinationId
+                )
             }
         }
     }
@@ -778,13 +899,11 @@ class TripViewModel(
 
         viewModelScope.launch {
 
-            // -------------------------------------------------
-            // If this itinerary item came from an Activity,
-            // deleting it should also remove the Activity's
-            // booked itinerary relationship.
-            //
-            // We do NOT delete the Activity itself.
-            // -------------------------------------------------
+            val oldDestinationIds =
+                itineraryDestinationDao
+                    .getDestinationIdsForItinerary(
+                        itinerary.id
+                    )
 
             val activityId =
                 itinerary.activityId
@@ -803,24 +922,227 @@ class TripViewModel(
                             booked = false
                         )
                     )
+
+                    activityDestinationDao
+                        .deleteDestinationsForActivity(
+                            activity.id
+                        )
                 }
             }
 
-            // -------------------------------------------------
-            // REMOVE ITINERARY → DESTINATION RELATIONSHIP
-            // -------------------------------------------------
-
-            itineraryDestinationDao.deleteDestinationsForItinerary(
-                itinerary.id
-            )
-
-            // -------------------------------------------------
-            // DELETE THE ITINERARY ITEM
-            // -------------------------------------------------
+            itineraryDestinationDao
+                .deleteDestinationsForItinerary(
+                    itinerary.id
+                )
 
             itineraryDao.deleteItinerary(
                 itinerary
             )
+
+            for (destinationId in oldDestinationIds) {
+
+                cleanupOldDestination(
+                    tripId = itinerary.tripId,
+                    destinationId = destinationId
+                )
+            }
+
+            cleanupOrphanDestinations()
         }
     }
+
+    // ---------------------------------------------------------
+    // Itinerary → Destination synchronisation
+    // ---------------------------------------------------------
+
+    private suspend fun syncItineraryToDestination(
+        itinerary: ItineraryEntity
+    ) {
+
+        itineraryDestinationDao
+            .deleteDestinationsForItinerary(
+                itinerary.id
+            )
+
+        val location =
+            itinerary.location
+                ?.trim()
+                ?.takeIf {
+                    it.isNotBlank()
+                }
+
+        if (location == null) {
+
+            return
+        }
+
+        val existingDestination =
+            destinationDao.getDestinationByName(
+                location
+            )
+
+        val destinationId =
+            existingDestination?.id
+                ?: destinationDao.insertDestination(
+                    DestinationEntity(
+                        name = location
+                    )
+                )
+
+        itineraryDestinationDao
+            .insertItineraryDestination(
+                ItineraryDestinationEntity(
+                    itineraryId = itinerary.id,
+                    destinationId = destinationId
+                )
+            )
+
+        tripDestinationDao.insertTripDestination(
+            TripDestinationEntity(
+                tripId = itinerary.tripId,
+                destinationId = destinationId
+            )
+        )
     }
+
+    // ---------------------------------------------------------
+    // Destination cleanup
+    // ---------------------------------------------------------
+
+    private suspend fun cleanupOldDestination(
+        tripId: Long,
+        destinationId: Long
+    ) {
+
+        val activities =
+            activityDao
+                .getActivitiesForTrip(
+                    tripId
+                )
+                .first()
+
+        for (activity in activities) {
+
+            val ids =
+                activityDestinationDao
+                    .getDestinationIdsForActivity(
+                        activity.id
+                    )
+
+            if (destinationId in ids) {
+
+                return
+            }
+        }
+
+        val itineraries =
+            itineraryDao
+                .getItineraryForTrip(
+                    tripId
+                )
+                .first()
+
+        for (itinerary in itineraries) {
+
+            val ids =
+                itineraryDestinationDao
+                    .getDestinationIdsForItinerary(
+                        itinerary.id
+                    )
+
+            if (destinationId in ids) {
+
+                return
+            }
+        }
+
+        tripDestinationDao.deleteTripDestination(
+            tripId,
+            destinationId
+        )
+
+        cleanupOrphanDestinations()
+    }
+
+    // ---------------------------------------------------------
+    // Global orphan destination cleanup
+    // ---------------------------------------------------------
+
+    private suspend fun cleanupOrphanDestinations() {
+
+        val destinations =
+            destinationDao
+                .getAllDestinations()
+                .first()
+
+        if (destinations.isEmpty()) {
+
+            return
+        }
+
+        val trips =
+            repository
+                .getTrips()
+                .first()
+
+        val referencedDestinationIds =
+            mutableSetOf<Long>()
+
+        for (trip in trips) {
+
+            referencedDestinationIds.addAll(
+                tripDestinationDao
+                    .getDestinationIdsForTrip(
+                        trip.id
+                    )
+            )
+
+            val activities =
+                activityDao
+                    .getActivitiesForTrip(
+                        trip.id
+                    )
+                    .first()
+
+            for (activity in activities) {
+
+                referencedDestinationIds.addAll(
+                    activityDestinationDao
+                        .getDestinationIdsForActivity(
+                            activity.id
+                        )
+                )
+            }
+
+            val itineraries =
+                itineraryDao
+                    .getItineraryForTrip(
+                        trip.id
+                    )
+                    .first()
+
+            for (itinerary in itineraries) {
+
+                referencedDestinationIds.addAll(
+                    itineraryDestinationDao
+                        .getDestinationIdsForItinerary(
+                            itinerary.id
+                        )
+                )
+            }
+        }
+
+        for (destination in destinations) {
+
+            if (
+                destination.id !in
+                referencedDestinationIds
+            ) {
+
+                destinationDao.deleteDestination(
+                    destination.id
+                )
+            }
+        }
+    }
+}

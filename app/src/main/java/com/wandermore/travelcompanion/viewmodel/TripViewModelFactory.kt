@@ -10,6 +10,7 @@ import com.wandermore.travelcompanion.database.ItineraryDao
 import com.wandermore.travelcompanion.database.ItineraryDestinationDao
 import com.wandermore.travelcompanion.database.TodoDao
 import com.wandermore.travelcompanion.database.TripDao
+import com.wandermore.travelcompanion.database.TripDestinationDao
 import com.wandermore.travelcompanion.database.TripEstimateDao
 
 class TripViewModelFactory(
@@ -21,7 +22,8 @@ class TripViewModelFactory(
     private val tripEstimateDao: TripEstimateDao,
     private val destinationDao: DestinationDao,
     private val itineraryDestinationDao: ItineraryDestinationDao,
-    private val activityDestinationDao: ActivityDestinationDao
+    private val activityDestinationDao: ActivityDestinationDao,
+    private val tripDestinationDao: TripDestinationDao
 ) : ViewModelProvider.Factory {
 
     override fun <T : ViewModel> create(
@@ -41,7 +43,8 @@ class TripViewModelFactory(
                 tripEstimateDao,
                 destinationDao,
                 itineraryDestinationDao,
-                activityDestinationDao
+                activityDestinationDao,
+                tripDestinationDao
             ) as T
         }
 

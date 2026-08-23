@@ -25,6 +25,7 @@ interface ItineraryDestinationDao {
         itineraryId: Long
     ): List<DestinationEntity>
 
+
     // ---------------------------------------------------------
     // GET DESTINATION IDS FOR AN ITINERARY ITEM
     // ---------------------------------------------------------
@@ -40,6 +41,23 @@ interface ItineraryDestinationDao {
         itineraryId: Long
     ): List<Long>
 
+
+    // ---------------------------------------------------------
+    // COUNT ITINERARIES USING A DESTINATION
+    // ---------------------------------------------------------
+
+    @Query(
+        """
+        SELECT COUNT(*)
+        FROM itinerary_destinations
+        WHERE destinationId = :destinationId
+        """
+    )
+    suspend fun countItinerariesForDestination(
+        destinationId: Long
+    ): Int
+
+
     // ---------------------------------------------------------
     // ADD DESTINATION
     // ---------------------------------------------------------
@@ -48,6 +66,7 @@ interface ItineraryDestinationDao {
     suspend fun insertItineraryDestination(
         itineraryDestination: ItineraryDestinationEntity
     )
+
 
     // ---------------------------------------------------------
     // REMOVE DESTINATION
@@ -64,6 +83,7 @@ interface ItineraryDestinationDao {
         itineraryId: Long,
         destinationId: Long
     )
+
 
     // ---------------------------------------------------------
     // REMOVE ALL DESTINATIONS

@@ -4,8 +4,8 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
 import com.wandermore.travelcompanion.data.repository.ExchangeRateRepository
@@ -19,7 +19,6 @@ import com.wandermore.travelcompanion.viewmodel.TripViewModel
 import com.wandermore.travelcompanion.viewmodel.TripViewModelFactory
 import com.wandermore.travelcompanion.viewmodel.UserSettingsViewModel
 import com.wandermore.travelcompanion.viewmodel.UserSettingsViewModelFactory
-
 
 class MainActivity : ComponentActivity() {
 
@@ -38,28 +37,27 @@ class MainActivity : ComponentActivity() {
                 val navController =
                     rememberNavController()
 
-
                 val database =
                     DatabaseProvider.getDatabase(
                         applicationContext
                     )
 
-
                 val tripViewModel: TripViewModel =
                     viewModel(
-                        factory = TripViewModelFactory(
-                            database.tripDao(),
-                            database.expenseDao(),
-                            database.todoDao(),
-                            database.activityDao(),
-                            database.itineraryDao(),
-                            database.tripEstimateDao(),
-                            database.destinationDao(),
-                            database.itineraryDestinationDao(),
-                            database.activityDestinationDao()
-                        )
+                        factory =
+                            TripViewModelFactory(
+                                database.tripDao(),
+                                database.expenseDao(),
+                                database.todoDao(),
+                                database.activityDao(),
+                                database.itineraryDao(),
+                                database.tripEstimateDao(),
+                                database.destinationDao(),
+                                database.itineraryDestinationDao(),
+                                database.activityDestinationDao(),
+                                database.tripDestinationDao()
+                            )
                     )
-
 
                 val currencyRateService =
                     remember {
@@ -67,7 +65,6 @@ class MainActivity : ComponentActivity() {
                         CurrencyRateService()
 
                     }
-
 
                 val exchangeRateRepository =
                     remember {
@@ -79,7 +76,6 @@ class MainActivity : ComponentActivity() {
 
                     }
 
-
                 val userSettingsRepository =
                     remember {
 
@@ -89,7 +85,6 @@ class MainActivity : ComponentActivity() {
 
                     }
 
-
                 val userSettingsViewModel:
                         UserSettingsViewModel =
                     viewModel(
@@ -98,7 +93,6 @@ class MainActivity : ComponentActivity() {
                                 userSettingsRepository
                             )
                     )
-
 
                 val exchangeRateViewModel:
                         ExchangeRateViewModel =
@@ -128,11 +122,7 @@ class MainActivity : ComponentActivity() {
                         userSettingsRepository,
                     database = database
                 )
-
             }
-
         }
-
     }
-
 }

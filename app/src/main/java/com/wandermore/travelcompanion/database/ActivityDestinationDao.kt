@@ -25,6 +25,7 @@ interface ActivityDestinationDao {
         activityId: Long
     ): List<DestinationEntity>
 
+
     // ---------------------------------------------------------
     // GET DESTINATION IDS FOR AN ACTIVITY
     // ---------------------------------------------------------
@@ -40,6 +41,23 @@ interface ActivityDestinationDao {
         activityId: Long
     ): List<Long>
 
+
+    // ---------------------------------------------------------
+    // COUNT ACTIVITIES USING A DESTINATION
+    // ---------------------------------------------------------
+
+    @Query(
+        """
+        SELECT COUNT(*)
+        FROM activity_destinations
+        WHERE destinationId = :destinationId
+        """
+    )
+    suspend fun countActivitiesForDestination(
+        destinationId: Long
+    ): Int
+
+
     // ---------------------------------------------------------
     // ADD DESTINATION
     // ---------------------------------------------------------
@@ -48,6 +66,7 @@ interface ActivityDestinationDao {
     suspend fun insertActivityDestination(
         activityDestination: ActivityDestinationEntity
     )
+
 
     // ---------------------------------------------------------
     // REMOVE DESTINATION
@@ -64,6 +83,7 @@ interface ActivityDestinationDao {
         activityId: Long,
         destinationId: Long
     )
+
 
     // ---------------------------------------------------------
     // REMOVE ALL DESTINATIONS

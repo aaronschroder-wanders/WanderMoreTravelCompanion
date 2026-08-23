@@ -2,6 +2,7 @@ package com.wandermore.travelcompanion.database
 
 import androidx.room.Dao
 import androidx.room.Insert
+import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import kotlinx.coroutines.flow.Flow
 
@@ -42,10 +43,30 @@ interface TripDestinationDao {
     ): List<Long>
 
     // ---------------------------------------------------------
-    // ADD DESTINATION TO TRIP
+    // GET TRIPS USING A DESTINATION
     // ---------------------------------------------------------
 
-    @Insert
+    @Query(
+        """
+        SELECT tripId
+        FROM trip_destinations
+        WHERE destinationId = :destinationId
+        """
+    )
+    suspend fun getTripIdsForDestination(
+        destinationId: Long
+    ): List<Long>
+
+    // ---------------------------------------------------------
+    // ADD DESTINATION TO TRIP
+    //
+    // IGNORE prevents a crash if the destination is already
+    // associated with this trip.
+    // ---------------------------------------------------------
+
+    @Insert(
+        onConflict = OnConflictStrategy.IGNORE
+    )
     suspend fun insertTripDestination(
         tripDestination: TripDestinationEntity
     )

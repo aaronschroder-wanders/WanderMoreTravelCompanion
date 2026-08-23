@@ -55,6 +55,8 @@ import com.wandermore.travelcompanion.ui.screens.TripDetailsScreen
 import com.wandermore.travelcompanion.ui.screens.TripEstimatesScreen
 import com.wandermore.travelcompanion.ui.screens.TripExpensesScreen
 import com.wandermore.travelcompanion.ui.screens.TripHubScreen
+import com.wandermore.travelcompanion.ui.screens.DestinationsScreen
+import com.wandermore.travelcompanion.ui.screens.DestinationDetailsScreen
 import com.wandermore.travelcompanion.viewmodel.ExchangeRateViewModel
 import com.wandermore.travelcompanion.viewmodel.TripViewModel
 import androidx.compose.runtime.rememberCoroutineScope
@@ -284,6 +286,13 @@ fun AppNavigation(
                         )
                     },
 
+                    onDestinations = {
+
+                        navController.navigate(
+                            "destinations"
+                        )
+                    },
+
                     onBackup = {
 
                         val filename =
@@ -375,6 +384,13 @@ fun AppNavigation(
 
                             navController.navigate(
                                 "todo/$tripId"
+                            )
+                        },
+
+                        onDestinations = {
+
+                            navController.navigate(
+                                "destinations/$tripId"
                             )
                         },
 
@@ -1111,6 +1127,84 @@ fun AppNavigation(
                 }
             }
 
+// =========================================================
+// DESTINATIONS
+// =========================================================
+
+            composable(
+                "destinations/{tripId}"
+            ) { entry ->
+
+                val tripId =
+                    entry.arguments
+                        ?.getString("tripId")
+                        ?.toLongOrNull()
+
+                if (tripId != null) {
+
+                    DestinationsScreen(
+
+                        tripId = tripId,
+
+                        tripViewModel =
+                            tripViewModel,
+
+                        onDestinationClick = { destinationId ->
+
+                            navController.navigate(
+                                "destinationDetails/$tripId/$destinationId"
+                            )
+                        },
+
+                        onBack = {
+
+                            navController.popBackStack()
+                        }
+                    )
+                }
+            }
+
+
+// =========================================================
+// DESTINATION DETAILS
+// =========================================================
+
+            composable(
+                "destinationDetails/{tripId}/{destinationId}"
+            ) { entry ->
+
+                val tripId =
+                    entry.arguments
+                        ?.getString("tripId")
+                        ?.toLongOrNull()
+
+                val destinationId =
+                    entry.arguments
+                        ?.getString("destinationId")
+                        ?.toLongOrNull()
+
+                if (
+                    tripId != null &&
+                    destinationId != null
+                ) {
+
+                    DestinationDetailsScreen(
+
+                        tripId = tripId,
+
+                        destinationId =
+                            destinationId,
+
+                        tripViewModel =
+                            tripViewModel,
+
+                        onBack = {
+
+                            navController.popBackStack()
+                        }
+                    )
+                }
+            }
 
             // =========================================================
             // TRIP EXPENSES

@@ -24,6 +24,8 @@ fun SettingsScreen(
 
     onExchangeRates: () -> Unit,
 
+    onDestinations: () -> Unit,
+
     onBackup: () -> Unit,
 
     onRestore: () -> Unit,
@@ -165,6 +167,39 @@ fun SettingsScreen(
 
                     text =
                         "Currency Exchange Rates"
+
+                )
+
+            }
+
+        }
+
+
+        // =========================================================
+        // DESTINATIONS
+        // =========================================================
+
+        Card(
+
+            modifier =
+                Modifier.fillMaxWidth()
+
+        ) {
+
+            Button(
+
+                onClick =
+                    onDestinations,
+
+                modifier =
+                    Modifier.fillMaxWidth()
+
+            ) {
+
+                Text(
+
+                    text =
+                        "Destinations"
 
                 )
 
