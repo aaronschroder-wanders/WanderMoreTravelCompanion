@@ -28,6 +28,7 @@ import androidx.compose.material3.TimePickerDialog
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -36,6 +37,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.wandermore.travelcompanion.database.ItineraryEntity
+import com.wandermore.travelcompanion.ui.components.DestinationSelector
 import com.wandermore.travelcompanion.viewmodel.TripViewModel
 import java.time.Instant
 import java.time.LocalDate
@@ -51,6 +53,10 @@ fun AddItineraryScreen(
     onItineraryAdded: () -> Unit,
     onBack: () -> Unit
 ) {
+
+    // =========================================================
+    // FORM STATE
+    // =========================================================
 
     var date by remember {
         mutableStateOf<LocalDate?>(null)
@@ -80,13 +86,40 @@ fun AddItineraryScreen(
         mutableStateOf("")
     }
 
-    // ---------------------------------------------------------
-    // BOOKED
-    // ---------------------------------------------------------
-
     var booked by remember {
         mutableStateOf(false)
     }
+
+    // =========================================================
+    // DESTINATION STATE
+    // =========================================================
+
+    var selectedDestinationIds by remember {
+        mutableStateOf<Set<Long>>(emptySet())
+    }
+
+    /*
+     * IMPORTANT:
+     *
+     * Use ALL ACTIVE destinations here.
+     *
+     * This means destinations created in Settings will appear
+     * even if they have not yet been associated with this trip.
+     *
+     * The selected destinations are added to the trip when the
+     * itinerary item is saved.
+     */
+
+    val destinations by
+    tripViewModel
+        .getAllActiveDestinations()
+        .collectAsState(
+            initial = emptyList()
+        )
+
+    // =========================================================
+    // DIALOG STATE
+    // =========================================================
 
     var showDatePicker by remember {
         mutableStateOf(false)
@@ -116,6 +149,10 @@ fun AddItineraryScreen(
     val timeFormatter =
         DateTimeFormatter.ofPattern("HH:mm")
 
+    // =========================================================
+    // SCREEN
+    // =========================================================
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -126,13 +163,14 @@ fun AddItineraryScreen(
             .padding(16.dp)
     ) {
 
-        // -----------------------------------------------------
+        // =====================================================
         // HEADER
-        // -----------------------------------------------------
+        // =====================================================
 
         Text(
             text = "Add Itinerary Item",
-            style = MaterialTheme.typography.headlineMedium
+            style =
+                MaterialTheme.typography.headlineMedium
         )
 
         Spacer(
@@ -140,32 +178,40 @@ fun AddItineraryScreen(
         )
 
         Text(
-            text = "Add a key event, stay or travel plan.",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            text =
+                "Add a key event, stay or travel plan.",
+            style =
+                MaterialTheme.typography.bodyMedium,
+            color =
+                MaterialTheme.colorScheme
+                    .onSurfaceVariant
         )
 
         Spacer(
             modifier = Modifier.height(20.dp)
         )
 
-        // -----------------------------------------------------
+        // =====================================================
         // DATE
-        // -----------------------------------------------------
+        // =====================================================
 
         OutlinedButton(
             onClick = {
                 showDatePicker = true
             },
-            modifier = Modifier.fillMaxWidth()
+            modifier =
+                Modifier.fillMaxWidth()
         ) {
 
             Text(
-                text = if (date == null) {
-                    "Select date"
-                } else {
-                    date!!.format(dateFormatter)
-                }
+                text =
+                    if (date == null) {
+                        "Select date"
+                    } else {
+                        date!!.format(
+                            dateFormatter
+                        )
+                    }
             )
         }
 
@@ -173,23 +219,27 @@ fun AddItineraryScreen(
             modifier = Modifier.height(12.dp)
         )
 
-        // -----------------------------------------------------
+        // =====================================================
         // TIME
-        // -----------------------------------------------------
+        // =====================================================
 
         OutlinedButton(
             onClick = {
                 showTimePicker = true
             },
-            modifier = Modifier.fillMaxWidth()
+            modifier =
+                Modifier.fillMaxWidth()
         ) {
 
             Text(
-                text = if (time == null) {
-                    "Select time — optional"
-                } else {
-                    time!!.format(timeFormatter)
-                }
+                text =
+                    if (time == null) {
+                        "Select time — optional"
+                    } else {
+                        time!!.format(
+                            timeFormatter
+                        )
+                    }
             )
         }
 
@@ -197,9 +247,9 @@ fun AddItineraryScreen(
             modifier = Modifier.height(12.dp)
         )
 
-        // -----------------------------------------------------
+        // =====================================================
         // TITLE
-        // -----------------------------------------------------
+        // =====================================================
 
         OutlinedTextField(
             value = title,
@@ -212,7 +262,8 @@ fun AddItineraryScreen(
             placeholder = {
                 Text("e.g. London to Budapest")
             },
-            modifier = Modifier.fillMaxWidth(),
+            modifier =
+                Modifier.fillMaxWidth(),
             singleLine = true
         )
 
@@ -220,16 +271,17 @@ fun AddItineraryScreen(
             modifier = Modifier.height(12.dp)
         )
 
-        // -----------------------------------------------------
+        // =====================================================
         // TYPE
-        // -----------------------------------------------------
+        // =====================================================
 
         ExposedDropdownMenuBox(
             expanded = typeExpanded,
             onExpandedChange = {
                 typeExpanded = !typeExpanded
             },
-            modifier = Modifier.fillMaxWidth()
+            modifier =
+                Modifier.fillMaxWidth()
         ) {
 
             OutlinedTextField(
@@ -243,9 +295,11 @@ fun AddItineraryScreen(
                     Text("Select type")
                 },
                 trailingIcon = {
-                    ExposedDropdownMenuDefaults.TrailingIcon(
-                        expanded = typeExpanded
-                    )
+                    ExposedDropdownMenuDefaults
+                        .TrailingIcon(
+                            expanded =
+                                typeExpanded
+                        )
                 },
                 modifier = Modifier
                     .menuAnchor()
@@ -260,16 +314,22 @@ fun AddItineraryScreen(
                 }
             ) {
 
-                itineraryTypes.forEach { itineraryType ->
+                itineraryTypes.forEach {
+                        itineraryType ->
 
                     DropdownMenuItem(
                         text = {
-                            Text(itineraryType)
+                            Text(
+                                itineraryType
+                            )
                         },
                         onClick = {
 
-                            type = itineraryType
-                            typeExpanded = false
+                            type =
+                                itineraryType
+
+                            typeExpanded =
+                                false
                         }
                     )
                 }
@@ -280,29 +340,40 @@ fun AddItineraryScreen(
             modifier = Modifier.height(12.dp)
         )
 
-        // -----------------------------------------------------
+        // =====================================================
         // BOOKED
-        // -----------------------------------------------------
+        // =====================================================
 
         Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+            modifier =
+                Modifier.fillMaxWidth(),
+            horizontalArrangement =
+                Arrangement.SpaceBetween,
+            verticalAlignment =
+                Alignment.CenterVertically
         ) {
 
             Column(
-                modifier = Modifier.weight(1f)
+                modifier =
+                    Modifier.weight(1f)
             ) {
 
                 Text(
                     text = "Booked",
-                    style = MaterialTheme.typography.bodyLarge
+                    style =
+                        MaterialTheme.typography
+                            .bodyLarge
                 )
 
                 Text(
-                    text = "Mark this item as already booked.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    text =
+                        "Mark this item as already booked.",
+                    style =
+                        MaterialTheme.typography
+                            .bodySmall,
+                    color =
+                        MaterialTheme.colorScheme
+                            .onSurfaceVariant
                 )
             }
 
@@ -318,9 +389,9 @@ fun AddItineraryScreen(
             modifier = Modifier.height(12.dp)
         )
 
-        // -----------------------------------------------------
+        // =====================================================
         // NIGHTS
-        // -----------------------------------------------------
+        // =====================================================
 
         OutlinedTextField(
             value = nightsText,
@@ -340,7 +411,8 @@ fun AddItineraryScreen(
             placeholder = {
                 Text("Optional")
             },
-            modifier = Modifier.fillMaxWidth(),
+            modifier =
+                Modifier.fillMaxWidth(),
             singleLine = true
         )
 
@@ -348,9 +420,9 @@ fun AddItineraryScreen(
             modifier = Modifier.height(12.dp)
         )
 
-        // -----------------------------------------------------
+        // =====================================================
         // LOCATION
-        // -----------------------------------------------------
+        // =====================================================
 
         OutlinedTextField(
             value = location,
@@ -361,9 +433,12 @@ fun AddItineraryScreen(
                 Text("Location")
             },
             placeholder = {
-                Text("City, address or destination")
+                Text(
+                    "City, address or destination"
+                )
             },
-            modifier = Modifier.fillMaxWidth(),
+            modifier =
+                Modifier.fillMaxWidth(),
             singleLine = true
         )
 
@@ -371,9 +446,65 @@ fun AddItineraryScreen(
             modifier = Modifier.height(12.dp)
         )
 
-        // -----------------------------------------------------
+        // =====================================================
+        // DESTINATION
+        // =====================================================
+
+        DestinationSelector(
+
+            destinations =
+                destinations,
+
+            selectedDestinationIds =
+                selectedDestinationIds,
+
+            onSelectionChanged = {
+                selectedDestinationIds =
+                    it
+            },
+
+            /*
+             * Create a new global destination and immediately
+             * return its database ID.
+             *
+             * We do NOT need to add it to the trip here.
+             *
+             * The destination will be associated with the trip
+             * when addItinerary() saves the selected destinations.
+             */
+
+            onAddDestination = {
+                    destinationName,
+                    onResult ->
+
+                tripViewModel
+                    .addDestinationAndReturnId(
+                        destinationName
+                    ) { destinationId ->
+
+                        if (destinationId != null) {
+
+                            selectedDestinationIds =
+                                selectedDestinationIds +
+                                        destinationId
+
+                            onResult(true)
+
+                        } else {
+
+                            onResult(false)
+                        }
+                    }
+            }
+        )
+
+        Spacer(
+            modifier = Modifier.height(12.dp)
+        )
+
+        // =====================================================
         // NOTES
-        // -----------------------------------------------------
+        // =====================================================
 
         OutlinedTextField(
             value = notes,
@@ -388,7 +519,8 @@ fun AddItineraryScreen(
                     "Transport information, address, reminders, etc."
                 )
             },
-            modifier = Modifier.fillMaxWidth(),
+            modifier =
+                Modifier.fillMaxWidth(),
             minLines = 3
         )
 
@@ -396,19 +528,21 @@ fun AddItineraryScreen(
             modifier = Modifier.height(24.dp)
         )
 
-        // -----------------------------------------------------
+        // =====================================================
         // BUTTONS
-        // -----------------------------------------------------
+        // =====================================================
 
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier =
+                Modifier.fillMaxWidth(),
             horizontalArrangement =
                 Arrangement.spacedBy(12.dp)
         ) {
 
             OutlinedButton(
                 onClick = onBack,
-                modifier = Modifier.weight(1f)
+                modifier =
+                    Modifier.weight(1f)
             ) {
                 Text("Cancel")
             }
@@ -424,36 +558,64 @@ fun AddItineraryScreen(
 
                     val itinerary =
                         ItineraryEntity(
-                            tripId = tripId,
-                            date = selectedDate,
-                            time = time,
-                            title = title.trim(),
-                            type = type,
-                            nights = nights,
+                            tripId =
+                                tripId,
+
+                            date =
+                                selectedDate,
+
+                            time =
+                                time,
+
+                            title =
+                                title.trim(),
+
+                            type =
+                                type,
+
+                            nights =
+                                nights,
+
                             location =
-                                location.trim()
+                                location
+                                    .trim()
                                     .ifBlank {
                                         null
                                     },
+
                             notes =
-                                notes.trim()
+                                notes
+                                    .trim()
                                     .ifBlank {
                                         null
                                     },
-                            booked = booked
+
+                            booked =
+                                booked
                         )
 
+                    /*
+                     * selectedDestinationIds is passed explicitly.
+                     *
+                     * An empty Set means the user deliberately
+                     * selected no destinations.
+                     */
+
                     tripViewModel.addItinerary(
-                        itinerary
+                        itinerary,
+                        selectedDestinationIds
                     )
 
                     onItineraryAdded()
                 },
+
                 enabled =
                     date != null &&
                             title.isNotBlank() &&
                             type.isNotBlank(),
-                modifier = Modifier.weight(1.5f)
+
+                modifier =
+                    Modifier.weight(1.5f)
             ) {
                 Text("Add Item")
             }
@@ -474,9 +636,11 @@ fun AddItineraryScreen(
             rememberDatePickerState()
 
         DatePickerDialog(
+
             onDismissRequest = {
                 showDatePicker = false
             },
+
             confirmButton = {
 
                 Button(
@@ -492,7 +656,8 @@ fun AddItineraryScreen(
                                             millis
                                         )
                                         .atZone(
-                                            ZoneId.systemDefault()
+                                            ZoneId
+                                                .systemDefault()
                                         )
                                         .toLocalDate()
                             }
@@ -503,6 +668,7 @@ fun AddItineraryScreen(
                     Text("OK")
                 }
             },
+
             dismissButton = {
 
                 OutlinedButton(
@@ -516,7 +682,8 @@ fun AddItineraryScreen(
         ) {
 
             DatePicker(
-                state = datePickerState
+                state =
+                    datePickerState
             )
         }
     }
@@ -536,9 +703,11 @@ fun AddItineraryScreen(
             )
 
         TimePickerDialog(
+
             onDismissRequest = {
                 showTimePicker = false
             },
+
             confirmButton = {
 
                 Button(
@@ -556,13 +725,15 @@ fun AddItineraryScreen(
                     Text("OK")
                 }
             },
+
             title = {
                 Text("Select time")
             }
         ) {
 
             TimePicker(
-                state = timePickerState
+                state =
+                    timePickerState
             )
         }
     }

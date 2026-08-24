@@ -28,15 +28,19 @@ import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.wandermore.travelcompanion.database.ItineraryEntity
+import com.wandermore.travelcompanion.ui.components.DestinationSelector
 import com.wandermore.travelcompanion.viewmodel.TripViewModel
+import kotlinx.coroutines.launch
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
@@ -53,9 +57,9 @@ fun EditItineraryScreen(
     onBack: () -> Unit
 ) {
 
-    // ---------------------------------------------------------
+    // =========================================================
     // FORM STATE
-    // ---------------------------------------------------------
+    // =========================================================
 
     var existingItem by remember {
         mutableStateOf<ItineraryEntity?>(null)
@@ -93,6 +97,26 @@ fun EditItineraryScreen(
         mutableStateOf(false)
     }
 
+    // =========================================================
+    // DESTINATION STATE
+    // =========================================================
+
+    var selectedDestinationIds by remember(
+        itineraryId
+    ) {
+        mutableStateOf<Set<Long>>(emptySet())
+    }
+
+    var destinationsLoaded by remember(
+        itineraryId
+    ) {
+        mutableStateOf(false)
+    }
+
+    // =========================================================
+    // DIALOG STATE
+    // =========================================================
+
     var showDatePicker by remember {
         mutableStateOf(false)
     }
@@ -105,9 +129,9 @@ fun EditItineraryScreen(
         mutableStateOf(false)
     }
 
-    // ---------------------------------------------------------
+    // =========================================================
     // LOAD EXISTING ITEM
-    // ---------------------------------------------------------
+    // =========================================================
 
     LaunchedEffect(itineraryId) {
 
@@ -124,20 +148,33 @@ fun EditItineraryScreen(
             time = item.time
             title = item.title
             type = item.type
+
             nightsText =
                 item.nights?.toString() ?: ""
+
             location =
                 item.location ?: ""
+
             notes =
                 item.notes ?: ""
+
             booked =
                 item.booked
+
+            selectedDestinationIds =
+                tripViewModel
+                    .getDestinationIdsForItinerary(
+                        item.id
+                    )
+                    .toSet()
+
+            destinationsLoaded = true
         }
     }
 
-    // ---------------------------------------------------------
-    // WAIT FOR ITEM
-    // ---------------------------------------------------------
+    // =========================================================
+    // CURRENT ITEM
+    // =========================================================
 
     if (existingItem == null) {
         return
@@ -145,6 +182,30 @@ fun EditItineraryScreen(
 
     val currentItem =
         existingItem!!
+
+    // =========================================================
+    // DESTINATIONS FOR THIS TRIP
+    // =========================================================
+
+    val destinations by
+    tripViewModel
+        .getDestinationsForTrip(
+            currentItem.tripId
+        )
+        .collectAsState(
+            initial = emptyList()
+        )
+
+    // =========================================================
+    // COROUTINE SCOPE
+    // =========================================================
+
+    val coroutineScope =
+        rememberCoroutineScope()
+
+    // =========================================================
+    // FORMATTERS
+    // =========================================================
 
     val dateFormatter =
         DateTimeFormatter.ofPattern(
@@ -416,6 +477,69 @@ fun EditItineraryScreen(
                 modifier = Modifier.height(12.dp)
             )
 
+            // =================================================
+            // DESTINATION
+            // =================================================
+
+            if (destinationsLoaded) {
+
+                DestinationSelector(
+                    destinations =
+                        destinations,
+
+                    selectedDestinationIds =
+                        selectedDestinationIds,
+
+                    onSelectionChanged = {
+                        selectedDestinationIds =
+                            it
+                    },
+
+                    onAddDestination = {
+                            destinationName,
+                            onResult ->
+
+                        tripViewModel.addDestination(
+                            destinationName
+                        ) { success ->
+
+                            if (success) {
+
+                                coroutineScope.launch {
+
+                                    val newDestination =
+                                        tripViewModel
+                                            .getDestinationByName(
+                                                destinationName
+                                            )
+
+                                    if (
+                                        newDestination != null
+                                    ) {
+
+                                        tripViewModel
+                                            .addDestinationToTrip(
+                                                currentItem.tripId,
+                                                newDestination.id
+                                            )
+
+                                        selectedDestinationIds =
+                                            selectedDestinationIds +
+                                                    newDestination.id
+                                    }
+                                }
+                            }
+
+                            onResult(success)
+                        }
+                    }
+                )
+            }
+
+            Spacer(
+                modifier = Modifier.height(12.dp)
+            )
+
             // -------------------------------------------------
             // NOTES
             // -------------------------------------------------
@@ -533,8 +657,16 @@ fun EditItineraryScreen(
                                 booked
                         )
 
+                    // =================================================
+                    // SAVE WITH EXPLICIT DESTINATIONS
+                    //
+                    // An empty Set is intentional:
+                    // it means the user has selected no destinations.
+                    // =================================================
+
                     tripViewModel.updateItinerary(
-                        updatedItem
+                        updatedItem,
+                        selectedDestinationIds
                     )
 
                     onItineraryUpdated()
@@ -543,7 +675,8 @@ fun EditItineraryScreen(
                 enabled =
                     date != null &&
                             title.isNotBlank() &&
-                            type.isNotBlank(),
+                            type.isNotBlank() &&
+                            destinationsLoaded,
 
                 modifier =
                     Modifier.weight(1f)

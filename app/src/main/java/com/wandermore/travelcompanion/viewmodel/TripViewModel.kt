@@ -1298,7 +1298,8 @@ class TripViewModel(
     // =========================================================
 
     fun addItinerary(
-        itinerary: ItineraryEntity
+        itinerary: ItineraryEntity,
+        destinationIds: Set<Long> = emptySet()
     ) {
 
         viewModelScope.launch {
@@ -1313,9 +1314,82 @@ class TripViewModel(
                     id = itineraryId
                 )
 
-            syncItineraryToDestination(
-                savedItinerary
+            syncItineraryToExplicitDestinations(
+                savedItinerary,
+                destinationIds
             )
+        }
+    }
+
+    // =========================================================
+// ITINERARY → EXPLICIT DESTINATIONS
+// =========================================================
+//
+// An empty Set is intentional.
+// It means the user has selected no destinations.
+//
+// This is separate from the legacy Location fallback below,
+// which is retained only for older/internal workflows.
+//
+
+    private suspend fun syncItineraryToExplicitDestinations(
+        itinerary: ItineraryEntity,
+        destinationIds: Set<Long>
+    ) {
+
+        val oldDestinationIds =
+            itineraryDestinationDao
+                .getDestinationIdsForItinerary(
+                    itinerary.id
+                )
+
+        itineraryDestinationDao
+            .deleteDestinationsForItinerary(
+                itinerary.id
+            )
+
+        for (destinationId in destinationIds.distinct()) {
+
+            val destination =
+                destinationDao.getDestinationById(
+                    destinationId
+                )
+
+            if (destination != null) {
+
+                itineraryDestinationDao
+                    .insertItineraryDestination(
+                        ItineraryDestinationEntity(
+                            itineraryId =
+                                itinerary.id,
+                            destinationId =
+                                destinationId
+                        )
+                    )
+
+                tripDestinationDao
+                    .insertTripDestination(
+                        TripDestinationEntity(
+                            tripId =
+                                itinerary.tripId,
+                            destinationId =
+                                destinationId
+                        )
+                    )
+            }
+        }
+
+        for (oldDestinationId in oldDestinationIds) {
+
+            if (
+                oldDestinationId !in
+                destinationIds
+            ) {
+
+                cleanupOrphanedDestination(
+                    oldDestinationId
+                )
+            }
         }
     }
 
@@ -1336,7 +1410,8 @@ class TripViewModel(
     }
 
     fun updateItinerary(
-        itinerary: ItineraryEntity
+        itinerary: ItineraryEntity,
+        destinationIds: Set<Long>
     ) {
 
         viewModelScope.launch {
@@ -1351,9 +1426,62 @@ class TripViewModel(
                 itinerary
             )
 
-            syncItineraryToDestination(
-                itinerary
-            )
+            // =====================================================
+            // ITINERARY DESTINATIONS
+            //
+            // destinationIds is always explicit here.
+            //
+            // An empty Set means the user deliberately selected
+            // no destinations, so we must remove all existing
+            // itinerary destination links.
+            // =====================================================
+
+            itineraryDestinationDao
+                .deleteDestinationsForItinerary(
+                    itinerary.id
+                )
+
+            for (destinationId in destinationIds.distinct()) {
+
+                val destination =
+                    destinationDao.getDestinationById(
+                        destinationId
+                    )
+
+                if (destination != null) {
+
+                    itineraryDestinationDao
+                        .insertItineraryDestination(
+                            ItineraryDestinationEntity(
+                                itineraryId =
+                                    itinerary.id,
+                                destinationId =
+                                    destinationId
+                            )
+                        )
+
+                    tripDestinationDao
+                        .insertTripDestination(
+                            TripDestinationEntity(
+                                tripId =
+                                    itinerary.tripId,
+                                destinationId =
+                                    destinationId
+                            )
+                        )
+                }
+            }
+
+            // =====================================================
+            // LINKED ACTIVITY
+            //
+            // If this itinerary item was created from an Activity,
+            // keep the Activity's normal fields synchronised.
+            //
+            // IMPORTANT:
+            // We do NOT overwrite the itinerary's explicitly
+            // selected destinations here.
+            // =====================================================
 
             val activityId =
                 itinerary.activityId
@@ -1371,61 +1499,63 @@ class TripViewModel(
                         existingActivity.copy(
                             name =
                                 itinerary.title,
+
                             type =
                                 itinerary.type,
+
                             date =
                                 itinerary.date,
+
                             startTime =
                                 itinerary.time,
+
                             location =
                                 itinerary.location,
+
                             notes =
                                 itinerary.notes,
+
                             booked =
                                 itinerary.booked
                         )
-
-                    val oldActivityDestinationIds =
-                        activityDestinationDao
-                            .getDestinationIdsForActivity(
-                                updatedActivity.id
-                            )
 
                     activityDao.updateActivity(
                         updatedActivity
                     )
 
-                    /*
-                     * A manually edited itinerary item still uses
-                     * its own destination/location workflow.
-                     *
-                     * This preserves the existing behaviour for
-                     * standalone itinerary items.
-                     */
-                    syncActivityToDestination(
-                        updatedActivity
+                    // =================================================
+                    // Keep the Activity destinations aligned with the
+                    // destinations explicitly selected on the
+                    // itinerary.
+                    // =================================================
+
+                    syncActivityToExplicitDestinations(
+                        updatedActivity,
+                        destinationIds
                     )
 
-                    syncActivityToItinerary(
-                        updatedActivity
-                    )
-
-                    for (
-                    destinationId
-                    in oldActivityDestinationIds
-                    ) {
-                        cleanupOrphanedDestination(
-                            destinationId
-                        )
-                    }
+                    // The linked itinerary already exists and has
+                    // just been given its explicit destinations above.
+                    // Do not call syncActivityToItinerary() here,
+                    // because that would rebuild the itinerary
+                    // destinations from the Activity and potentially
+                    // undo the user's selection.
                 }
             }
 
+            // =====================================================
+            // CLEAN UP DESTINATIONS THAT ARE NO LONGER USED
+            // =====================================================
+
             for (destinationId in oldDestinationIds) {
 
-                cleanupOrphanedDestination(
-                    destinationId
-                )
+                if (
+                    destinationId !in destinationIds
+                ) {
+                    cleanupOrphanedDestination(
+                        destinationId
+                    )
+                }
             }
         }
     }
