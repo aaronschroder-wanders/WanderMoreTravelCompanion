@@ -1114,13 +1114,6 @@ fun EditActivityScreen(
                                 type =
                                     type,
 
-                                location =
-                                    location
-                                        .trim()
-                                        .ifBlank {
-                                            null
-                                        },
-
                                 estimatedCost =
                                     parsedCost,
 

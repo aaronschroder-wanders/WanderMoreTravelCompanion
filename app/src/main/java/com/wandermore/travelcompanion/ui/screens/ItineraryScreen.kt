@@ -22,6 +22,7 @@ import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -35,6 +36,7 @@ import androidx.compose.ui.unit.dp
 import com.wandermore.travelcompanion.database.ItineraryEntity
 import com.wandermore.travelcompanion.ui.components.TripSectionHeader
 import com.wandermore.travelcompanion.viewmodel.TripViewModel
+import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 @Composable
@@ -66,6 +68,44 @@ fun ItineraryScreen(
         .collectAsState(initial = emptyList())
 
     // ---------------------------------------------------------
+    // LOAD DESTINATION NAMES FOR ITINERARY ITEMS
+    // ---------------------------------------------------------
+
+    var itineraryDestinations by remember {
+        mutableStateOf(
+            emptyMap<Long, List<String>>()
+        )
+    }
+
+    LaunchedEffect(itinerary) {
+
+        val destinationMap =
+            itinerary.associate { item ->
+
+                val destinationIds =
+                    tripViewModel
+                        .getDestinationIdsForItinerary(
+                            item.id
+                        )
+
+                val destinationNames =
+                    destinationIds.mapNotNull { destinationId ->
+
+                        tripViewModel
+                            .getDestinationById(
+                                destinationId
+                            )
+                            ?.name
+                    }
+
+                item.id to destinationNames
+            }
+
+        itineraryDestinations =
+            destinationMap
+    }
+
+    // ---------------------------------------------------------
     // FILTER
     // ---------------------------------------------------------
 
@@ -94,11 +134,26 @@ fun ItineraryScreen(
 
             "Others" ->
                 itinerary.filter {
-                    it.type.equals("Activity", ignoreCase = true) ||
-                            it.type.equals("Attraction", ignoreCase = true) ||
-                            it.type.equals("Arrival", ignoreCase = true) ||
-                            it.type.equals("Departure", ignoreCase = true) ||
-                            it.type.equals("Other", ignoreCase = true)
+                    it.type.equals(
+                        "Activity",
+                        ignoreCase = true
+                    ) ||
+                            it.type.equals(
+                                "Attraction",
+                                ignoreCase = true
+                            ) ||
+                            it.type.equals(
+                                "Arrival",
+                                ignoreCase = true
+                            ) ||
+                            it.type.equals(
+                                "Departure",
+                                ignoreCase = true
+                            ) ||
+                            it.type.equals(
+                                "Other",
+                                ignoreCase = true
+                            )
                 }
 
             else ->
@@ -174,7 +229,8 @@ fun ItineraryScreen(
                     Text("All")
                 },
                 modifier = Modifier.weight(1f),
-                colors = FilterChipDefaults.filterChipColors()
+                colors =
+                    FilterChipDefaults.filterChipColors()
             )
 
             FilterChip(
@@ -186,7 +242,8 @@ fun ItineraryScreen(
                     Text("Accom.")
                 },
                 modifier = Modifier.weight(1f),
-                colors = FilterChipDefaults.filterChipColors()
+                colors =
+                    FilterChipDefaults.filterChipColors()
             )
 
             FilterChip(
@@ -198,7 +255,8 @@ fun ItineraryScreen(
                     Text("Travel")
                 },
                 modifier = Modifier.weight(1f),
-                colors = FilterChipDefaults.filterChipColors()
+                colors =
+                    FilterChipDefaults.filterChipColors()
             )
 
             FilterChip(
@@ -210,7 +268,8 @@ fun ItineraryScreen(
                     Text("Others")
                 },
                 modifier = Modifier.weight(1f),
-                colors = FilterChipDefaults.filterChipColors()
+                colors =
+                    FilterChipDefaults.filterChipColors()
             )
         }
 
@@ -287,11 +346,13 @@ fun ItineraryScreen(
                             text =
                                 formatItineraryDate(date),
                             style =
-                                MaterialTheme.typography.titleMedium,
+                                MaterialTheme.typography
+                                    .titleMedium,
                             fontWeight =
                                 FontWeight.SemiBold,
                             color =
-                                MaterialTheme.colorScheme.primary,
+                                MaterialTheme.colorScheme
+                                    .primary,
                             modifier =
                                 Modifier.padding(
                                     top = 4.dp,
@@ -313,6 +374,12 @@ fun ItineraryScreen(
 
                         ItineraryCard(
                             item = item,
+
+                            destinations =
+                                itineraryDestinations[
+                                    item.id
+                                ] ?: emptyList(),
+
                             onClick = {
                                 onItinerarySelected(
                                     item.id
@@ -363,6 +430,7 @@ fun ItineraryScreen(
 @Composable
 private fun ItineraryCard(
     item: ItineraryEntity,
+    destinations: List<String>,
     onClick: () -> Unit
 ) {
 
@@ -475,6 +543,34 @@ private fun ItineraryCard(
                     color =
                         MaterialTheme.colorScheme
                             .primary,
+                    fontWeight =
+                        FontWeight.Medium
+                )
+            }
+
+            // -----------------------------------------------------
+            // DESTINATIONS
+            // -----------------------------------------------------
+
+            if (destinations.isNotEmpty()) {
+
+                Spacer(
+                    modifier =
+                        Modifier.height(5.dp)
+                )
+
+                Text(
+                    text =
+                        "📍 " +
+                                destinations.joinToString(
+                                    separator = " • "
+                                ),
+                    style =
+                        MaterialTheme.typography
+                            .bodySmall,
+                    color =
+                        MaterialTheme.colorScheme
+                            .onSurfaceVariant,
                     fontWeight =
                         FontWeight.Medium
                 )
@@ -639,7 +735,7 @@ private fun itinerarySymbol(
 // =================================================================
 
 private fun formatItineraryDate(
-    date: java.time.LocalDate?
+    date: LocalDate?
 ): String {
 
     if (date == null) {

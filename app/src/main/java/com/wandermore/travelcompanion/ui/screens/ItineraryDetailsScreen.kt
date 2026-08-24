@@ -21,6 +21,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -30,12 +31,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.repeatOnLifecycle
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import com.wandermore.travelcompanion.database.ItineraryEntity
+import com.wandermore.travelcompanion.viewmodel.TripViewModel
 import java.time.format.DateTimeFormatter
 
 @Composable
 fun ItineraryDetailsScreen(
     itinerary: ItineraryEntity,
+    tripViewModel: TripViewModel,
     onEdit: () -> Unit,
     onDelete: () -> Unit,
     onBack: () -> Unit
@@ -44,6 +50,70 @@ fun ItineraryDetailsScreen(
     var showDeleteDialog by remember {
         mutableStateOf(false)
     }
+
+    // =========================================================
+    // DESTINATION STATE
+    // =========================================================
+
+    var destinationNames by remember {
+        mutableStateOf<List<String>>(emptyList())
+    }
+
+    var destinationsLoaded by remember {
+        mutableStateOf(false)
+    }
+
+    // =========================================================
+    // LIFECYCLE
+    // =========================================================
+
+    val lifecycleOwner =
+        LocalLifecycleOwner.current
+
+    // =========================================================
+    // LOAD DESTINATIONS
+    //
+    // The Destination relationships are stored separately from
+    // ItineraryEntity, so they must be reloaded when this screen
+    // becomes active again after returning from Edit Itinerary.
+    // =========================================================
+
+    LaunchedEffect(
+        lifecycleOwner,
+        itinerary.id
+    ) {
+
+        lifecycleOwner.lifecycle.repeatOnLifecycle(
+            Lifecycle.State.RESUMED
+        ) {
+
+            destinationsLoaded = false
+
+            val destinationIds =
+                tripViewModel
+                    .getDestinationIdsForItinerary(
+                        itinerary.id
+                    )
+
+            val names =
+                destinationIds.mapNotNull { destinationId ->
+
+                    tripViewModel
+                        .getDestinationById(
+                            destinationId
+                        )
+                        ?.name
+                }
+
+            destinationNames = names
+
+            destinationsLoaded = true
+        }
+    }
+
+    // =========================================================
+    // FORMATTERS
+    // =========================================================
 
     val dateFormatter =
         DateTimeFormatter.ofPattern(
@@ -85,10 +155,13 @@ fun ItineraryDetailsScreen(
 
                 TextButton(
                     onClick = {
+
                         showDeleteDialog = false
+
                         onDelete()
                     }
                 ) {
+
                     Text(
                         text = "Delete",
                         color =
@@ -117,7 +190,8 @@ fun ItineraryDetailsScreen(
     // =========================================================
 
     Column(
-        modifier = Modifier.fillMaxSize()
+        modifier =
+            Modifier.fillMaxSize()
     ) {
 
         // =====================================================
@@ -147,7 +221,8 @@ fun ItineraryDetailsScreen(
             )
 
             Spacer(
-                modifier = Modifier.height(16.dp)
+                modifier =
+                    Modifier.height(16.dp)
             )
 
             // -------------------------------------------------
@@ -157,10 +232,12 @@ fun ItineraryDetailsScreen(
             Card(
                 modifier =
                     Modifier.fillMaxWidth(),
+
                 elevation =
                     CardDefaults.cardElevation(
                         defaultElevation = 2.dp
                     ),
+
                 colors =
                     CardDefaults.cardColors(
                         containerColor =
@@ -170,9 +247,11 @@ fun ItineraryDetailsScreen(
             ) {
 
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+
                     verticalAlignment =
                         Alignment.Top
                 ) {
@@ -186,9 +265,11 @@ fun ItineraryDetailsScreen(
                             itinerarySymbol(
                                 itinerary.type
                             ),
+
                         style =
                             MaterialTheme.typography
                                 .headlineMedium,
+
                         modifier =
                             Modifier.size(42.dp)
                     )
@@ -210,9 +291,11 @@ fun ItineraryDetailsScreen(
                         Text(
                             text =
                                 itinerary.title,
+
                             style =
                                 MaterialTheme.typography
                                     .titleLarge,
+
                             fontWeight =
                                 FontWeight.Bold
                         )
@@ -229,12 +312,15 @@ fun ItineraryDetailsScreen(
                             Text(
                                 text =
                                     itinerary.type,
+
                                 style =
                                     MaterialTheme.typography
                                         .bodyMedium,
+
                                 color =
                                     MaterialTheme.colorScheme
                                         .primary,
+
                                 fontWeight =
                                     FontWeight.Medium
                             )
@@ -254,6 +340,7 @@ fun ItineraryDetailsScreen(
 
                         AssistChip(
                             onClick = {},
+
                             label = {
                                 Text(
                                     text = "BOOKED",
@@ -261,11 +348,13 @@ fun ItineraryDetailsScreen(
                                         FontWeight.Bold
                                 )
                             },
+
                             colors =
                                 AssistChipDefaults
                                     .assistChipColors(
                                         containerColor =
                                             Color(0xFFB6FF00),
+
                                         labelColor =
                                             Color.Black
                                     )
@@ -275,7 +364,8 @@ fun ItineraryDetailsScreen(
             }
 
             Spacer(
-                modifier = Modifier.height(14.dp)
+                modifier =
+                    Modifier.height(14.dp)
             )
 
             // -------------------------------------------------
@@ -285,6 +375,7 @@ fun ItineraryDetailsScreen(
             Card(
                 modifier =
                     Modifier.fillMaxWidth(),
+
                 elevation =
                     CardDefaults.cardElevation(
                         defaultElevation = 1.dp
@@ -292,9 +383,11 @@ fun ItineraryDetailsScreen(
             ) {
 
                 Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+
                     verticalArrangement =
                         Arrangement.spacedBy(14.dp)
                 ) {
@@ -355,12 +448,12 @@ fun ItineraryDetailsScreen(
             }
 
             // -------------------------------------------------
-            // LOCATION
+            // DESTINATIONS
             // -------------------------------------------------
 
             if (
-                !itinerary.location
-                    .isNullOrBlank()
+                destinationsLoaded &&
+                destinationNames.isNotEmpty()
             ) {
 
                 Spacer(
@@ -370,12 +463,47 @@ fun ItineraryDetailsScreen(
 
                 DetailSectionCard {
 
-                    DetailLine(
-                        icon = "📍",
-                        label = "Location",
-                        value =
-                            itinerary.location!!
-                    )
+                    Column {
+
+                        Text(
+                            text = "Destinations",
+                            style =
+                                MaterialTheme.typography
+                                    .titleMedium,
+
+                            fontWeight =
+                                FontWeight.SemiBold,
+
+                            color =
+                                MaterialTheme.colorScheme
+                                    .primary
+                        )
+
+                        Spacer(
+                            modifier =
+                                Modifier.height(8.dp)
+                        )
+
+                        destinationNames.forEach { name ->
+
+                            DetailLine(
+                                icon = "📍",
+                                label = "",
+                                value = name
+                            )
+
+                            if (
+                                name !=
+                                destinationNames.last()
+                            ) {
+
+                                Spacer(
+                                    modifier =
+                                        Modifier.height(10.dp)
+                                )
+                            }
+                        }
+                    }
                 }
             }
 
@@ -425,6 +553,7 @@ fun ItineraryDetailsScreen(
                 Card(
                     modifier =
                         Modifier.fillMaxWidth(),
+
                     elevation =
                         CardDefaults.cardElevation(
                             defaultElevation = 1.dp
@@ -443,8 +572,10 @@ fun ItineraryDetailsScreen(
                             style =
                                 MaterialTheme.typography
                                     .titleMedium,
+
                             fontWeight =
                                 FontWeight.SemiBold,
+
                             color =
                                 MaterialTheme.colorScheme
                                     .primary
@@ -458,6 +589,7 @@ fun ItineraryDetailsScreen(
                         Text(
                             text =
                                 itinerary.notes!!,
+
                             style =
                                 MaterialTheme.typography
                                     .bodyLarge
@@ -507,6 +639,7 @@ fun ItineraryDetailsScreen(
                     top = 8.dp,
                     bottom = 10.dp
                 ),
+
             horizontalArrangement =
                 Arrangement.spacedBy(8.dp)
         ) {
@@ -564,6 +697,7 @@ private fun DetailSectionCard(
     Card(
         modifier =
             Modifier.fillMaxWidth(),
+
         elevation =
             CardDefaults.cardElevation(
                 defaultElevation = 1.dp
@@ -596,15 +730,18 @@ private fun DetailLine(
     Row(
         modifier =
             Modifier.fillMaxWidth(),
+
         verticalAlignment =
             Alignment.Top
     ) {
 
         Text(
             text = icon,
+
             style =
                 MaterialTheme.typography
                     .titleMedium,
+
             modifier =
                 Modifier.size(30.dp)
         )
@@ -619,25 +756,32 @@ private fun DetailLine(
                 Modifier.weight(1f)
         ) {
 
-            Text(
-                text = label,
-                style =
-                    MaterialTheme.typography
-                        .labelLarge,
-                color =
-                    MaterialTheme.colorScheme
-                        .onSurfaceVariant,
-                fontWeight =
-                    FontWeight.SemiBold
-            )
+            if (label.isNotBlank()) {
 
-            Spacer(
-                modifier =
-                    Modifier.height(2.dp)
-            )
+                Text(
+                    text = label,
+
+                    style =
+                        MaterialTheme.typography
+                            .labelLarge,
+
+                    color =
+                        MaterialTheme.colorScheme
+                            .onSurfaceVariant,
+
+                    fontWeight =
+                        FontWeight.SemiBold
+                )
+
+                Spacer(
+                    modifier =
+                        Modifier.height(2.dp)
+                )
+            }
 
             Text(
                 text = value,
+
                 style =
                     MaterialTheme.typography
                         .bodyLarge

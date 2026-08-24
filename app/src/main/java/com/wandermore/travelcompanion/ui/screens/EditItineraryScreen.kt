@@ -15,7 +15,10 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -32,7 +35,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -40,7 +42,6 @@ import androidx.compose.ui.unit.dp
 import com.wandermore.travelcompanion.database.ItineraryEntity
 import com.wandermore.travelcompanion.ui.components.DestinationSelector
 import com.wandermore.travelcompanion.viewmodel.TripViewModel
-import kotlinx.coroutines.launch
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
@@ -85,6 +86,13 @@ fun EditItineraryScreen(
         mutableStateOf("")
     }
 
+    /*
+     * LOCATION
+     *
+     * Retained internally for backwards compatibility and
+     * existing database records, but deliberately hidden from
+     * the user interface.
+     */
     var location by remember {
         mutableStateOf("")
     }
@@ -129,6 +137,24 @@ fun EditItineraryScreen(
         mutableStateOf(false)
     }
 
+    var typeExpanded by remember {
+        mutableStateOf(false)
+    }
+
+    // =========================================================
+    // ITINERARY TYPES
+    // =========================================================
+
+    val itineraryTypes = listOf(
+        "Travel",
+        "Accommodation",
+        "Activity",
+        "Attraction",
+        "Arrival",
+        "Departure",
+        "Other"
+    )
+
     // =========================================================
     // LOAD EXISTING ITEM
     // =========================================================
@@ -144,10 +170,17 @@ fun EditItineraryScreen(
 
             existingItem = item
 
-            date = item.date
-            time = item.time
-            title = item.title
-            type = item.type
+            date =
+                item.date
+
+            time =
+                item.time
+
+            title =
+                item.title
+
+            type =
+                item.type
 
             nightsText =
                 item.nights?.toString() ?: ""
@@ -168,7 +201,8 @@ fun EditItineraryScreen(
                     )
                     .toSet()
 
-            destinationsLoaded = true
+            destinationsLoaded =
+                true
         }
     }
 
@@ -184,27 +218,24 @@ fun EditItineraryScreen(
         existingItem!!
 
     // =========================================================
-    // DESTINATIONS FOR THIS TRIP
+    // ALL ACTIVE GLOBAL DESTINATIONS
+    //
+    // This matches AddItineraryScreen.
+    //
+    // Destinations created in Settings are therefore available
+    // even if they have not previously been associated with this
+    // trip.
     // =========================================================
 
     val destinations by
     tripViewModel
-        .getDestinationsForTrip(
-            currentItem.tripId
-        )
+        .getAllActiveDestinations()
         .collectAsState(
             initial = emptyList()
         )
 
     // =========================================================
-    // COROUTINE SCOPE
-    // =========================================================
-
-    val coroutineScope =
-        rememberCoroutineScope()
-
-    // =========================================================
-    // FORMATTERS
+    // DATE / TIME FORMATTERS
     // =========================================================
 
     val dateFormatter =
@@ -241,42 +272,47 @@ fun EditItineraryScreen(
                 .padding(16.dp)
         ) {
 
-            // -------------------------------------------------
+            // =================================================
             // HEADER
-            // -------------------------------------------------
+            // =================================================
 
             Text(
                 text = "Edit Itinerary Item",
                 style =
-                    MaterialTheme.typography.headlineMedium
+                    MaterialTheme.typography
+                        .headlineMedium
             )
 
             Spacer(
-                modifier = Modifier.height(4.dp)
+                modifier =
+                    Modifier.height(4.dp)
             )
 
             Text(
                 text =
                     "Update this travel plan, stay or event.",
                 style =
-                    MaterialTheme.typography.bodyMedium,
+                    MaterialTheme.typography
+                        .bodyMedium,
                 color =
                     MaterialTheme.colorScheme
                         .onSurfaceVariant
             )
 
             Spacer(
-                modifier = Modifier.height(20.dp)
+                modifier =
+                    Modifier.height(20.dp)
             )
 
-            // -------------------------------------------------
+            // =================================================
             // DATE
-            // -------------------------------------------------
+            // =================================================
 
             OutlinedButton(
                 onClick = {
                     showDatePicker = true
                 },
+
                 modifier =
                     Modifier.fillMaxWidth()
             ) {
@@ -294,17 +330,19 @@ fun EditItineraryScreen(
             }
 
             Spacer(
-                modifier = Modifier.height(12.dp)
+                modifier =
+                    Modifier.height(12.dp)
             )
 
-            // -------------------------------------------------
+            // =================================================
             // TIME
-            // -------------------------------------------------
+            // =================================================
 
             OutlinedButton(
                 onClick = {
                     showTimePicker = true
                 },
+
                 modifier =
                     Modifier.fillMaxWidth()
             ) {
@@ -322,60 +360,130 @@ fun EditItineraryScreen(
             }
 
             Spacer(
-                modifier = Modifier.height(12.dp)
+                modifier =
+                    Modifier.height(12.dp)
             )
 
-            // -------------------------------------------------
+            // =================================================
             // TITLE
-            // -------------------------------------------------
+            // =================================================
 
             OutlinedTextField(
                 value = title,
+
                 onValueChange = {
                     title = it
                 },
+
                 label = {
                     Text("Title")
                 },
+
                 modifier =
                     Modifier.fillMaxWidth(),
+
                 singleLine = true
             )
 
             Spacer(
-                modifier = Modifier.height(12.dp)
+                modifier =
+                    Modifier.height(12.dp)
             )
 
-            // -------------------------------------------------
+            // =================================================
             // TYPE
-            // -------------------------------------------------
+            // =================================================
 
-            OutlinedTextField(
-                value = type,
-                onValueChange = {
-                    type = it
+            ExposedDropdownMenuBox(
+                expanded =
+                    typeExpanded,
+
+                onExpandedChange = {
+                    typeExpanded =
+                        !typeExpanded
                 },
-                label = {
-                    Text("Type")
-                },
+
                 modifier =
-                    Modifier.fillMaxWidth(),
-                singleLine = true
-            )
+                    Modifier.fillMaxWidth()
+            ) {
+
+                OutlinedTextField(
+                    value = type,
+
+                    onValueChange = {},
+
+                    readOnly = true,
+
+                    label = {
+                        Text("Type")
+                    },
+
+                    trailingIcon = {
+
+                        ExposedDropdownMenuDefaults
+                            .TrailingIcon(
+                                expanded =
+                                    typeExpanded
+                            )
+                    },
+
+                    modifier =
+                        Modifier
+                            .menuAnchor()
+                            .fillMaxWidth(),
+
+                    singleLine = true
+                )
+
+                ExposedDropdownMenu(
+                    expanded =
+                        typeExpanded,
+
+                    onDismissRequest = {
+                        typeExpanded =
+                            false
+                    }
+                ) {
+
+                    itineraryTypes.forEach {
+                            itineraryType ->
+
+                        DropdownMenuItem(
+                            text = {
+                                Text(
+                                    itineraryType
+                                )
+                            },
+
+                            onClick = {
+
+                                type =
+                                    itineraryType
+
+                                typeExpanded =
+                                    false
+                            }
+                        )
+                    }
+                }
+            }
 
             Spacer(
-                modifier = Modifier.height(12.dp)
+                modifier =
+                    Modifier.height(12.dp)
             )
 
-            // -------------------------------------------------
+            // =================================================
             // BOOKED
-            // -------------------------------------------------
+            // =================================================
 
             Row(
                 modifier =
                     Modifier.fillMaxWidth(),
+
                 horizontalArrangement =
                     Arrangement.SpaceBetween,
+
                 verticalAlignment =
                     Alignment.CenterVertically
             ) {
@@ -387,6 +495,7 @@ fun EditItineraryScreen(
 
                     Text(
                         text = "Booked",
+
                         style =
                             MaterialTheme.typography
                                 .bodyLarge
@@ -399,9 +508,11 @@ fun EditItineraryScreen(
                             } else {
                                 "Not booked yet"
                             },
+
                         style =
                             MaterialTheme.typography
                                 .bodySmall,
+
                         color =
                             MaterialTheme.colorScheme
                                 .onSurfaceVariant
@@ -410,6 +521,7 @@ fun EditItineraryScreen(
 
                 Switch(
                     checked = booked,
+
                     onCheckedChange = {
                         booked = it
                     }
@@ -417,15 +529,17 @@ fun EditItineraryScreen(
             }
 
             Spacer(
-                modifier = Modifier.height(12.dp)
+                modifier =
+                    Modifier.height(12.dp)
             )
 
-            // -------------------------------------------------
+            // =================================================
             // NIGHTS
-            // -------------------------------------------------
+            // =================================================
 
             OutlinedTextField(
                 value = nightsText,
+
                 onValueChange = {
 
                     if (
@@ -436,54 +550,34 @@ fun EditItineraryScreen(
                         nightsText = it
                     }
                 },
+
                 label = {
                     Text("Nights")
                 },
+
                 placeholder = {
                     Text("Optional")
                 },
+
                 modifier =
                     Modifier.fillMaxWidth(),
+
                 singleLine = true
             )
 
             Spacer(
-                modifier = Modifier.height(12.dp)
-            )
-
-            // -------------------------------------------------
-            // LOCATION
-            // -------------------------------------------------
-
-            OutlinedTextField(
-                value = location,
-                onValueChange = {
-                    location = it
-                },
-                label = {
-                    Text("Location")
-                },
-                placeholder = {
-                    Text(
-                        "City, address or destination"
-                    )
-                },
                 modifier =
-                    Modifier.fillMaxWidth(),
-                singleLine = true
-            )
-
-            Spacer(
-                modifier = Modifier.height(12.dp)
+                    Modifier.height(12.dp)
             )
 
             // =================================================
-            // DESTINATION
+            // DESTINATIONS
             // =================================================
 
             if (destinationsLoaded) {
 
                 DestinationSelector(
+
                     destinations =
                         destinations,
 
@@ -495,75 +589,80 @@ fun EditItineraryScreen(
                             it
                     },
 
+                    /*
+                     * Create a new global destination and
+                     * immediately return its database ID.
+                     *
+                     * We do NOT add it to the trip here.
+                     *
+                     * The selected destination will be
+                     * associated with the trip when
+                     * updateItinerary() saves the item.
+                     */
+
                     onAddDestination = {
                             destinationName,
                             onResult ->
 
-                        tripViewModel.addDestination(
-                            destinationName
-                        ) { success ->
+                        tripViewModel
+                            .addDestinationAndReturnId(
+                                destinationName
+                            ) { destinationId ->
 
-                            if (success) {
+                                if (
+                                    destinationId != null
+                                ) {
 
-                                coroutineScope.launch {
+                                    selectedDestinationIds =
+                                        selectedDestinationIds +
+                                                destinationId
 
-                                    val newDestination =
-                                        tripViewModel
-                                            .getDestinationByName(
-                                                destinationName
-                                            )
+                                    onResult(true)
 
-                                    if (
-                                        newDestination != null
-                                    ) {
+                                } else {
 
-                                        tripViewModel
-                                            .addDestinationToTrip(
-                                                currentItem.tripId,
-                                                newDestination.id
-                                            )
-
-                                        selectedDestinationIds =
-                                            selectedDestinationIds +
-                                                    newDestination.id
-                                    }
+                                    onResult(false)
                                 }
                             }
-
-                            onResult(success)
-                        }
                     }
                 )
             }
 
             Spacer(
-                modifier = Modifier.height(12.dp)
+                modifier =
+                    Modifier.height(12.dp)
             )
 
-            // -------------------------------------------------
+            // =================================================
             // NOTES
-            // -------------------------------------------------
+            // =================================================
 
             OutlinedTextField(
                 value = notes,
+
                 onValueChange = {
                     notes = it
                 },
+
                 label = {
                     Text("Notes")
                 },
+
                 placeholder = {
                     Text(
                         "Transport information, address, reminders, etc."
                     )
                 },
+
                 modifier =
                     Modifier.fillMaxWidth(),
+
                 minLines = 3
             )
 
             Spacer(
-                modifier = Modifier.height(20.dp)
+                modifier =
+                    Modifier.height(20.dp)
             )
         }
 
@@ -580,39 +679,45 @@ fun EditItineraryScreen(
                     top = 8.dp,
                     bottom = 10.dp
                 ),
+
             horizontalArrangement =
                 Arrangement.spacedBy(6.dp)
         ) {
 
-            // -------------------------------------------------
+            // =================================================
             // BACK
-            // -------------------------------------------------
+            // =================================================
 
             Button(
                 onClick = onBack,
+
                 modifier =
                     Modifier.weight(1f)
             ) {
+
                 Text("Back")
             }
 
-            // -------------------------------------------------
+            // =================================================
             // DELETE
-            // -------------------------------------------------
+            // =================================================
 
             Button(
                 onClick = {
-                    showDeleteConfirmation = true
+                    showDeleteConfirmation =
+                        true
                 },
+
                 modifier =
                     Modifier.weight(1f)
             ) {
+
                 Text("Delete")
             }
 
-            // -------------------------------------------------
+            // =================================================
             // SAVE
-            // -------------------------------------------------
+            // =================================================
 
             Button(
                 onClick = {
@@ -638,6 +743,13 @@ fun EditItineraryScreen(
                             nights =
                                 nightsText
                                     .toIntOrNull(),
+
+                            /*
+                             * Location is deliberately
+                             * preserved from the existing
+                             * record because the field is
+                             * hidden from the UI.
+                             */
 
                             location =
                                 location
@@ -681,6 +793,7 @@ fun EditItineraryScreen(
                 modifier =
                     Modifier.weight(1f)
             ) {
+
                 Text("Save")
             }
         }
@@ -730,9 +843,11 @@ fun EditItineraryScreen(
                                         .toLocalDate()
                             }
 
-                        showDatePicker = false
+                        showDatePicker =
+                            false
                     }
                 ) {
+
                     Text("OK")
                 }
             },
@@ -741,16 +856,19 @@ fun EditItineraryScreen(
 
                 OutlinedButton(
                     onClick = {
-                        showDatePicker = false
+                        showDatePicker =
+                            false
                     }
                 ) {
+
                     Text("Cancel")
                 }
             }
         ) {
 
             DatePicker(
-                state = datePickerState
+                state =
+                    datePickerState
             )
         }
     }
@@ -765,6 +883,7 @@ fun EditItineraryScreen(
             rememberTimePickerState(
                 initialHour =
                     time?.hour ?: 12,
+
                 initialMinute =
                     time?.minute ?: 0
             )
@@ -786,9 +905,11 @@ fun EditItineraryScreen(
                                 timePickerState.minute
                             )
 
-                        showTimePicker = false
+                        showTimePicker =
+                            false
                     }
                 ) {
+
                     Text("OK")
                 }
             },
@@ -799,7 +920,8 @@ fun EditItineraryScreen(
         ) {
 
             TimePicker(
-                state = timePickerState
+                state =
+                    timePickerState
             )
         }
     }
@@ -813,7 +935,8 @@ fun EditItineraryScreen(
         AlertDialog(
 
             onDismissRequest = {
-                showDeleteConfirmation = false
+                showDeleteConfirmation =
+                    false
             },
 
             title = {
@@ -831,13 +954,15 @@ fun EditItineraryScreen(
                 TextButton(
                     onClick = {
 
-                        showDeleteConfirmation = false
+                        showDeleteConfirmation =
+                            false
 
                         onDeleteItinerary(
                             currentItem
                         )
                     }
                 ) {
+
                     Text("Delete")
                 }
             },
@@ -846,9 +971,11 @@ fun EditItineraryScreen(
 
                 TextButton(
                     onClick = {
-                        showDeleteConfirmation = false
+                        showDeleteConfirmation =
+                            false
                     }
                 ) {
+
                     Text("Cancel")
                 }
             }

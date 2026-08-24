@@ -780,6 +780,8 @@ fun AppNavigation(
 
                         itinerary = item,
 
+                        tripViewModel = tripViewModel,
+
                         onEdit = {
 
                             navController.navigate(
