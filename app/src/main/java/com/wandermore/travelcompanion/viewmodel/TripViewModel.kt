@@ -508,19 +508,11 @@ class TripViewModel(
         destinationId: Long
     ): List<ActivityEntity> {
 
-        val activities =
-            activityDao
-                .getActivitiesForTrip(tripId)
-                .first()
-
-        return activities.filter { activity ->
-
-            destinationId in
-                    activityDestinationDao
-                        .getDestinationIdsForActivity(
-                            activity.id
-                        )
-        }
+        return activityDestinationDao
+            .getActivitiesForDestination(
+                tripId,
+                destinationId
+            )
     }
 
     // =========================================================
@@ -532,19 +524,11 @@ class TripViewModel(
         destinationId: Long
     ): List<ItineraryEntity> {
 
-        val itineraryItems =
-            itineraryDao
-                .getItineraryForTrip(tripId)
-                .first()
-
-        return itineraryItems.filter { itinerary ->
-
-            destinationId in
-                    itineraryDestinationDao
-                        .getDestinationIdsForItinerary(
-                            itinerary.id
-                        )
-        }
+        return itineraryDestinationDao
+            .getItineraryForDestination(
+                tripId,
+                destinationId
+            )
     }
 
     // =========================================================

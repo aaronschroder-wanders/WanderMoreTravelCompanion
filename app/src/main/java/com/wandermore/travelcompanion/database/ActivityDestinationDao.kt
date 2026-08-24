@@ -41,6 +41,38 @@ interface ActivityDestinationDao {
         activityId: Long
     ): List<Long>
 
+
+    // ---------------------------------------------------------
+    // GET ACTIVITIES FOR A DESTINATION
+    //
+    // Direct database query used by Destination screens.
+    // This avoids loading every activity and then checking
+    // each activity's destinations individually.
+    // ---------------------------------------------------------
+
+    @Query(
+        """
+        SELECT a.*
+        FROM activities a
+        INNER JOIN activity_destinations ad
+            ON a.id = ad.activityId
+        WHERE a.tripId = :tripId
+        AND ad.destinationId = :destinationId
+        ORDER BY
+            CASE WHEN a.date IS NULL THEN 1 ELSE 0 END,
+            a.date ASC,
+            CASE WHEN a.startTime IS NULL THEN 1 ELSE 0 END,
+            a.startTime ASC,
+            a.booked ASC,
+            a.id ASC
+        """
+    )
+    suspend fun getActivitiesForDestination(
+        tripId: Long,
+        destinationId: Long
+    ): List<ActivityEntity>
+
+
     // ---------------------------------------------------------
     // GET ACTIVITY IDS FOR A DESTINATION
     // ---------------------------------------------------------
@@ -55,6 +87,7 @@ interface ActivityDestinationDao {
     suspend fun getActivityIdsForDestination(
         destinationId: Long
     ): List<Long>
+
 
     // ---------------------------------------------------------
     // COUNT ACTIVITIES USING A DESTINATION

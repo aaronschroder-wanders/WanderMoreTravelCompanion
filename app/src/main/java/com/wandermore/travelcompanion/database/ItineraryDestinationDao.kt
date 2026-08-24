@@ -41,6 +41,36 @@ interface ItineraryDestinationDao {
         itineraryId: Long
     ): List<Long>
 
+
+    // ---------------------------------------------------------
+    // GET ITINERARY ITEMS FOR A DESTINATION
+    //
+    // Direct database query used by Destination screens.
+    // This avoids loading every itinerary item and then
+    // checking each item's destinations individually.
+    // ---------------------------------------------------------
+
+    @Query(
+        """
+        SELECT i.*
+        FROM itinerary i
+        INNER JOIN itinerary_destinations id
+            ON i.id = id.itineraryId
+        WHERE i.tripId = :tripId
+        AND id.destinationId = :destinationId
+        ORDER BY
+            i.date ASC,
+            i.sortOrder ASC,
+            i.time ASC,
+            i.id ASC
+        """
+    )
+    suspend fun getItineraryForDestination(
+        tripId: Long,
+        destinationId: Long
+    ): List<ItineraryEntity>
+
+
     // ---------------------------------------------------------
     // GET ITINERARY IDS FOR A DESTINATION
     // ---------------------------------------------------------
@@ -55,6 +85,7 @@ interface ItineraryDestinationDao {
     suspend fun getItineraryIdsForDestination(
         destinationId: Long
     ): List<Long>
+
 
     // ---------------------------------------------------------
     // COUNT ITINERARIES USING A DESTINATION
