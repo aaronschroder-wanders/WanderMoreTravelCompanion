@@ -24,6 +24,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -35,6 +36,7 @@ import com.wandermore.travelcompanion.database.DestinationEntity
 import com.wandermore.travelcompanion.database.ItineraryEntity
 import com.wandermore.travelcompanion.viewmodel.TripViewModel
 import kotlinx.coroutines.flow.first
+import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 @Composable
@@ -63,6 +65,10 @@ fun DestinationDetailsScreen(
     var refreshTrigger by remember {
         mutableStateOf(0)
     }
+
+    // =========================================================
+    // LOAD DESTINATION DATA
+    // =========================================================
 
     suspend fun loadDestinationData() {
 
@@ -121,6 +127,48 @@ fun DestinationDetailsScreen(
     }
 
     // =========================================================
+    // DATE FORMATTER
+    // =========================================================
+
+    val dateFormatter =
+        DateTimeFormatter.ofPattern(
+            "EEEE, dd MMM yyyy"
+        )
+
+    // =========================================================
+    // GROUP ITINERARY ITEMS BY DATE
+    // =========================================================
+
+    val itineraryGroups =
+        itineraryItems
+            .groupBy {
+                it.date
+            }
+            .toSortedMap()
+
+    // =========================================================
+    // GROUP ACTIVITIES BY DATE
+    //
+    // Activities can have a null date, so those are handled
+    // separately and displayed at the end.
+    // =========================================================
+
+    val datedActivityGroups =
+        activities
+            .filter {
+                it.date != null
+            }
+            .groupBy {
+                it.date!!
+            }
+            .toSortedMap()
+
+    val undatedActivities =
+        activities.filter {
+            it.date == null
+        }
+
+    // =========================================================
     // SCREEN
     // =========================================================
 
@@ -162,57 +210,7 @@ fun DestinationDetailsScreen(
         ) {
 
             // =================================================
-            // ACTIVITIES
-            // =================================================
-
-            item {
-
-                Text(
-                    text = "Activities",
-
-                    style =
-                        MaterialTheme.typography.titleLarge
-                )
-            }
-
-            if (activities.isEmpty()) {
-
-                item {
-
-                    Text(
-                        text =
-                            "No activities at this destination.",
-
-                        style =
-                            MaterialTheme.typography.bodyMedium
-                    )
-                }
-
-            } else {
-
-                items(
-                    items = activities,
-
-                    key = {
-                        "activity_${it.id}"
-                    }
-
-                ) { activity ->
-
-                    ActivityDestinationCard(
-                        activity = activity,
-
-                        onClick = {
-                            onActivityClick(
-                                activity.id
-                            )
-                        }
-                    )
-                }
-            }
-
-            // =================================================
-            // ITINERARY
+            // ITINERARY SECTION
             // =================================================
 
             item {
@@ -221,16 +219,11 @@ fun DestinationDetailsScreen(
                     text = "Itinerary",
 
                     style =
-                        MaterialTheme.typography.titleLarge,
-
-                    modifier =
-                        Modifier.padding(
-                            top = 8.dp
-                        )
+                        MaterialTheme.typography.titleLarge
                 )
             }
 
-            if (itineraryItems.isEmpty()) {
+            if (itineraryGroups.isEmpty()) {
 
                 item {
 
@@ -245,24 +238,216 @@ fun DestinationDetailsScreen(
 
             } else {
 
-                items(
-                    items = itineraryItems,
+                itineraryGroups.forEach { (date, itemsForDate) ->
 
-                    key = {
-                        "itinerary_${it.id}"
+                    // -----------------------------------------
+                    // DATE HEADER
+                    // -----------------------------------------
+
+                    item(
+                        key = "itinerary_date_$date"
+                    ) {
+
+                        Text(
+                            text =
+                                date.format(
+                                    dateFormatter
+                                ),
+
+                            style =
+                                MaterialTheme.typography.titleMedium,
+
+                            fontWeight =
+                                FontWeight.SemiBold,
+
+                            color =
+                                MaterialTheme.colorScheme.primary,
+
+                            modifier =
+                                Modifier.padding(
+                                    top = 4.dp,
+                                    bottom = 2.dp
+                                )
+                        )
                     }
 
-                ) { itinerary ->
+                    // -----------------------------------------
+                    // ITEMS FOR DATE
+                    // -----------------------------------------
 
-                    ItineraryDestinationCard(
-                        itinerary = itinerary,
+                    items(
+                        items =
+                            itemsForDate.sortedWith(
+                                compareBy<ItineraryEntity> {
+                                    it.time
+                                }
+                            ),
 
-                        onClick = {
-                            onItineraryClick(
-                                itinerary.id
-                            )
+                        key = {
+                            "itinerary_${it.id}"
                         }
+
+                    ) { itinerary ->
+
+                        ItineraryDestinationCard(
+                            itinerary = itinerary,
+
+                            onClick = {
+                                onItineraryClick(
+                                    itinerary.id
+                                )
+                            }
+                        )
+                    }
+                }
+            }
+
+            // =================================================
+            // ACTIVITIES SECTION
+            // =================================================
+
+            item {
+
+                Text(
+                    text = "Activities",
+
+                    style =
+                        MaterialTheme.typography.titleLarge,
+
+                    modifier =
+                        Modifier.padding(
+                            top = 12.dp
+                        )
+                )
+            }
+
+            if (
+                datedActivityGroups.isEmpty() &&
+                undatedActivities.isEmpty()
+            ) {
+
+                item {
+
+                    Text(
+                        text =
+                            "No activities at this destination.",
+
+                        style =
+                            MaterialTheme.typography.bodyMedium
                     )
+                }
+
+            } else {
+
+                // ---------------------------------------------
+                // DATED ACTIVITIES
+                // ---------------------------------------------
+
+                datedActivityGroups.forEach {
+                        (date, activitiesForDate) ->
+
+                    item(
+                        key = "activity_date_$date"
+                    ) {
+
+                        Text(
+                            text =
+                                date.format(
+                                    dateFormatter
+                                ),
+
+                            style =
+                                MaterialTheme.typography.titleMedium,
+
+                            fontWeight =
+                                FontWeight.SemiBold,
+
+                            color =
+                                MaterialTheme.colorScheme.primary,
+
+                            modifier =
+                                Modifier.padding(
+                                    top = 4.dp,
+                                    bottom = 2.dp
+                                )
+                        )
+                    }
+
+                    items(
+                        items =
+                            activitiesForDate.sortedWith(
+                                compareBy<ActivityEntity> {
+                                    it.startTime
+                                }
+                            ),
+
+                        key = {
+                            "activity_${it.id}"
+                        }
+
+                    ) { activity ->
+
+                        ActivityDestinationCard(
+                            activity = activity,
+
+                            onClick = {
+                                onActivityClick(
+                                    activity.id
+                                )
+                            }
+                        )
+                    }
+                }
+
+                // ---------------------------------------------
+                // UNDATED ACTIVITIES
+                // ---------------------------------------------
+
+                if (undatedActivities.isNotEmpty()) {
+
+                    item(
+                        key = "activity_undated_header"
+                    ) {
+
+                        Text(
+                            text = "Date not set",
+
+                            style =
+                                MaterialTheme.typography.titleMedium,
+
+                            fontWeight =
+                                FontWeight.SemiBold,
+
+                            color =
+                                MaterialTheme.colorScheme.primary,
+
+                            modifier =
+                                Modifier.padding(
+                                    top = 4.dp,
+                                    bottom = 2.dp
+                                )
+                        )
+                    }
+
+                    items(
+                        items = undatedActivities,
+
+                        key = {
+                            "activity_${it.id}"
+                        }
+
+                    ) { activity ->
+
+                        ActivityDestinationCard(
+                            activity = activity,
+
+                            onClick = {
+                                onActivityClick(
+                                    activity.id
+                                )
+                            }
+                        )
+                    }
                 }
             }
         }
@@ -371,26 +556,28 @@ private fun ActivityDestinationCard(
             }
 
             // -------------------------------------------------
-            // ACTIVITY DATE
+            // ACTIVITY TIME
             // -------------------------------------------------
 
-            activity.date?.let { date ->
+            activity.startTime?.let { time ->
 
-                Text(
-                    text =
-                        "📅 " +
-                                date.format(
-                                    DateTimeFormatter.ofPattern(
-                                        "dd MMM yyyy"
-                                    )
-                                ),
+                Row(
+                    verticalAlignment =
+                        Alignment.CenterVertically
+                ) {
 
-                    style =
-                        MaterialTheme.typography.bodySmall,
+                    Text(
+                        text =
+                            "🕐 " +
+                                    time.toString(),
 
-                    color =
-                        MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                        style =
+                            MaterialTheme.typography.bodySmall,
+
+                        color =
+                            MaterialTheme.colorScheme.primary
+                    )
+                }
             }
         }
     }
@@ -478,20 +665,17 @@ private fun ItineraryDestinationCard(
             }
 
             // -------------------------------------------------
-            // DATE + TIME
+            // TIME
             // -------------------------------------------------
 
-            Row(
-                verticalAlignment =
-                    androidx.compose.ui.Alignment.CenterVertically
-            ) {
+            if (itinerary.time != null) {
 
                 Text(
                     text =
-                        "📅 " +
-                                itinerary.date.format(
+                        "🕐 " +
+                                itinerary.time!!.format(
                                     DateTimeFormatter.ofPattern(
-                                        "dd MMM yyyy"
+                                        "HH:mm"
                                     )
                                 ),
 
@@ -499,32 +683,8 @@ private fun ItineraryDestinationCard(
                         MaterialTheme.typography.bodySmall,
 
                     color =
-                        MaterialTheme.colorScheme.onSurfaceVariant
+                        MaterialTheme.colorScheme.primary
                 )
-
-                if (itinerary.time != null) {
-
-                    Spacer(
-                        modifier =
-                            Modifier.size(16.dp)
-                    )
-
-                    Text(
-                        text =
-                            "🕐 " +
-                                    itinerary.time!!.format(
-                                        DateTimeFormatter.ofPattern(
-                                            "HH:mm"
-                                        )
-                                    ),
-
-                        style =
-                            MaterialTheme.typography.bodySmall,
-
-                        color =
-                            MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
             }
         }
     }

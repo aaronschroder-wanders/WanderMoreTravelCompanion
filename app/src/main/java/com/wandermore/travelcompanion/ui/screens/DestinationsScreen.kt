@@ -50,13 +50,6 @@ fun DestinationsScreen(
 
     // =========================================================
     // DESTINATIONS
-    //
-    // Trip mode:
-    // Show destinations associated with this trip.
-    //
-    // Settings mode:
-    // Show all active global destinations and provide
-    // management controls.
     // =========================================================
 
     val destinations by if (tripId != null) {
@@ -152,9 +145,6 @@ fun DestinationsScreen(
 
     // =========================================================
     // FILTER TRIP DESTINATIONS
-    //
-    // A destination only appears in the trip list if it is
-    // actually being used by an Activity or Itinerary item.
     // =========================================================
 
     val visibleDestinations =
@@ -212,7 +202,6 @@ fun DestinationsScreen(
 
             Text(
                 text = "📍",
-
                 style =
                     MaterialTheme.typography.headlineMedium
             )
@@ -226,7 +215,6 @@ fun DestinationsScreen(
 
                 Text(
                     text = "Destinations",
-
                     style =
                         MaterialTheme.typography.headlineMedium
                 )
@@ -299,7 +287,6 @@ fun DestinationsScreen(
 
                 Text(
                     text = "📍",
-
                     style =
                         MaterialTheme.typography.displaySmall
                 )
@@ -352,7 +339,7 @@ fun DestinationsScreen(
                     Modifier.weight(1f),
 
                 verticalArrangement =
-                    Arrangement.spacedBy(12.dp)
+                    Arrangement.spacedBy(10.dp)
             ) {
 
                 // =================================================
@@ -377,7 +364,6 @@ fun DestinationsScreen(
 
                 items(
                     items = visibleDestinations,
-
                     key = {
                         it.id
                     }
@@ -445,7 +431,7 @@ fun DestinationsScreen(
 
                         Spacer(
                             modifier =
-                                Modifier.size(8.dp)
+                                Modifier.size(6.dp)
                         )
 
                         Text(
@@ -513,7 +499,6 @@ fun DestinationsScreen(
 
         Button(
             onClick = onBack,
-
             modifier =
                 Modifier.fillMaxWidth()
         ) {
@@ -957,7 +942,7 @@ private fun DestinationCard(
                 ),
 
         shape =
-            RoundedCornerShape(16.dp),
+            RoundedCornerShape(12.dp),
 
         colors =
             CardDefaults.cardColors(
@@ -976,7 +961,7 @@ private fun DestinationCard(
             modifier =
                 Modifier
                     .fillMaxWidth()
-                    .padding(16.dp)
+                    .padding(10.dp)
         ) {
 
             Row(
@@ -986,7 +971,7 @@ private fun DestinationCard(
 
                 Box(
                     modifier =
-                        Modifier.size(42.dp),
+                        Modifier.size(34.dp),
 
                     contentAlignment =
                         Alignment.Center
@@ -996,7 +981,7 @@ private fun DestinationCard(
                         text = "📍",
 
                         style =
-                            MaterialTheme.typography.headlineSmall
+                            MaterialTheme.typography.titleLarge
                     )
                 }
 
@@ -1005,7 +990,7 @@ private fun DestinationCard(
                         Modifier
                             .weight(1f)
                             .padding(
-                                start = 10.dp
+                                start = 8.dp
                             )
                 ) {
 
@@ -1014,19 +999,19 @@ private fun DestinationCard(
                             destination.name,
 
                         style =
-                            MaterialTheme.typography.titleLarge
+                            MaterialTheme.typography.titleMedium
                     )
 
                     if (showSummary) {
 
                         Spacer(
                             modifier =
-                                Modifier.size(5.dp)
+                                Modifier.size(2.dp)
                         )
 
                         Row(
                             horizontalArrangement =
-                                Arrangement.spacedBy(14.dp)
+                                Arrangement.spacedBy(12.dp)
                         ) {
 
                             Text(
@@ -1041,7 +1026,7 @@ private fun DestinationCard(
                                             },
 
                                 style =
-                                    MaterialTheme.typography.bodyMedium,
+                                    MaterialTheme.typography.bodySmall,
 
                                 color =
                                     MaterialTheme.colorScheme
@@ -1060,7 +1045,7 @@ private fun DestinationCard(
                                             },
 
                                 style =
-                                    MaterialTheme.typography.bodyMedium,
+                                    MaterialTheme.typography.bodySmall,
 
                                 color =
                                     MaterialTheme.colorScheme
@@ -1093,7 +1078,7 @@ private fun DestinationCard(
 
                 Spacer(
                     modifier =
-                        Modifier.size(10.dp)
+                        Modifier.size(6.dp)
                 )
 
                 Row(
@@ -1101,7 +1086,7 @@ private fun DestinationCard(
                         Modifier.fillMaxWidth(),
 
                     horizontalArrangement =
-                        Arrangement.spacedBy(8.dp)
+                        Arrangement.spacedBy(6.dp)
                 ) {
 
                     OutlinedButton(
