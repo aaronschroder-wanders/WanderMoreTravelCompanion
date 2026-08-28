@@ -13,8 +13,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.AssistChip
-import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -29,7 +27,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.wandermore.travelcompanion.database.ActivityEntity
@@ -266,76 +263,42 @@ private fun ActivityCard(
         ) {
 
             // -----------------------------------------------------
-            // NAME + BOOKED
+            // NAME + TYPE
             // -----------------------------------------------------
 
-            Row(
+            Column(
                 modifier =
-                    Modifier.fillMaxWidth(),
-
-                verticalAlignment =
-                    Alignment.Top
+                    Modifier.fillMaxWidth()
             ) {
 
-                Column(
+                Text(
+                    text = activity.name,
+
+                    style =
+                        MaterialTheme.typography
+                            .titleLarge,
+
+                    fontWeight =
+                        FontWeight.SemiBold
+                )
+
+                Spacer(
                     modifier =
-                        Modifier.weight(1f)
-                ) {
+                        Modifier.height(2.dp)
+                )
+
+                if (activity.type.isNotBlank()) {
 
                     Text(
-                        text = activity.name,
+                        text = activity.type,
 
                         style =
                             MaterialTheme.typography
-                                .titleLarge,
+                                .bodyMedium,
 
-                        fontWeight =
-                            FontWeight.SemiBold
-                    )
-
-                    Spacer(
-                        modifier =
-                            Modifier.height(2.dp)
-                    )
-
-                    if (activity.type.isNotBlank()) {
-
-                        Text(
-                            text = activity.type,
-
-                            style =
-                                MaterialTheme.typography
-                                    .bodyMedium,
-
-                            color =
-                                MaterialTheme.colorScheme
-                                    .primary
-                        )
-                    }
-                }
-
-                if (activity.booked) {
-
-                    AssistChip(
-                        onClick = {},
-
-                        label = {
-                            Text(
-                                text = "BOOKED",
-                                fontWeight =
-                                    FontWeight.Bold
-                            )
-                        },
-
-                        colors =
-                            AssistChipDefaults
-                                .assistChipColors(
-                                    containerColor =
-                                        Color(0xFFB6FF00),
-
-                                    labelColor =
-                                        Color.Black
-                                )
+                        color =
+                            MaterialTheme.colorScheme
+                                .primary
                     )
                 }
             }

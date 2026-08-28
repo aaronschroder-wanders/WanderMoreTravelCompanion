@@ -329,9 +329,20 @@ fun ItineraryDetailsScreen(
 
                     // -----------------------------------------
                     // BOOKED
+                    //
+                    // Only manually-created itinerary items
+                    // should display the BOOKED indicator.
+                    //
+                    // Activity-created itinerary items have
+                    // activityId != null, so their booked state
+                    // comes from the linked Activity and should
+                    // NOT be displayed here.
                     // -----------------------------------------
 
-                    if (itinerary.booked) {
+                    if (
+                        itinerary.booked &&
+                        itinerary.activityId == null
+                    ) {
 
                         Spacer(
                             modifier =

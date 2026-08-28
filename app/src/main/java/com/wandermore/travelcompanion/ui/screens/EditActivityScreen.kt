@@ -76,10 +76,6 @@ fun EditActivityScreen(
 
     // =========================================================
     // LOAD DESTINATIONS FOR THIS TRIP
-    //
-    // Destinations are currently trip-specific.
-    // Only destinations already associated with this trip
-    // are offered by the selector.
     // =========================================================
 
     val destinations by tripViewModel
@@ -90,10 +86,6 @@ fun EditActivityScreen(
 
     // =========================================================
     // EXISTING ACTIVITY DESTINATIONS
-    //
-    // An empty set is valid. Therefore we use a separate
-    // loading flag so that an empty selection is not confused
-    // with destinations that have not loaded yet.
     // =========================================================
 
     var selectedDestinationIds by remember(
@@ -122,9 +114,6 @@ fun EditActivityScreen(
 
     // =========================================================
     // COROUTINE SCOPE
-    //
-    // Used when a new destination is created so that it can
-    // immediately be associated with this trip and selected.
     // =========================================================
 
     val coroutineScope =
@@ -140,18 +129,6 @@ fun EditActivityScreen(
 
     var type by remember {
         mutableStateOf(activity.type)
-    }
-
-    // ---------------------------------------------------------
-    // LOCATION
-    //
-    // Retained internally for backwards compatibility and
-    // existing database records, but deliberately hidden from
-    // the user interface.
-    // ---------------------------------------------------------
-
-    var location by remember {
-        mutableStateOf(activity.location ?: "")
     }
 
     var estimatedCost by remember {
@@ -266,15 +243,6 @@ fun EditActivityScreen(
 
     // =========================================================
     // TIME NORMALISATION
-    //
-    // Accepts:
-    // 9      -> 09:00
-    // 09     -> 09:00
-    // 900    -> 09:00
-    // 0900   -> 09:00
-    // 09:00  -> 09:00
-    // 1430   -> 14:30
-    // 14:30  -> 14:30
     // =========================================================
 
     fun normaliseTime(
@@ -785,7 +753,7 @@ fun EditActivityScreen(
             }
 
             // =================================================
-            // BOOKED
+            // ADD TO ITINERARY
             // =================================================
 
             Row(
@@ -800,7 +768,7 @@ fun EditActivityScreen(
             ) {
 
                 Text(
-                    text = "Booked"
+                    text = "Add to Itinerary"
                 )
 
                 Switch(
@@ -1099,10 +1067,6 @@ fun EditActivityScreen(
 
                         // -----------------------------------------
                         // CREATE UPDATED ACTIVITY
-                        //
-                        // Location is deliberately preserved from
-                        // the existing record because the field is
-                        // currently hidden from the UI.
                         // -----------------------------------------
 
                         val updatedActivity =
@@ -1155,10 +1119,6 @@ fun EditActivityScreen(
 
                         // -----------------------------------------
                         // SAVE ACTIVITY + DESTINATIONS
-                        //
-                        // selectedDestinationIds is passed even
-                        // when empty so that an empty selection is
-                        // treated as intentional.
                         // -----------------------------------------
 
                         tripViewModel.updateActivity(
@@ -1242,8 +1202,7 @@ fun EditActivityScreen(
 
                 TextButton(
                     onClick = {
-                        showDatePicker =
-                            false
+                        showDatePicker = false
                     }
                 ) {
 

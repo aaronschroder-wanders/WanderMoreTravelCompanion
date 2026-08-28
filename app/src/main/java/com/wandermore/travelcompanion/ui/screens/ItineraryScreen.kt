@@ -499,9 +499,22 @@ private fun ItineraryCard(
 
                 // -------------------------------------------------
                 // BOOKED CHIP
+                //
+                // Manually-created itinerary items can display
+                // BOOKED.
+                //
+                // Activity-created itinerary items are already
+                // represented by their Activity, so the BOOKED
+                // chip is deliberately hidden here.
+                //
+                // activityId == null = manual/standalone item
+                // activityId != null = created from Activity
                 // -------------------------------------------------
 
-                if (item.booked) {
+                if (
+                    item.booked &&
+                    item.activityId == null
+                ) {
 
                     AssistChip(
                         onClick = {},

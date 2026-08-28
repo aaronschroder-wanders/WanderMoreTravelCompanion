@@ -218,6 +218,20 @@ fun EditItineraryScreen(
         existingItem!!
 
     // =========================================================
+    // CREATED FROM ACTIVITY
+    //
+    // An itinerary item with an activityId was automatically
+    // created from an Activity or Attraction.
+    //
+    // These items should not show a Booked switch because the
+    // itinerary item exists as a representation of the booked
+    // Activity/Attraction.
+    // =========================================================
+
+    val createdFromActivity =
+        currentItem.activityId != null
+
+    // =========================================================
     // ALL ACTIVE GLOBAL DESTINATIONS
     //
     // This matches AddItineraryScreen.
@@ -468,46 +482,53 @@ fun EditItineraryScreen(
                 }
             }
 
+            // =================================================
+            // BOOKED / CREATED FROM ACTIVITY
+            // =================================================
+            //
+            // Manually-created itinerary items retain the
+            // normal Booked switch.
+            //
+            // Items created from Activities/Attractions instead
+            // show an informational message.
+            // =================================================
+
             Spacer(
                 modifier =
                     Modifier.height(12.dp)
             )
 
-            // =================================================
-            // BOOKED
-            // =================================================
-
-            Row(
-                modifier =
-                    Modifier.fillMaxWidth(),
-
-                horizontalArrangement =
-                    Arrangement.SpaceBetween,
-
-                verticalAlignment =
-                    Alignment.CenterVertically
-            ) {
+            if (createdFromActivity) {
 
                 Column(
                     modifier =
-                        Modifier.weight(1f)
+                        Modifier.fillMaxWidth()
                 ) {
 
                     Text(
-                        text = "Booked",
+                        text = "Created from Activity",
 
                         style =
                             MaterialTheme.typography
-                                .bodyLarge
+                                .bodyLarge,
+
+                        fontWeight =
+                            androidx.compose.ui.text.font
+                                .FontWeight.SemiBold,
+
+                        color =
+                            MaterialTheme.colorScheme
+                                .primary
+                    )
+
+                    Spacer(
+                        modifier =
+                            Modifier.height(2.dp)
                     )
 
                     Text(
                         text =
-                            if (booked) {
-                                "This item is booked"
-                            } else {
-                                "Not booked yet"
-                            },
+                            "This itinerary item was created from a booked Activity or Attraction.",
 
                         style =
                             MaterialTheme.typography
@@ -519,13 +540,58 @@ fun EditItineraryScreen(
                     )
                 }
 
-                Switch(
-                    checked = booked,
+            } else {
 
-                    onCheckedChange = {
-                        booked = it
+                Row(
+                    modifier =
+                        Modifier.fillMaxWidth(),
+
+                    horizontalArrangement =
+                        Arrangement.SpaceBetween,
+
+                    verticalAlignment =
+                        Alignment.CenterVertically
+                ) {
+
+                    Column(
+                        modifier =
+                            Modifier.weight(1f)
+                    ) {
+
+                        Text(
+                            text = "Booked",
+
+                            style =
+                                MaterialTheme.typography
+                                    .bodyLarge
+                        )
+
+                        Text(
+                            text =
+                                if (booked) {
+                                    "This item is booked"
+                                } else {
+                                    "Not booked yet"
+                                },
+
+                            style =
+                                MaterialTheme.typography
+                                    .bodySmall,
+
+                            color =
+                                MaterialTheme.colorScheme
+                                    .onSurfaceVariant
+                        )
                     }
-                )
+
+                    Switch(
+                        checked = booked,
+
+                        onCheckedChange = {
+                            booked = it
+                        }
+                    )
+                }
             }
 
             Spacer(
@@ -765,8 +831,20 @@ fun EditItineraryScreen(
                                         null
                                     },
 
+                            /*
+                             * For items created from an
+                             * Activity/Attraction, the booked
+                             * state remains true.
+                             *
+                             * The user cannot change it from
+                             * the itinerary edit screen.
+                             */
                             booked =
-                                booked
+                                if (createdFromActivity) {
+                                    true
+                                } else {
+                                    booked
+                                }
                         )
 
                     // =================================================

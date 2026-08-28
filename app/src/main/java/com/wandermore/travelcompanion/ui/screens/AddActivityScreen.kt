@@ -685,7 +685,7 @@ fun AddActivityScreen(
             }
 
             // =================================================
-            // BOOKED
+            // ADD TO ITINERARY
             // =================================================
 
             Row(
@@ -700,7 +700,7 @@ fun AddActivityScreen(
             ) {
 
                 Text(
-                    text = "Booked"
+                    text = "Add to Itinerary"
                 )
 
                 Switch(
@@ -710,11 +710,6 @@ fun AddActivityScreen(
                     }
                 )
             }
-
-            Spacer(
-                modifier =
-                    Modifier.height(8.dp)
-            )
 
             // =================================================
             // WEBSITE
