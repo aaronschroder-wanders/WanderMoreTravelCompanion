@@ -145,4 +145,18 @@ interface ActivityDestinationDao {
     suspend fun deleteDestinationsForActivity(
         activityId: Long
     )
+
+    // ---------------------------------------------------------
+// DELETE ALL ACTIVITY ↔ DESTINATION RELATIONSHIPS
+//
+// Used when restoring a complete database backup.
+// ---------------------------------------------------------
+
+    @Query(
+        """
+    DELETE FROM activity_destinations
+    """
+    )
+    suspend fun deleteAllActivityDestinations()
+
 }

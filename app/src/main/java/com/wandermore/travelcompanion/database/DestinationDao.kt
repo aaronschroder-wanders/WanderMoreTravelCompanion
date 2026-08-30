@@ -121,4 +121,18 @@ interface DestinationDao {
     suspend fun deleteDestination(
         destinationId: Long
     )
+
+    // ---------------------------------------------------------
+// DELETE ALL DESTINATIONS
+//
+// Used when restoring a complete database backup.
+// ---------------------------------------------------------
+
+    @Query(
+        """
+    DELETE FROM destinations
+    """
+    )
+    suspend fun deleteAllDestinations()
+
 }

@@ -100,4 +100,18 @@ interface TripDestinationDao {
     suspend fun deleteDestinationsForTrip(
         tripId: Long
     )
+
+    // ---------------------------------------------------------
+// DELETE ALL TRIP ↔ DESTINATION RELATIONSHIPS
+//
+// Used when restoring a complete database backup.
+// ---------------------------------------------------------
+
+    @Query(
+        """
+    DELETE FROM trip_destinations
+    """
+    )
+    suspend fun deleteAllTripDestinations()
+    
 }

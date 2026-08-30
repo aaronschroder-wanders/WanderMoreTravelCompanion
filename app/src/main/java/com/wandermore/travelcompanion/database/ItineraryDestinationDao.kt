@@ -143,4 +143,17 @@ interface ItineraryDestinationDao {
     suspend fun deleteDestinationsForItinerary(
         itineraryId: Long
     )
+
+    // ---------------------------------------------------------
+    // DELETE ALL ITINERARY ↔ DESTINATION RELATIONSHIPS
+    //
+    // Used when restoring a complete database backup.
+    // ---------------------------------------------------------
+
+    @Query(
+        """
+    DELETE FROM itinerary_destinations
+    """
+    )
+    suspend fun deleteAllItineraryDestinations()
 }

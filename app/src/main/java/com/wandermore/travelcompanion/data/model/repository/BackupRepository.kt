@@ -152,6 +152,35 @@ class BackupRepository(
         database.withTransaction {
 
             // -------------------------------------------------
+            // CLEAR DESTINATION RELATIONSHIPS FIRST
+            //
+            // These must be removed before the destinations
+            // themselves are deleted.
+            // -------------------------------------------------
+
+            database.tripDestinationDao()
+                .deleteAllTripDestinations()
+
+            database.itineraryDestinationDao()
+                .deleteAllItineraryDestinations()
+
+            database.activityDestinationDao()
+                .deleteAllActivityDestinations()
+
+
+            // -------------------------------------------------
+            // CLEAR EXISTING DESTINATIONS
+            //
+            // This prevents UNIQUE constraint errors when the
+            // backup contains destination IDs already present
+            // on this device.
+            // -------------------------------------------------
+
+            database.destinationDao()
+                .deleteAllDestinations()
+
+
+            // -------------------------------------------------
             // DELETE CURRENT TRIPS
             //
             // Child records are deleted automatically because
