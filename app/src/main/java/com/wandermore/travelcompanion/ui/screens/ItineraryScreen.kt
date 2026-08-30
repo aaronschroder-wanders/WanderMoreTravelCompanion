@@ -220,18 +220,34 @@ fun ItineraryScreen(
                 Alignment.CenterVertically
         ) {
 
+            // -------------------------------------------------
+            // ALL
+            // -------------------------------------------------
+
             FilterChip(
                 selected = selectedFilter == "All",
                 onClick = {
                     selectedFilter = "All"
                 },
                 label = {
-                    Text("All")
+                    Text(
+                        text = "All",
+                        maxLines = 1
+                    )
                 },
-                modifier = Modifier.weight(1f),
+                modifier =
+                    Modifier.weight(0.9f),
                 colors =
                     FilterChipDefaults.filterChipColors()
             )
+
+            // -------------------------------------------------
+            // ACCOMMODATION
+            //
+            // Slightly more width is deliberately given to
+            // this chip because "Accom." is the longest label
+            // and can wrap on narrower phone displays.
+            // -------------------------------------------------
 
             FilterChip(
                 selected = selectedFilter == "Accom.",
@@ -239,12 +255,21 @@ fun ItineraryScreen(
                     selectedFilter = "Accom."
                 },
                 label = {
-                    Text("Accom.")
+                    Text(
+                        text = "Accom.",
+                        maxLines = 1,
+                        softWrap = false
+                    )
                 },
-                modifier = Modifier.weight(1f),
+                modifier =
+                    Modifier.weight(1.2f),
                 colors =
                     FilterChipDefaults.filterChipColors()
             )
+
+            // -------------------------------------------------
+            // TRAVEL
+            // -------------------------------------------------
 
             FilterChip(
                 selected = selectedFilter == "Travel",
@@ -252,12 +277,20 @@ fun ItineraryScreen(
                     selectedFilter = "Travel"
                 },
                 label = {
-                    Text("Travel")
+                    Text(
+                        text = "Travel",
+                        maxLines = 1
+                    )
                 },
-                modifier = Modifier.weight(1f),
+                modifier =
+                    Modifier.weight(1f),
                 colors =
                     FilterChipDefaults.filterChipColors()
             )
+
+            // -------------------------------------------------
+            // OTHERS
+            // -------------------------------------------------
 
             FilterChip(
                 selected = selectedFilter == "Others",
@@ -265,9 +298,13 @@ fun ItineraryScreen(
                     selectedFilter = "Others"
                 },
                 label = {
-                    Text("Others")
+                    Text(
+                        text = "Others",
+                        maxLines = 1
+                    )
                 },
-                modifier = Modifier.weight(1f),
+                modifier =
+                    Modifier.weight(1f),
                 colors =
                     FilterChipDefaults.filterChipColors()
             )
@@ -499,16 +536,6 @@ private fun ItineraryCard(
 
                 // -------------------------------------------------
                 // BOOKED CHIP
-                //
-                // Manually-created itinerary items can display
-                // BOOKED.
-                //
-                // Activity-created itinerary items are already
-                // represented by their Activity, so the BOOKED
-                // chip is deliberately hidden here.
-                //
-                // activityId == null = manual/standalone item
-                // activityId != null = created from Activity
                 // -------------------------------------------------
 
                 if (

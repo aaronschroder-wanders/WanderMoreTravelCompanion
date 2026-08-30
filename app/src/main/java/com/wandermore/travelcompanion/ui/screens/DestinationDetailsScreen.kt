@@ -7,11 +7,13 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.AssistChip
+import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -26,6 +28,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
@@ -36,7 +39,6 @@ import com.wandermore.travelcompanion.database.DestinationEntity
 import com.wandermore.travelcompanion.database.ItineraryEntity
 import com.wandermore.travelcompanion.viewmodel.TripViewModel
 import kotlinx.coroutines.flow.first
-import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 @Composable
@@ -127,12 +129,22 @@ fun DestinationDetailsScreen(
     }
 
     // =========================================================
-    // DATE FORMATTER
+    // DATE FORMATTERS
     // =========================================================
 
     val dateFormatter =
         DateTimeFormatter.ofPattern(
             "EEEE, dd MMM yyyy"
+        )
+
+    val shortDateFormatter =
+        DateTimeFormatter.ofPattern(
+            "dd MMM"
+        )
+
+    val timeFormatter =
+        DateTimeFormatter.ofPattern(
+            "HH:mm"
         )
 
     // =========================================================
@@ -290,7 +302,14 @@ fun DestinationDetailsScreen(
                     ) { itinerary ->
 
                         ItineraryDestinationCard(
-                            itinerary = itinerary,
+                            itinerary =
+                                itinerary,
+
+                            timeFormatter =
+                                timeFormatter,
+
+                            shortDateFormatter =
+                                shortDateFormatter,
 
                             onClick = {
                                 onItineraryClick(
@@ -388,7 +407,11 @@ fun DestinationDetailsScreen(
                     ) { activity ->
 
                         ActivityDestinationCard(
-                            activity = activity,
+                            activity =
+                                activity,
+
+                            timeFormatter =
+                                timeFormatter,
 
                             onClick = {
                                 onActivityClick(
@@ -439,7 +462,11 @@ fun DestinationDetailsScreen(
                     ) { activity ->
 
                         ActivityDestinationCard(
-                            activity = activity,
+                            activity =
+                                activity,
+
+                            timeFormatter =
+                                timeFormatter,
 
                             onClick = {
                                 onActivityClick(
@@ -482,6 +509,7 @@ fun DestinationDetailsScreen(
 @Composable
 private fun ActivityDestinationCard(
     activity: ActivityEntity,
+    timeFormatter: DateTimeFormatter,
     onClick: () -> Unit
 ) {
 
@@ -513,32 +541,64 @@ private fun ActivityDestinationCard(
                     .padding(
                         horizontal = 14.dp,
                         vertical = 12.dp
-                    ),
-
-            verticalArrangement =
-                Arrangement.spacedBy(4.dp)
+                    )
         ) {
 
             // -------------------------------------------------
-            // ACTIVITY NAME
+            // TITLE ROW
             // -------------------------------------------------
 
-            Text(
-                text =
-                    activity.name,
+            Row(
+                modifier =
+                    Modifier.fillMaxWidth(),
 
-                style =
-                    MaterialTheme.typography.titleMedium,
+                verticalAlignment =
+                    Alignment.CenterVertically
+            ) {
 
-                fontWeight =
-                    FontWeight.SemiBold
-            )
+                Text(
+                    text =
+                        activitySymbol(
+                            activity.type
+                        ),
+
+                    style =
+                        MaterialTheme.typography.titleMedium,
+
+                    modifier =
+                        Modifier.size(26.dp)
+                )
+
+                Spacer(
+                    modifier =
+                        Modifier.size(8.dp)
+                )
+
+                Text(
+                    text =
+                        activity.name,
+
+                    style =
+                        MaterialTheme.typography.titleMedium,
+
+                    fontWeight =
+                        FontWeight.SemiBold,
+
+                    modifier =
+                        Modifier.weight(1f)
+                )
+            }
 
             // -------------------------------------------------
             // ACTIVITY TYPE
             // -------------------------------------------------
 
             if (activity.type.isNotBlank()) {
+
+                Spacer(
+                    modifier =
+                        Modifier.height(2.dp)
+                )
 
                 Text(
                     text =
@@ -561,23 +621,28 @@ private fun ActivityDestinationCard(
 
             activity.startTime?.let { time ->
 
-                Row(
-                    verticalAlignment =
-                        Alignment.CenterVertically
-                ) {
+                Spacer(
+                    modifier =
+                        Modifier.height(4.dp)
+                )
 
-                    Text(
-                        text =
-                            "🕐 " +
-                                    time.toString(),
+                Text(
+                    text =
+                        "🕐 " +
+                                time.format(
+                                    timeFormatter
+                                ),
 
-                        style =
-                            MaterialTheme.typography.bodySmall,
+                    style =
+                        MaterialTheme.typography.bodySmall,
 
-                        color =
-                            MaterialTheme.colorScheme.primary
-                    )
-                }
+                    color =
+                        MaterialTheme.colorScheme
+                            .onSurfaceVariant,
+
+                    fontWeight =
+                        FontWeight.Medium
+                )
             }
         }
     }
@@ -591,6 +656,8 @@ private fun ActivityDestinationCard(
 @Composable
 private fun ItineraryDestinationCard(
     itinerary: ItineraryEntity,
+    timeFormatter: DateTimeFormatter,
+    shortDateFormatter: DateTimeFormatter,
     onClick: () -> Unit
 ) {
 
@@ -622,32 +689,98 @@ private fun ItineraryDestinationCard(
                     .padding(
                         horizontal = 14.dp,
                         vertical = 12.dp
-                    ),
-
-            verticalArrangement =
-                Arrangement.spacedBy(4.dp)
+                    )
         ) {
 
             // -------------------------------------------------
-            // ITINERARY TITLE
+            // TITLE ROW
             // -------------------------------------------------
 
-            Text(
-                text =
-                    itinerary.title,
+            Row(
+                modifier =
+                    Modifier.fillMaxWidth(),
 
-                style =
-                    MaterialTheme.typography.titleMedium,
+                verticalAlignment =
+                    Alignment.CenterVertically
+            ) {
 
-                fontWeight =
-                    FontWeight.SemiBold
-            )
+                Text(
+                    text =
+                        itinerarySymbol(
+                            itinerary.type
+                        ),
+
+                    style =
+                        MaterialTheme.typography.titleMedium,
+
+                    modifier =
+                        Modifier.size(26.dp)
+                )
+
+                Spacer(
+                    modifier =
+                        Modifier.size(8.dp)
+                )
+
+                Text(
+                    text =
+                        itinerary.title,
+
+                    style =
+                        MaterialTheme.typography.titleMedium,
+
+                    fontWeight =
+                        FontWeight.SemiBold,
+
+                    modifier =
+                        Modifier.weight(1f)
+                )
+
+                // -------------------------------------------------
+                // BOOKED CHIP
+                // -------------------------------------------------
+
+                if (
+                    itinerary.booked &&
+                    itinerary.activityId == null
+                ) {
+
+                    AssistChip(
+                        onClick = {},
+
+                        label = {
+
+                            Text(
+                                text = "BOOKED",
+
+                                fontWeight =
+                                    FontWeight.Bold
+                            )
+                        },
+
+                        colors =
+                            AssistChipDefaults
+                                .assistChipColors(
+                                    containerColor =
+                                        Color(0xFFB6FF00),
+
+                                    labelColor =
+                                        Color.Black
+                                )
+                    )
+                }
+            }
 
             // -------------------------------------------------
             // ITINERARY TYPE
             // -------------------------------------------------
 
             if (itinerary.type.isNotBlank()) {
+
+                Spacer(
+                    modifier =
+                        Modifier.height(2.dp)
+                )
 
                 Text(
                     text =
@@ -665,27 +798,196 @@ private fun ItineraryDestinationCard(
             }
 
             // -------------------------------------------------
-            // TIME
+            // TIME / NIGHTS / DEPARTURE
             // -------------------------------------------------
 
-            if (itinerary.time != null) {
+            val hasTime =
+                itinerary.time != null
 
-                Text(
-                    text =
-                        "🕐 " +
-                                itinerary.time!!.format(
-                                    DateTimeFormatter.ofPattern(
-                                        "HH:mm"
-                                    )
-                                ),
+            val hasNights =
+                itinerary.nights != null &&
+                        itinerary.nights > 0
 
-                    style =
-                        MaterialTheme.typography.bodySmall,
+            if (hasTime || hasNights) {
 
-                    color =
-                        MaterialTheme.colorScheme.primary
+                Spacer(
+                    modifier =
+                        Modifier.height(4.dp)
                 )
+
+                Row(
+                    verticalAlignment =
+                        Alignment.CenterVertically
+                ) {
+
+                    // -----------------------------------------
+                    // TIME
+                    // -----------------------------------------
+
+                    if (hasTime) {
+
+                        Text(
+                            text =
+                                "🕐 " +
+                                        itinerary.time!!
+                                            .format(
+                                                timeFormatter
+                                            ),
+
+                            style =
+                                MaterialTheme.typography
+                                    .bodySmall,
+
+                            color =
+                                MaterialTheme.colorScheme
+                                    .onSurfaceVariant,
+
+                            fontWeight =
+                                FontWeight.Medium
+                        )
+                    }
+
+                    // -----------------------------------------
+                    // SPACE BETWEEN TIME AND NIGHTS
+                    // -----------------------------------------
+
+                    if (
+                        hasTime &&
+                        hasNights
+                    ) {
+
+                        Spacer(
+                            modifier =
+                                Modifier.size(16.dp)
+                        )
+                    }
+
+                    // -----------------------------------------
+                    // NIGHTS
+                    // -----------------------------------------
+
+                    if (hasNights) {
+
+                        Text(
+                            text =
+                                if (
+                                    itinerary.nights == 1
+                                ) {
+                                    "🛏 1 night"
+                                } else {
+                                    "🛏 ${itinerary.nights} nights"
+                                },
+
+                            style =
+                                MaterialTheme.typography
+                                    .bodySmall,
+
+                            color =
+                                MaterialTheme.colorScheme
+                                    .onSurfaceVariant
+                        )
+                    }
+
+                    // -----------------------------------------
+                    // SPACE BEFORE DEPARTURE
+                    // -----------------------------------------
+
+                    if (hasNights) {
+
+                        Spacer(
+                            modifier =
+                                Modifier.size(16.dp)
+                        )
+
+                        Text(
+                            text =
+                                "→ " +
+                                        itinerary.date
+                                            .plusDays(
+                                                itinerary.nights!!
+                                                    .toLong()
+                                            )
+                                            .format(
+                                                shortDateFormatter
+                                            ),
+
+                            style =
+                                MaterialTheme.typography
+                                    .bodySmall,
+
+                            color =
+                                MaterialTheme.colorScheme
+                                    .onSurfaceVariant,
+
+                            fontWeight =
+                                FontWeight.Medium
+                        )
+                    }
+                }
             }
         }
+    }
+}
+
+
+// =================================================================
+// ITINERARY TYPE SYMBOL
+// =================================================================
+
+private fun itinerarySymbol(
+    type: String
+): String {
+
+    return when (
+        type.trim().lowercase()
+    ) {
+
+        "travel" ->
+            "🚆"
+
+        "accommodation" ->
+            "🏨"
+
+        "activity" ->
+            "🎯"
+
+        "attraction" ->
+            "📸"
+
+        "arrival" ->
+            "🛬"
+
+        "departure" ->
+            "🛫"
+
+        "other" ->
+            "📌"
+
+        else ->
+            "📅"
+    }
+}
+
+
+// =================================================================
+// ACTIVITY TYPE SYMBOL
+// =================================================================
+
+private fun activitySymbol(
+    type: String
+): String {
+
+    return when (
+        type.trim().lowercase()
+    ) {
+
+        "activity" ->
+            "🎯"
+
+        "attraction" ->
+            "📸"
+
+        else ->
+            "🎯"
     }
 }

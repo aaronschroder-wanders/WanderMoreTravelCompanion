@@ -19,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.layout.PaddingValues
 import com.wandermore.travelcompanion.model.Trip
 import com.wandermore.travelcompanion.model.TripStatus
 import com.wandermore.travelcompanion.ui.components.TripCard
@@ -252,19 +253,22 @@ fun HomeScreen(
         ) {
 
             Button(
-                onClick = onCreateTrip
+                onClick = onCreateTrip,
+                contentPadding = PaddingValues(horizontal = 8.dp)
             ) {
                 Text("Create Trip")
             }
 
             Button(
-                onClick = onArchivedTrips
+                onClick = onArchivedTrips,
+                contentPadding = PaddingValues(horizontal = 8.dp)
             ) {
                 Text("Archived Trips")
             }
 
             Button(
-                onClick = onSettings
+                onClick = onSettings,
+                contentPadding = PaddingValues(horizontal = 8.dp)
             ) {
                 Text("Settings")
             }
