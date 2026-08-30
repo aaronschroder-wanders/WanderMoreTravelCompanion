@@ -12,6 +12,10 @@ class UserSettingsViewModel(
     private val repository: UserSettingsRepository
 ) : ViewModel() {
 
+    // ---------------------------------------------------------
+    // HOME CURRENCY
+    // ---------------------------------------------------------
+
     val homeCurrency: StateFlow<String> =
         repository.homeCurrency
             .stateIn(
@@ -20,8 +24,31 @@ class UserSettingsViewModel(
                 initialValue = "NZD"
             )
 
+
+    // ---------------------------------------------------------
+    // HOME CURRENCY SETUP STATUS
+    //
+    // null  = DataStore is still loading
+    // false = new/unconfigured installation
+    // true  = Home Currency has been configured
+    // ---------------------------------------------------------
+
+    val hasHomeCurrencyBeenSet: StateFlow<Boolean?> =
+        repository.hasHomeCurrencyBeenSet
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5000),
+                initialValue = null
+            )
+
+
+    // ---------------------------------------------------------
+    // SET HOME CURRENCY
+    // ---------------------------------------------------------
+
     fun setHomeCurrency(
-        currency: String
+        currency: String,
+        onComplete: () -> Unit = {}
     ) {
 
         viewModelScope.launch {
@@ -30,8 +57,8 @@ class UserSettingsViewModel(
                 currency
             )
 
+            onComplete()
         }
-
     }
 
 }

@@ -5,7 +5,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class BackupData(
 
-    val backupVersion: Int = 1,
+    val backupVersion: Int = 2,
 
     val createdAt: String,
 
@@ -25,5 +25,17 @@ data class BackupData(
 
     val bookings: List<BookingEntity>,
 
-    val tripEstimates: List<TripEstimateEntity>
+    val tripEstimates: List<TripEstimateEntity>,
+
+    // ---------------------------------------------------------
+    // DESTINATIONS
+    // ---------------------------------------------------------
+
+    val destinations: List<DestinationEntity> = emptyList(),
+
+    val tripDestinations: List<TripDestinationEntity> = emptyList(),
+
+    val itineraryDestinations: List<ItineraryDestinationEntity> = emptyList(),
+
+    val activityDestinations: List<ActivityDestinationEntity> = emptyList()
 )

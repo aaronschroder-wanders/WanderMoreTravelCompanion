@@ -6,6 +6,7 @@ import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Scaffold
@@ -19,6 +20,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -57,6 +59,8 @@ import com.wandermore.travelcompanion.ui.screens.TripExpensesScreen
 import com.wandermore.travelcompanion.ui.screens.TripHubScreen
 import com.wandermore.travelcompanion.ui.screens.DestinationsScreen
 import com.wandermore.travelcompanion.ui.screens.DestinationDetailsScreen
+import com.wandermore.travelcompanion.ui.screens.InitialSetupScreen
+import com.wandermore.travelcompanion.ui.screens.InitialExchangeRateSetupScreen
 import com.wandermore.travelcompanion.viewmodel.ExchangeRateViewModel
 import com.wandermore.travelcompanion.viewmodel.TripViewModel
 import androidx.compose.runtime.rememberCoroutineScope
@@ -77,6 +81,10 @@ fun AppNavigation(
     database: AppDatabase
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
+
+    val hasHomeCurrencyBeenSet by userSettingsViewModel
+        .hasHomeCurrencyBeenSet
+        .collectAsState()
 
     val coroutineScope = rememberCoroutineScope()
 
@@ -171,11 +179,104 @@ fun AppNavigation(
         modifier = Modifier.fillMaxSize()
     ) { innerPadding ->
 
+        val startDestination =
+            when (hasHomeCurrencyBeenSet) {
+
+                null ->
+                    "loading"
+
+                false ->
+                    "initialSetup"
+
+                true ->
+                    "home"
+            }
+
+
         NavHost(
             navController = navController,
-            startDestination = "home",
+            startDestination = startDestination,
             modifier = Modifier.padding(innerPadding)
         ) {
+
+            // =========================================================
+            // LOADING
+            // =========================================================
+
+            composable("loading") {
+
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(24.dp)
+                ) {
+
+                    Text(
+                        text = "Loading..."
+                    )
+                }
+            }
+
+
+            // =========================================================
+            // INITIAL SETUP
+            // =========================================================
+
+            composable("initialSetup") {
+
+                InitialSetupScreen(
+
+                    userSettingsViewModel =
+                        userSettingsViewModel,
+
+                    exchangeRateViewModel =
+                        exchangeRateViewModel,
+
+                    onComplete = {
+
+                        navController.navigate(
+                            "home"
+                        ) {
+
+                            popUpTo("initialSetup") {
+                                inclusive = true
+                            }
+
+                        }
+
+                    }
+
+                )
+            }
+
+
+            // =========================================================
+            // INITIAL EXCHANGE RATES
+            // =========================================================
+
+            composable("initialExchangeRates") {
+
+                InitialExchangeRateSetupScreen(
+
+                    exchangeRateViewModel =
+                        exchangeRateViewModel,
+
+                    onComplete = {
+
+                        navController.navigate(
+                            "home"
+                        ) {
+
+                            popUpTo("initialExchangeRates") {
+                                inclusive = true
+                            }
+
+                        }
+
+                    }
+
+                )
+            }
 
             // =========================================================
             // HOME

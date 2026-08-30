@@ -1,7 +1,6 @@
 package com.wandermore.travelcompanion.data.repository
 
 import android.content.Context
-import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
@@ -23,6 +22,26 @@ class UserSettingsRepository(
 
     }
 
+    /**
+     * Returns true when the user has selected a Home Currency.
+     *
+     * A brand-new installation returns false.
+     */
+    val hasHomeCurrencyBeenSet: Flow<Boolean> =
+        context.userSettingsDataStore.data
+            .map { preferences ->
+
+                preferences[HOME_CURRENCY] != null
+
+            }
+
+
+    /**
+     * Returns the saved Home Currency.
+     *
+     * Returns NZD as the fallback when no currency has
+     * yet been selected.
+     */
     val homeCurrency: Flow<String> =
         context.userSettingsDataStore.data
             .map { preferences ->
@@ -32,6 +51,10 @@ class UserSettingsRepository(
 
             }
 
+
+    /**
+     * Saves the user's selected Home Currency.
+     */
     suspend fun setHomeCurrency(
         currency: String
     ) {

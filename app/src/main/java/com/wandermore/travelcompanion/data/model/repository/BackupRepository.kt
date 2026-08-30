@@ -56,6 +56,51 @@ class BackupRepository(
             database.tripEstimateDao()
                 .getAllEstimatesForBackup()
 
+        // ---------------------------------------------------------
+        // DESTINATIONS
+        // ---------------------------------------------------------
+
+        val destinations =
+            database.destinationDao()
+                .getAllDestinations()
+                .first()
+
+        val tripDestinations =
+            trips.flatMap { trip ->
+                database.tripDestinationDao()
+                    .getDestinationIdsForTrip(trip.id)
+                    .map { destinationId ->
+                        com.wandermore.travelcompanion.database.TripDestinationEntity(
+                            tripId = trip.id,
+                            destinationId = destinationId
+                        )
+                    }
+            }
+
+        val itineraryDestinations =
+            itinerary.flatMap { itineraryItem ->
+                database.itineraryDestinationDao()
+                    .getDestinationIdsForItinerary(itineraryItem.id)
+                    .map { destinationId ->
+                        com.wandermore.travelcompanion.database.ItineraryDestinationEntity(
+                            itineraryId = itineraryItem.id,
+                            destinationId = destinationId
+                        )
+                    }
+            }
+
+        val activityDestinations =
+            activities.flatMap { activity ->
+                database.activityDestinationDao()
+                    .getDestinationIdsForActivity(activity.id)
+                    .map { destinationId ->
+                        com.wandermore.travelcompanion.database.ActivityDestinationEntity(
+                            activityId = activity.id,
+                            destinationId = destinationId
+                        )
+                    }
+            }
+
         val homeCurrency =
             userSettingsRepository
                 .homeCurrency
@@ -63,7 +108,7 @@ class BackupRepository(
 
         val backup =
             BackupData(
-                backupVersion = 1,
+                backupVersion = 2,
                 createdAt = LocalDateTime.now().toString(),
 
                 homeCurrency = homeCurrency,
@@ -75,7 +120,12 @@ class BackupRepository(
                 activities = activities,
                 itinerary = itinerary,
                 bookings = bookings,
-                tripEstimates = tripEstimates
+                tripEstimates = tripEstimates,
+
+                destinations = destinations,
+                tripDestinations = tripDestinations,
+                itineraryDestinations = itineraryDestinations,
+                activityDestinations = activityDestinations
             )
 
         return json.encodeToString(
@@ -189,6 +239,54 @@ class BackupRepository(
 
                 database.tripEstimateDao()
                     .insertEstimate(estimate)
+            }
+
+
+            // -------------------------------------------------
+            // RESTORE DESTINATIONS
+            // -------------------------------------------------
+
+            backup.destinations.forEach { destination ->
+
+                database.destinationDao()
+                    .insertDestination(destination)
+            }
+
+
+            // -------------------------------------------------
+            // RESTORE TRIP ↔ DESTINATION RELATIONSHIPS
+            // -------------------------------------------------
+
+            backup.tripDestinations.forEach { tripDestination ->
+
+                database.tripDestinationDao()
+                    .insertTripDestination(tripDestination)
+            }
+
+
+            // -------------------------------------------------
+            // RESTORE ITINERARY ↔ DESTINATION RELATIONSHIPS
+            // -------------------------------------------------
+
+            backup.itineraryDestinations.forEach { itineraryDestination ->
+
+                database.itineraryDestinationDao()
+                    .insertItineraryDestination(
+                        itineraryDestination
+                    )
+            }
+
+
+            // -------------------------------------------------
+            // RESTORE ACTIVITY ↔ DESTINATION RELATIONSHIPS
+            // -------------------------------------------------
+
+            backup.activityDestinations.forEach { activityDestination ->
+
+                database.activityDestinationDao()
+                    .insertActivityDestination(
+                        activityDestination
+                    )
             }
 
 
