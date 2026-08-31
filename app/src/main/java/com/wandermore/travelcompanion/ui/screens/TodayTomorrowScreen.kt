@@ -22,6 +22,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.wandermore.travelcompanion.ui.components.TodayTomorrowCard
+import com.wandermore.travelcompanion.ui.components.TripSectionHeader
 import com.wandermore.travelcompanion.viewmodel.TripViewModel
 import java.time.LocalDate
 
@@ -34,16 +35,30 @@ fun TodayTomorrowScreen(
     onBack: () -> Unit
 ) {
 
-    // =========================================================
-    // SELECTED DAY
-    // =========================================================
+// =========================================================
+// LOAD TRIP
+// =========================================================
+
+    val tripState by tripViewModel
+        .getTripByIdFlow(tripId)
+        .collectAsState(initial = null)
+
+    val currentTrip =
+        tripState ?: return
+
+// =========================================================
+// SELECTED DAY
+// =========================================================
 
     var showTomorrow by remember {
         mutableStateOf(false)
     }
 
-    val today = LocalDate.now()
-    val tomorrow = today.plusDays(1)
+    val today =
+        LocalDate.now()
+
+    val tomorrow =
+        today.plusDays(1)
 
     val selectedDate =
         if (showTomorrow) {
@@ -52,9 +67,9 @@ fun TodayTomorrowScreen(
             today
         }
 
-    // =========================================================
-    // TODAY DATA
-    // =========================================================
+// =========================================================
+// TODAY DATA
+// =========================================================
 
     val todayItinerary by tripViewModel
         .getItineraryForDate(
@@ -74,9 +89,9 @@ fun TodayTomorrowScreen(
             initial = emptyList()
         )
 
-    // =========================================================
-    // TOMORROW DATA
-    // =========================================================
+// =========================================================
+// TOMORROW DATA
+// =========================================================
 
     val tomorrowItinerary by tripViewModel
         .getItineraryForDate(
@@ -96,9 +111,9 @@ fun TodayTomorrowScreen(
             initial = emptyList()
         )
 
-    // =========================================================
-    // SELECTED DATA
-    // =========================================================
+// =========================================================
+// SELECTED DATA
+// =========================================================
 
     val selectedItinerary =
         if (showTomorrow) {
@@ -114,13 +129,18 @@ fun TodayTomorrowScreen(
             todayTodos
         }
 
-    // =========================================================
-    // SCREEN
-    // =========================================================
+// =========================================================
+// SCREEN
+// =========================================================
 
     Column(
-        modifier = Modifier.fillMaxSize()
+        modifier =
+            Modifier.fillMaxSize()
     ) {
+
+        // =====================================================
+        // SCROLLABLE CONTENT
+        // =====================================================
 
         Column(
             modifier = Modifier
@@ -129,24 +149,20 @@ fun TodayTomorrowScreen(
                     rememberScrollState()
                 )
                 .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment =
+                Alignment.CenterHorizontally
         ) {
 
             // =================================================
-            // HEADER
+            // SHARED TRIP SECTION HEADER
             // =================================================
 
-            Text(
-                text = "📅",
-                style = MaterialTheme.typography.displaySmall
-            )
-
-            Text(
-                text = "Today / Tomorrow",
-                style = MaterialTheme.typography.headlineMedium,
-                modifier = Modifier.padding(
-                    top = 4.dp
-                )
+            TripSectionHeader(
+                title = "Today / Tomorrow",
+                tripName = currentTrip.name,
+                startDate = currentTrip.startDate,
+                endDate = currentTrip.endDate,
+                icon = "📋"
             )
 
             // =================================================
@@ -172,8 +188,9 @@ fun TodayTomorrowScreen(
                         .weight(1f)
                         .height(56.dp)
                 ) {
+
                     Text(
-                        "Today"
+                        text = "Today"
                     )
                 }
 
@@ -185,8 +202,9 @@ fun TodayTomorrowScreen(
                         .weight(1f)
                         .height(56.dp)
                 ) {
+
                     Text(
-                        "Tomorrow"
+                        text = "Tomorrow"
                     )
                 }
             }
@@ -198,9 +216,9 @@ fun TodayTomorrowScreen(
             TodayTomorrowCard(
                 title =
                     if (showTomorrow) {
-                        "📅 Tomorrow"
+                        "Tomorrow"
                     } else {
-                        "📅 Today"
+                        "Today"
                     },
 
                 date =
@@ -235,9 +253,11 @@ fun TodayTomorrowScreen(
                     bottom = 12.dp
                 )
         ) {
+
             Text(
-                "Back"
+                text = "Back"
             )
         }
     }
+
 }

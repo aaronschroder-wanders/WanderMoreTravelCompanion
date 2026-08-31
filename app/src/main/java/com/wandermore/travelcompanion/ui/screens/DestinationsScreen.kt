@@ -34,6 +34,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.wandermore.travelcompanion.database.DestinationEntity
+import com.wandermore.travelcompanion.ui.components.TripSectionHeader
 import com.wandermore.travelcompanion.viewmodel.TripViewModel
 
 private data class DestinationSummary(
@@ -49,9 +50,28 @@ fun DestinationsScreen(
     onBack: () -> Unit
 ) {
 
-    // =========================================================
-    // DESTINATIONS
-    // =========================================================
+// =========================================================
+// LOAD CURRENT TRIP
+// =========================================================
+
+    val tripState by if (tripId != null) {
+
+        tripViewModel
+            .getTripByIdFlow(tripId)
+            .collectAsState(initial = null)
+
+    } else {
+
+        remember {
+            mutableStateOf(null)
+        }
+    }
+
+    val currentTrip = tripState
+
+// =========================================================
+// DESTINATIONS
+// =========================================================
 
     val destinations by if (tripId != null) {
 
@@ -76,9 +96,9 @@ fun DestinationsScreen(
         )
     }
 
-    // =========================================================
-    // SETTINGS DIALOG STATE
-    // =========================================================
+// =========================================================
+// SETTINGS DIALOG STATE
+// =========================================================
 
     var showAddDialog by remember {
         mutableStateOf(false)
@@ -104,9 +124,9 @@ fun DestinationsScreen(
         mutableStateOf<String?>(null)
     }
 
-    // =========================================================
-    // LOAD DESTINATION SUMMARY COUNTS
-    // =========================================================
+// =========================================================
+// LOAD DESTINATION SUMMARY COUNTS
+// =========================================================
 
     LaunchedEffect(
         tripId,
@@ -144,9 +164,9 @@ fun DestinationsScreen(
         }
     }
 
-    // =========================================================
-    // FILTER TRIP DESTINATIONS
-    // =========================================================
+// =========================================================
+// FILTER TRIP DESTINATIONS
+// =========================================================
 
     val visibleDestinations =
         if (tripId != null) {
@@ -182,66 +202,80 @@ fun DestinationsScreen(
             emptyList()
         }
 
+// =========================================================
+// SCREEN
+// =========================================================
+
     Column(
         modifier =
             Modifier
                 .fillMaxSize()
-                .padding(16.dp),
-
-        verticalArrangement =
-            Arrangement.spacedBy(16.dp)
+                .padding(16.dp)
     ) {
 
         // =====================================================
-        // HEADER
+        // SHARED TRIP SECTION HEADER
         // =====================================================
 
-        Row(
-            verticalAlignment =
-                Alignment.CenterVertically
-        ) {
+        if (tripId != null && currentTrip != null) {
 
-            Text(
-                text = "📍",
-                style =
-                    MaterialTheme.typography.headlineMedium
+            TripSectionHeader(
+                title = "Destinations",
+                tripName = currentTrip.name,
+                startDate = currentTrip.startDate,
+                endDate = currentTrip.endDate,
+                icon = "📍"
             )
 
-            Column(
-                modifier =
-                    Modifier.padding(
-                        start = 10.dp
-                    )
+        } else {
+
+            Row(
+                verticalAlignment =
+                    Alignment.CenterVertically
             ) {
 
                 Text(
-                    text = "Destinations",
+                    text = "📍",
                     style =
                         MaterialTheme.typography.headlineMedium
                 )
 
-                Text(
-                    text =
-                        if (tripId != null) {
-                            "Places you're visiting on this trip"
-                        } else {
-                            "Your saved travel destinations"
-                        },
-
-                    style =
-                        MaterialTheme.typography.bodyMedium,
-
-                    color =
-                        MaterialTheme.colorScheme
-                            .onSurfaceVariant,
-
+                Column(
                     modifier =
                         Modifier.padding(
-                            top = 2.dp
+                            start = 10.dp
                         )
-                )
+                ) {
+
+                    Text(
+                        text = "Destinations",
+                        style =
+                            MaterialTheme.typography.headlineMedium
+                    )
+
+                    Text(
+                        text =
+                            "Your saved travel destinations",
+
+                        style =
+                            MaterialTheme.typography.bodyMedium,
+
+                        color =
+                            MaterialTheme.colorScheme
+                                .onSurfaceVariant,
+
+                        modifier =
+                            Modifier.padding(
+                                top = 2.dp
+                            )
+                    )
+                }
             }
         }
+
+        Spacer(
+            modifier = Modifier.size(10.dp)
+        )
 
         // =====================================================
         // SETTINGS: ADD BUTTON
@@ -262,6 +296,10 @@ fun DestinationsScreen(
                     text = "+ Add Destination"
                 )
             }
+
+            Spacer(
+                modifier = Modifier.size(10.dp)
+            )
         }
 
         // =====================================================
@@ -510,9 +548,9 @@ fun DestinationsScreen(
         }
     }
 
-    // =========================================================
-    // ADD DESTINATION DIALOG
-    // =========================================================
+// =========================================================
+// ADD DESTINATION DIALOG
+// =========================================================
 
     if (showAddDialog) {
 
@@ -594,9 +632,9 @@ fun DestinationsScreen(
         )
     }
 
-    // =========================================================
-    // RENAME DIALOG
-    // =========================================================
+// =========================================================
+// RENAME DIALOG
+// =========================================================
 
     destinationToRename?.let { destination ->
 
@@ -684,9 +722,9 @@ fun DestinationsScreen(
         )
     }
 
-    // =========================================================
-    // ARCHIVE DIALOG
-    // =========================================================
+// =========================================================
+// ARCHIVE DIALOG
+// =========================================================
 
     destinationToArchive?.let { destination ->
 
@@ -744,9 +782,9 @@ fun DestinationsScreen(
         )
     }
 
-    // =========================================================
-    // UNARCHIVE DIALOG
-    // =========================================================
+// =========================================================
+// UNARCHIVE DIALOG
+// =========================================================
 
     destinationToUnarchive?.let { destination ->
 
@@ -804,9 +842,9 @@ fun DestinationsScreen(
         )
     }
 
-    // =========================================================
-    // DELETE DIALOG
-    // =========================================================
+// =========================================================
+// DELETE DIALOG
+// =========================================================
 
     destinationToDelete?.let { destination ->
 
@@ -869,9 +907,9 @@ fun DestinationsScreen(
         )
     }
 
-    // =========================================================
-    // DELETE BLOCKED DIALOG
-    // =========================================================
+// =========================================================
+// DELETE BLOCKED DIALOG
+// =========================================================
 
     deleteErrorMessage?.let { message ->
 
@@ -907,8 +945,8 @@ fun DestinationsScreen(
             }
         )
     }
-}
 
+}
 
 // =============================================================
 // DESTINATION CARD
@@ -1167,4 +1205,5 @@ private fun DestinationCard(
             }
         }
     }
+
 }

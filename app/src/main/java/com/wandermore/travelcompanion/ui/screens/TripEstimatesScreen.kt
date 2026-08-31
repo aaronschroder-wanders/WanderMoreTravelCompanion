@@ -20,6 +20,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.wandermore.travelcompanion.database.TripEstimateEntity
+import com.wandermore.travelcompanion.ui.components.TripSectionHeader
 import com.wandermore.travelcompanion.util.formatMoney
 import com.wandermore.travelcompanion.viewmodel.TripViewModel
 import java.time.temporal.ChronoUnit
@@ -33,9 +34,9 @@ fun TripEstimatesScreen(
     onBack: () -> Unit
 ) {
 
-    // ---------------------------------------------------------
-    // LOAD TRIP
-    // ---------------------------------------------------------
+// ---------------------------------------------------------
+// LOAD TRIP
+// ---------------------------------------------------------
 
     val tripState by tripViewModel
         .getTripByIdFlow(tripId)
@@ -45,9 +46,9 @@ fun TripEstimatesScreen(
 
     val currentTrip = tripState ?: return
 
-    // ---------------------------------------------------------
-    // LOAD ESTIMATES
-    // ---------------------------------------------------------
+// ---------------------------------------------------------
+// LOAD ESTIMATES
+// ---------------------------------------------------------
 
     val estimates by tripViewModel
         .getTripEstimatesForTrip(currentTrip.id)
@@ -55,9 +56,9 @@ fun TripEstimatesScreen(
             initial = emptyList()
         )
 
-    // ---------------------------------------------------------
-    // TRIP DAYS / NIGHTS
-    // ---------------------------------------------------------
+// ---------------------------------------------------------
+// TRIP DAYS / NIGHTS
+// ---------------------------------------------------------
 
     val tripDays =
         ChronoUnit.DAYS.between(
@@ -71,12 +72,12 @@ fun TripEstimatesScreen(
             currentTrip.endDate
         )
 
-    // ---------------------------------------------------------
-    // CALCULATE TOTAL ESTIMATED COST
-    //
-    // convertedAmount is already in the trip home currency.
-    // Apply the appropriate day/night multiplier here.
-    // ---------------------------------------------------------
+// ---------------------------------------------------------
+// CALCULATE TOTAL ESTIMATED COST
+//
+// convertedAmount is already in the trip home currency.
+// Apply the appropriate day/night multiplier here.
+// ---------------------------------------------------------
 
     val estimatedTripTotal =
         estimates.sumOf { estimate ->
@@ -94,9 +95,9 @@ fun TripEstimatesScreen(
             estimate.convertedAmount * multiplier
         }
 
-    // ---------------------------------------------------------
-    // SCREEN
-    // ---------------------------------------------------------
+// ---------------------------------------------------------
+// SCREEN
+// ---------------------------------------------------------
 
     Column(
         modifier = Modifier
@@ -105,28 +106,31 @@ fun TripEstimatesScreen(
     ) {
 
         // -----------------------------------------------------
-        // HEADER
+        // SHARED TRIP SECTION HEADER
         // -----------------------------------------------------
 
-        Text(
-            text = "📊 Trip Estimates",
-            style = MaterialTheme.typography.headlineMedium
+        TripSectionHeader(
+            title = "Trip Estimates",
+            tripName = currentTrip.name,
+            startDate = currentTrip.startDate,
+            endDate = currentTrip.endDate,
+            icon = "📊"
         )
 
         Spacer(
-            modifier = Modifier.height(4.dp)
+            modifier = Modifier.height(10.dp)
         )
 
-        Text(
-            text = currentTrip.name,
-            style = MaterialTheme.typography.titleMedium
-        )
+        // -----------------------------------------------------
+        // ESTIMATE SUMMARY INFORMATION
+        // -----------------------------------------------------
 
         Text(
             text =
                 "${tripDays} days • ${tripNights} nights • " +
                         "Home currency: ${currentTrip.homeCurrency}",
-            style = MaterialTheme.typography.bodyMedium
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
 
         Spacer(
@@ -249,6 +253,7 @@ fun TripEstimatesScreen(
             }
         }
     }
+
 }
 
 // =============================================================
@@ -264,9 +269,9 @@ private fun TripEstimateCard(
     onClick: () -> Unit
 ) {
 
-    // ---------------------------------------------------------
-    // CALCULATE MULTIPLIER
-    // ---------------------------------------------------------
+// ---------------------------------------------------------
+// CALCULATE MULTIPLIER
+// ---------------------------------------------------------
 
     val multiplier =
         when (estimate.estimateType) {
@@ -278,18 +283,18 @@ private fun TripEstimateCard(
             else -> 1L
         }
 
-    // ---------------------------------------------------------
-    // CALCULATED TOTAL
-    //
-    // convertedAmount is already in the home currency.
-    // ---------------------------------------------------------
+// ---------------------------------------------------------
+// CALCULATED TOTAL
+//
+// convertedAmount is already in the home currency.
+// ---------------------------------------------------------
 
     val calculatedAmount =
         estimate.convertedAmount * multiplier
 
-    // ---------------------------------------------------------
-    // SHOW THE ORIGINAL CURRENCY FOR THE BASIS
-    // ---------------------------------------------------------
+// ---------------------------------------------------------
+// SHOW THE ORIGINAL CURRENCY FOR THE BASIS
+// ---------------------------------------------------------
 
     val basisText =
         when (estimate.estimateType) {
@@ -313,13 +318,13 @@ private fun TripEstimateCard(
                 )
         }
 
-    // ---------------------------------------------------------
-    // SIMPLE HOME-CURRENCY ONE-OFF
-    //
-    // In this case the basis amount IS already the final total,
-    // so displaying "Estimated total" underneath would duplicate
-    // the same information.
-    // ---------------------------------------------------------
+// ---------------------------------------------------------
+// SIMPLE HOME-CURRENCY ONE-OFF
+//
+// In this case the basis amount IS already the final total,
+// so displaying "Estimated total" underneath would duplicate
+// the same information.
+// ---------------------------------------------------------
 
     val isSimpleHomeCurrencyOneOff =
         estimate.estimateType == "ONE_OFF" &&
@@ -397,4 +402,5 @@ private fun TripEstimateCard(
             }
         }
     }
+
 }
