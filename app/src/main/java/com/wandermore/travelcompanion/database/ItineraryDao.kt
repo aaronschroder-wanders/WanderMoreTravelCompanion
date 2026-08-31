@@ -6,6 +6,7 @@ import androidx.room.Insert
 import androidx.room.Query
 import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
+import java.time.LocalDate
 
 @Dao
 interface ItineraryDao {
@@ -24,6 +25,27 @@ interface ItineraryDao {
     )
     fun getItineraryForTrip(
         tripId: Long
+    ): Flow<List<ItineraryEntity>>
+
+    // ---------------------------------------------------------
+    // GET ITINERARY ITEMS FOR A SPECIFIC DATE
+    // ---------------------------------------------------------
+
+    @Query(
+        """
+    SELECT *
+    FROM itinerary
+    WHERE tripId = :tripId
+      AND date = :date
+    ORDER BY
+        CASE WHEN time IS NULL THEN 1 ELSE 0 END,
+        time ASC,
+        sortOrder ASC
+    """
+    )
+    fun getItineraryForDate(
+        tripId: Long,
+        date: LocalDate
     ): Flow<List<ItineraryEntity>>
 
     // ---------------------------------------------------------

@@ -1,12 +1,12 @@
 package com.wandermore.travelcompanion
 
-import androidx.activity.result.contract.ActivityResultContracts
-import java.time.LocalDateTime
 import android.net.Uri
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Scaffold
@@ -18,12 +18,15 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import com.wandermore.travelcompanion.data.repository.BackupRepository
 import com.wandermore.travelcompanion.database.ActivityEntity
 import com.wandermore.travelcompanion.database.AppDatabase
 import com.wandermore.travelcompanion.database.ExpenseEntity
@@ -41,34 +44,33 @@ import com.wandermore.travelcompanion.ui.screens.ArchivedTripsScreen
 import com.wandermore.travelcompanion.ui.screens.CategoryBreakdownScreen
 import com.wandermore.travelcompanion.ui.screens.CategoryExpensesScreen
 import com.wandermore.travelcompanion.ui.screens.CreateTripScreen
+import com.wandermore.travelcompanion.ui.screens.DestinationDetailsScreen
+import com.wandermore.travelcompanion.ui.screens.DestinationsScreen
 import com.wandermore.travelcompanion.ui.screens.EditActivityScreen
 import com.wandermore.travelcompanion.ui.screens.EditExpenseScreen
 import com.wandermore.travelcompanion.ui.screens.EditItineraryScreen
 import com.wandermore.travelcompanion.ui.screens.EditTodoScreen
-import com.wandermore.travelcompanion.ui.screens.EditTripScreen
 import com.wandermore.travelcompanion.ui.screens.EditTripEstimateScreen
+import com.wandermore.travelcompanion.ui.screens.EditTripScreen
 import com.wandermore.travelcompanion.ui.screens.ExchangeRateSettingsScreen
 import com.wandermore.travelcompanion.ui.screens.HomeScreen
+import com.wandermore.travelcompanion.ui.screens.InitialExchangeRateSetupScreen
+import com.wandermore.travelcompanion.ui.screens.InitialSetupScreen
 import com.wandermore.travelcompanion.ui.screens.ItineraryDetailsScreen
 import com.wandermore.travelcompanion.ui.screens.ItineraryScreen
 import com.wandermore.travelcompanion.ui.screens.SettingsScreen
+import com.wandermore.travelcompanion.ui.screens.TodayTomorrowScreen
 import com.wandermore.travelcompanion.ui.screens.TodoScreen
 import com.wandermore.travelcompanion.ui.screens.TripDetailsScreen
 import com.wandermore.travelcompanion.ui.screens.TripEstimatesScreen
 import com.wandermore.travelcompanion.ui.screens.TripExpensesScreen
 import com.wandermore.travelcompanion.ui.screens.TripHubScreen
-import com.wandermore.travelcompanion.ui.screens.DestinationsScreen
-import com.wandermore.travelcompanion.ui.screens.DestinationDetailsScreen
-import com.wandermore.travelcompanion.ui.screens.InitialSetupScreen
-import com.wandermore.travelcompanion.ui.screens.InitialExchangeRateSetupScreen
 import com.wandermore.travelcompanion.viewmodel.ExchangeRateViewModel
 import com.wandermore.travelcompanion.viewmodel.TripViewModel
-import androidx.compose.runtime.rememberCoroutineScope
-import com.wandermore.travelcompanion.data.repository.BackupRepository
-import kotlinx.coroutines.launch
-import android.widget.Toast
 import com.wandermore.travelcompanion.viewmodel.UserSettingsViewModel
 import com.wandermore.travelcompanion.data.repository.UserSettingsRepository
+import java.time.LocalDateTime
+import kotlinx.coroutines.launch
 
 
 @Composable
@@ -80,7 +82,8 @@ fun AppNavigation(
     userSettingsRepository: UserSettingsRepository,
     database: AppDatabase
 ) {
-    val context = androidx.compose.ui.platform.LocalContext.current
+
+    val context = LocalContext.current
 
     val hasHomeCurrencyBeenSet by userSettingsViewModel
         .hasHomeCurrencyBeenSet
@@ -95,10 +98,10 @@ fun AppNavigation(
         ) {
             BackupRepository(
                 database = database,
-                userSettingsRepository =
-                    userSettingsRepository
+                userSettingsRepository = userSettingsRepository
             )
         }
+
 
     // =========================================================
     // BACKUP FILE CREATION
@@ -145,7 +148,8 @@ fun AppNavigation(
 
     val restoreLauncher =
         rememberLauncherForActivityResult(
-            contract = ActivityResultContracts.OpenDocument()
+            contract =
+                ActivityResultContracts.OpenDocument()
         ) { uri: Uri? ->
 
             if (uri != null) {
@@ -199,6 +203,7 @@ fun AppNavigation(
             modifier = Modifier.padding(innerPadding)
         ) {
 
+
             // =========================================================
             // LOADING
             // =========================================================
@@ -241,11 +246,8 @@ fun AppNavigation(
                             popUpTo("initialSetup") {
                                 inclusive = true
                             }
-
                         }
-
                     }
-
                 )
             }
 
@@ -270,13 +272,11 @@ fun AppNavigation(
                             popUpTo("initialExchangeRates") {
                                 inclusive = true
                             }
-
                         }
-
                     }
-
                 )
             }
+
 
             // =========================================================
             // HOME
@@ -295,18 +295,21 @@ fun AppNavigation(
                     tripViewModel = tripViewModel,
 
                     onCreateTrip = {
+
                         navController.navigate(
                             "createTrip"
                         )
                     },
 
                     onArchivedTrips = {
+
                         navController.navigate(
                             "archivedTrips"
                         )
                     },
 
                     onSettings = {
+
                         navController.navigate(
                             "settings"
                         )
@@ -335,8 +338,11 @@ fun AppNavigation(
                     )
 
                 ArchivedTripsScreen(
+
                     trips = trips,
-                    tripViewModel = tripViewModel,
+
+                    tripViewModel =
+                        tripViewModel,
 
                     onTripSelected = { trip ->
 
@@ -346,6 +352,7 @@ fun AppNavigation(
                     },
 
                     onBack = {
+
                         navController.popBackStack()
                     }
                 )
@@ -359,10 +366,15 @@ fun AppNavigation(
             composable("createTrip") {
 
                 CreateTripScreen(
-                    tripViewModel = tripViewModel,
-                    userSettingsViewModel = userSettingsViewModel,
+
+                    tripViewModel =
+                        tripViewModel,
+
+                    userSettingsViewModel =
+                        userSettingsViewModel,
 
                     onTripCreated = {
+
                         navController.popBackStack()
                     }
                 )
@@ -407,7 +419,6 @@ fun AppNavigation(
                         backupLauncher.launch(
                             filename
                         )
-
                     },
 
                     onRestore = {
@@ -415,15 +426,12 @@ fun AppNavigation(
                         restoreLauncher.launch(
                             arrayOf("application/json")
                         )
-
                     },
 
                     onBack = {
 
                         navController.popBackStack()
-
                     }
-
                 )
             }
 
@@ -435,10 +443,12 @@ fun AppNavigation(
             composable("exchangeRates") {
 
                 ExchangeRateSettingsScreen(
+
                     exchangeRateViewModel =
                         exchangeRateViewModel,
 
                     onBack = {
+
                         navController.popBackStack()
                     }
                 )
@@ -466,6 +476,13 @@ fun AppNavigation(
 
                         tripViewModel =
                             tripViewModel,
+
+                        onTodayTomorrow = {
+
+                            navController.navigate(
+                                "todayTomorrow/$tripId"
+                            )
+                        },
 
                         onItinerary = {
 
@@ -544,6 +561,56 @@ fun AppNavigation(
                                 tripId
                             )
 
+                            navController.popBackStack()
+                        }
+                    )
+                }
+            }
+
+
+            // =========================================================
+            // TODAY / TOMORROW
+            // =========================================================
+            //
+            // This route was missing. Trip Hub navigates to:
+            //
+            // todayTomorrow/{tripId}
+            //
+            // which previously caused the crash:
+            //
+            // "Navigation destination that matches route
+            // todayTomorrow/8 cannot be found..."
+            //
+            // =========================================================
+
+            composable(
+                "todayTomorrow/{tripId}"
+            ) { entry ->
+
+                val tripId =
+                    entry.arguments
+                        ?.getString("tripId")
+                        ?.toLongOrNull()
+
+                if (tripId != null) {
+
+                    TodayTomorrowScreen(
+                        tripId = tripId,
+                        tripViewModel = tripViewModel,
+
+                        onItineraryClick = { itineraryId ->
+                            navController.navigate(
+                                "editItinerary/$itineraryId"
+                            )
+                        },
+
+                        onTodoClick = { todoId ->
+                            navController.navigate(
+                                "editTodo/$todoId"
+                            )
+                        },
+
+                        onBack = {
                             navController.popBackStack()
                         }
                     )
@@ -682,22 +749,27 @@ fun AppNavigation(
                     }
                 }
 
-                // =====================================================
-                // DELETE ESTIMATE CONFIRMATION
-                // =====================================================
-
-                if (showDeleteEstimateDialog && estimate != null) {
+                if (
+                    showDeleteEstimateDialog &&
+                    estimate != null
+                ) {
 
                     AlertDialog(
+
                         onDismissRequest = {
+
                             showDeleteEstimateDialog = false
                         },
 
                         title = {
-                            Text("Delete estimate?")
+
+                            Text(
+                                "Delete estimate?"
+                            )
                         },
 
                         text = {
+
                             Text(
                                 "Are you sure you want to delete this estimate? " +
                                         "This cannot be undone."
@@ -713,12 +785,16 @@ fun AppNavigation(
                                         estimate!!
                                     )
 
-                                    showDeleteEstimateDialog = false
+                                    showDeleteEstimateDialog =
+                                        false
 
                                     navController.popBackStack()
                                 }
                             ) {
-                                Text("Delete")
+
+                                Text(
+                                    "Delete"
+                                )
                             }
                         },
 
@@ -726,10 +802,15 @@ fun AppNavigation(
 
                             TextButton(
                                 onClick = {
-                                    showDeleteEstimateDialog = false
+
+                                    showDeleteEstimateDialog =
+                                        false
                                 }
                             ) {
-                                Text("Cancel")
+
+                                Text(
+                                    "Cancel"
+                                )
                             }
                         }
                     )
@@ -881,7 +962,8 @@ fun AppNavigation(
 
                         itinerary = item,
 
-                        tripViewModel = tripViewModel,
+                        tripViewModel =
+                            tripViewModel,
 
                         onEdit = {
 
@@ -1230,14 +1312,15 @@ fun AppNavigation(
                 }
             }
 
+
             // =========================================================
-// GLOBAL DESTINATIONS
-// =========================================================
-// Used by Settings.
-//
-// No trip is associated with this screen, so it displays
-// the global list of active saved destinations.
-// =========================================================
+            // GLOBAL DESTINATIONS
+            // =========================================================
+            // Used by Settings.
+            //
+            // No trip is associated with this screen, so it displays
+            // the global list of active saved destinations.
+            // =========================================================
 
             composable(
                 "destinations"
@@ -1265,9 +1348,10 @@ fun AppNavigation(
                 )
             }
 
-// =========================================================
-// DESTINATIONS
-// =========================================================
+
+            // =========================================================
+            // DESTINATIONS
+            // =========================================================
 
             composable(
                 "destinations/{tripId}"
@@ -1303,9 +1387,9 @@ fun AppNavigation(
             }
 
 
-// =========================================================
-// DESTINATION DETAILS
-// =========================================================
+            // =========================================================
+            // DESTINATION DETAILS
+            // =========================================================
 
             composable(
                 "destinationDetails/{tripId}/{destinationId}"
@@ -1360,6 +1444,7 @@ fun AppNavigation(
                     )
                 }
             }
+
 
             // =========================================================
             // TRIP EXPENSES

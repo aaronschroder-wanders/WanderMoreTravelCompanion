@@ -6,6 +6,7 @@ import androidx.room.Insert
 import androidx.room.Query
 import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
+import java.time.LocalDate
 
 @Dao
 interface TodoDao {
@@ -34,6 +35,25 @@ interface TodoDao {
     suspend fun getTodoById(
         todoId: Long
     ): TodoEntity?
+
+    // ---------------------------------------------------------
+    // GET INCOMPLETE TO DOS FOR A SPECIFIC DATE
+    // ---------------------------------------------------------
+
+    @Query(
+        """
+    SELECT *
+    FROM todos
+    WHERE tripId = :tripId
+      AND dueDate = :date
+      AND completed = 0
+    ORDER BY id ASC
+    """
+    )
+    fun getTodosForDate(
+        tripId: Long,
+        date: LocalDate
+    ): Flow<List<TodoEntity>>
 
     // ---------------------------------------------------------
     // BACKUP

@@ -34,6 +34,7 @@ fun TripHubScreen(
     tripViewModel: TripViewModel,
     onItinerary: () -> Unit,
     onActivities: () -> Unit,
+    onTodayTomorrow: () -> Unit,
     onToDo: () -> Unit,
     onDestinations: () -> Unit,
     onExpenses: () -> Unit,
@@ -83,7 +84,9 @@ fun TripHubScreen(
             Text(
                 text = currentTrip.name,
                 style = MaterialTheme.typography.headlineMedium,
-                modifier = Modifier.padding(top = 4.dp)
+                modifier = Modifier.padding(
+                    top = 4.dp
+                )
             )
 
             Spacer(
@@ -104,7 +107,9 @@ fun TripHubScreen(
                 text = "Status: ${
                     currentTrip.status.name
                         .lowercase()
-                        .replaceFirstChar { it.uppercase() }
+                        .replaceFirstChar {
+                            it.uppercase()
+                        }
                 }",
                 style = MaterialTheme.typography.bodyMedium
             )
@@ -142,6 +147,17 @@ fun TripHubScreen(
                 ) {
                     Text(
                         "⭐  Attractions & Activities"
+                    )
+                }
+
+                Button(
+                    onClick = onTodayTomorrow,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(64.dp)
+                ) {
+                    Text(
+                        "🔵  Today / Tomorrow"
                     )
                 }
 

@@ -585,6 +585,21 @@ class TripViewModel(
         return todoDao.getTodosForTrip(tripId)
     }
 
+    // =========================================================
+    // INCOMPLETE TO DOS FOR SPECIFIC DATE
+    // =========================================================
+
+    fun getTodosForDate(
+        tripId: Long,
+        date: LocalDate
+    ): Flow<List<TodoEntity>> {
+
+        return todoDao.getTodosForDate(
+            tripId,
+            date
+        )
+    }
+
     suspend fun getTodoById(
         todoId: Long
     ): TodoEntity? {
@@ -1382,6 +1397,21 @@ class TripViewModel(
     ): Flow<List<ItineraryEntity>> {
         return itineraryDao.getItineraryForTrip(
             tripId
+        )
+    }
+
+    // =========================================================
+    // ITINERARY FOR SPECIFIC DATE
+    // =========================================================
+
+    fun getItineraryForDate(
+        tripId: Long,
+        date: LocalDate
+    ): Flow<List<ItineraryEntity>> {
+
+        return itineraryDao.getItineraryForDate(
+            tripId,
+            date
         )
     }
 

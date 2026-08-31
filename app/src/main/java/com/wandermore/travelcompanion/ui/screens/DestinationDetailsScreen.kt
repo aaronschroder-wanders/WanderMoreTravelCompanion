@@ -37,6 +37,7 @@ import androidx.navigation.NavBackStackEntry
 import com.wandermore.travelcompanion.database.ActivityEntity
 import com.wandermore.travelcompanion.database.DestinationEntity
 import com.wandermore.travelcompanion.database.ItineraryEntity
+import com.wandermore.travelcompanion.ui.components.itinerarySymbol
 import com.wandermore.travelcompanion.viewmodel.TripViewModel
 import kotlinx.coroutines.flow.first
 import java.time.format.DateTimeFormatter
@@ -160,9 +161,6 @@ fun DestinationDetailsScreen(
 
     // =========================================================
     // GROUP ACTIVITIES BY DATE
-    //
-    // Activities can have a null date, so those are handled
-    // separately and displayed at the end.
     // =========================================================
 
     val datedActivityGroups =
@@ -926,45 +924,6 @@ private fun ItineraryDestinationCard(
                 }
             }
         }
-    }
-}
-
-
-// =================================================================
-// ITINERARY TYPE SYMBOL
-// =================================================================
-
-private fun itinerarySymbol(
-    type: String
-): String {
-
-    return when (
-        type.trim().lowercase()
-    ) {
-
-        "travel" ->
-            "🚆"
-
-        "accommodation" ->
-            "🏨"
-
-        "activity" ->
-            "🎯"
-
-        "attraction" ->
-            "📸"
-
-        "arrival" ->
-            "🛬"
-
-        "departure" ->
-            "🛫"
-
-        "other" ->
-            "📌"
-
-        else ->
-            "📅"
     }
 }
 

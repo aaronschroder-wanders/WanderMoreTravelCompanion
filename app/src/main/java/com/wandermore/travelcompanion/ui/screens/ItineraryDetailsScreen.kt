@@ -31,10 +31,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.repeatOnLifecycle
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import com.wandermore.travelcompanion.database.ItineraryEntity
+import com.wandermore.travelcompanion.ui.components.itinerarySymbol
 import com.wandermore.travelcompanion.viewmodel.TripViewModel
 import java.time.format.DateTimeFormatter
 
@@ -798,43 +799,5 @@ private fun DetailLine(
                         .bodyLarge
             )
         }
-    }
-}
-
-// =============================================================
-// ITINERARY TYPE SYMBOL
-// =============================================================
-
-private fun itinerarySymbol(
-    type: String
-): String {
-
-    return when (
-        type.trim().lowercase()
-    ) {
-
-        "travel" ->
-            "🚆"
-
-        "accommodation" ->
-            "🏨"
-
-        "activity" ->
-            "🎯"
-
-        "attraction" ->
-            "📸"
-
-        "arrival" ->
-            "🛬"
-
-        "departure" ->
-            "🛫"
-
-        "other" ->
-            "📌"
-
-        else ->
-            "📅"
     }
 }
