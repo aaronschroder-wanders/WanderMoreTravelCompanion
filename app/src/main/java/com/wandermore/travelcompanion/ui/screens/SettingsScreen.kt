@@ -1,5 +1,7 @@
 package com.wandermore.travelcompanion.ui.screens
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -13,6 +15,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.wandermore.travelcompanion.ui.components.CurrencyDropdown
 import com.wandermore.travelcompanion.viewmodel.UserSettingsViewModel
@@ -38,6 +43,7 @@ fun SettingsScreen(
         .homeCurrency
         .collectAsState()
 
+    val context = LocalContext.current
 
     Column(
 
@@ -46,7 +52,7 @@ fun SettingsScreen(
             .padding(16.dp),
 
         verticalArrangement =
-            Arrangement.spacedBy(16.dp)
+            Arrangement.spacedBy(12.dp)
 
     ) {
 
@@ -76,7 +82,7 @@ fun SettingsScreen(
                 MaterialTheme.typography.labelLarge,
 
             modifier = Modifier.padding(
-                top = 8.dp
+                top = 4.dp
             )
 
         )
@@ -96,10 +102,10 @@ fun SettingsScreen(
             Column(
 
                 modifier =
-                    Modifier.padding(16.dp),
+                    Modifier.padding(12.dp),
 
                 verticalArrangement =
-                    Arrangement.spacedBy(8.dp)
+                    Arrangement.spacedBy(4.dp)
 
             ) {
 
@@ -220,11 +226,15 @@ fun SettingsScreen(
                 MaterialTheme.typography.labelLarge,
 
             modifier = Modifier.padding(
-                top = 8.dp
+                top = 4.dp
             )
 
         )
 
+
+        // =========================================================
+        // BACKUP
+        // =========================================================
 
         Card(
 
@@ -255,6 +265,10 @@ fun SettingsScreen(
         }
 
 
+        // =========================================================
+        // RESTORE
+        // =========================================================
+
         Card(
 
             modifier =
@@ -278,6 +292,92 @@ fun SettingsScreen(
                         "Restore from Google Drive"
 
                 )
+
+            }
+
+        }
+
+
+        // =========================================================
+        // WANDER MORE WORK LESS
+        // =========================================================
+
+        Card(
+
+            modifier =
+                Modifier.fillMaxWidth()
+
+        ) {
+
+            Column(
+
+                modifier =
+                    Modifier.padding(12.dp),
+
+                verticalArrangement =
+                    Arrangement.spacedBy(6.dp)
+
+            ) {
+
+                Text(
+
+                    text =
+                        "Wander More Work Less",
+
+                    style =
+                        MaterialTheme.typography.titleLarge,
+
+                    fontWeight =
+                        FontWeight.Bold,
+
+                    color =
+                        Color(0xFF00A6A6)
+
+                )
+
+
+                Text(
+
+                    text =
+                        "Travel videos, tips and adventures.",
+
+                    style =
+                        MaterialTheme.typography.bodyLarge
+
+                )
+
+
+                Button(
+
+                    onClick = {
+
+                        val intent = Intent(
+
+                            Intent.ACTION_VIEW,
+
+                            Uri.parse(
+                                "https://www.youtube.com/@WanderMoreWorkLess"
+                            )
+
+                        )
+
+                        context.startActivity(intent)
+
+                    },
+
+                    modifier =
+                        Modifier.fillMaxWidth()
+
+                ) {
+
+                    Text(
+
+                        text =
+                            "Visit our YouTube Channel"
+
+                    )
+
+                }
 
             }
 

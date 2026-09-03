@@ -6,8 +6,10 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -19,7 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.ui.unit.sp
 import com.wandermore.travelcompanion.model.Trip
 import com.wandermore.travelcompanion.model.TripStatus
 import com.wandermore.travelcompanion.ui.components.TripCard
@@ -67,6 +69,7 @@ fun HomeScreen(
             Text(
                 text = "Wander More",
                 style = MaterialTheme.typography.displaySmall,
+                fontSize = 48.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color(0xFF00A6A6)
             )
@@ -74,6 +77,7 @@ fun HomeScreen(
             Text(
                 text = "Travel Companion",
                 style = MaterialTheme.typography.titleLarge,
+                fontSize = 32.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = Color(0xFFF2A900),
                 modifier = Modifier.padding(
@@ -248,27 +252,38 @@ fun HomeScreen(
                 .padding(
                     top = 8.dp,
                     bottom = 16.dp
-                ),
-            horizontalArrangement = Arrangement.SpaceEvenly
+                )
         ) {
 
             Button(
                 onClick = onCreateTrip,
-                contentPadding = PaddingValues(horizontal = 8.dp)
+                modifier = Modifier.weight(1f),
+                shape = RoundedCornerShape(6.dp),
+                contentPadding = PaddingValues(
+                    horizontal = 4.dp
+                )
             ) {
                 Text("Create Trip")
             }
 
             Button(
                 onClick = onArchivedTrips,
-                contentPadding = PaddingValues(horizontal = 8.dp)
+                modifier = Modifier.weight(1f),
+                shape = RoundedCornerShape(6.dp),
+                contentPadding = PaddingValues(
+                    horizontal = 4.dp
+                )
             ) {
                 Text("Archived Trips")
             }
 
             Button(
                 onClick = onSettings,
-                contentPadding = PaddingValues(horizontal = 8.dp)
+                modifier = Modifier.weight(1f),
+                shape = RoundedCornerShape(6.dp),
+                contentPadding = PaddingValues(
+                    horizontal = 4.dp
+                )
             ) {
                 Text("Settings")
             }
