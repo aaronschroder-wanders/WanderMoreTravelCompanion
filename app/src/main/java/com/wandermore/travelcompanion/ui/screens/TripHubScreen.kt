@@ -8,8 +8,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
@@ -66,13 +64,20 @@ fun TripHubScreen(
         modifier = Modifier.fillMaxSize()
     ) {
 
+        // =====================================================
+        // TRIP INFORMATION + MAIN TRIP AREAS
+        // =====================================================
+
         Column(
             modifier = Modifier
                 .weight(1f)
-                .verticalScroll(
-                    rememberScrollState()
-                )
-                .padding(16.dp),
+                .fillMaxWidth()
+                .padding(
+                    start = 16.dp,
+                    end = 16.dp,
+                    top = 12.dp,
+                    bottom = 4.dp
+                ),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
@@ -85,12 +90,12 @@ fun TripHubScreen(
                 text = currentTrip.name,
                 style = MaterialTheme.typography.headlineMedium,
                 modifier = Modifier.padding(
-                    top = 4.dp
+                    top = 2.dp
                 )
             )
 
             Spacer(
-                modifier = Modifier.height(8.dp)
+                modifier = Modifier.height(4.dp)
             )
 
             Text(
@@ -115,24 +120,28 @@ fun TripHubScreen(
             )
 
             Spacer(
-                modifier = Modifier.height(24.dp)
+                modifier = Modifier.height(12.dp)
             )
 
             // =================================================
             // MAIN TRIP AREAS
+            //
+            // The buttons share the available vertical space.
+            // There is deliberately NO verticalScroll here.
             // =================================================
 
             Column(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement =
-                    Arrangement.spacedBy(10.dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f),
+                verticalArrangement = Arrangement.spacedBy(6.dp)
             ) {
 
                 Button(
                     onClick = onItinerary,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(64.dp)
+                        .weight(1f)
                 ) {
                     Text(
                         "🗓️  Itinerary & Bookings"
@@ -143,7 +152,7 @@ fun TripHubScreen(
                     onClick = onActivities,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(64.dp)
+                        .weight(1f)
                 ) {
                     Text(
                         "⭐  Attractions & Activities"
@@ -154,7 +163,7 @@ fun TripHubScreen(
                     onClick = onTodayTomorrow,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(64.dp)
+                        .weight(1f)
                 ) {
                     Text(
                         "🔵  Today / Tomorrow"
@@ -165,7 +174,7 @@ fun TripHubScreen(
                     onClick = onToDo,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(64.dp)
+                        .weight(1f)
                 ) {
                     Text(
                         "✅  To Do"
@@ -176,7 +185,7 @@ fun TripHubScreen(
                     onClick = onDestinations,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(64.dp)
+                        .weight(1f)
                 ) {
                     Text(
                         "📍  Destinations"
@@ -188,7 +197,7 @@ fun TripHubScreen(
                     onClick = onEstimates,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(64.dp)
+                        .weight(1f)
                 ) {
                     Text(
                         "📊  Estimates"
@@ -199,7 +208,7 @@ fun TripHubScreen(
                     onClick = onExpenses,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(64.dp)
+                        .weight(1f)
                 ) {
                     Text(
                         "💰  Expenses"
@@ -218,13 +227,11 @@ fun TripHubScreen(
                 .padding(
                     start = 12.dp,
                     end = 12.dp,
-                    top = 8.dp,
+                    top = 4.dp,
                     bottom = 12.dp
                 ),
-            horizontalArrangement =
-                Arrangement.SpaceEvenly,
-            verticalAlignment =
-                Alignment.CenterVertically
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.CenterVertically
         ) {
 
             Button(
