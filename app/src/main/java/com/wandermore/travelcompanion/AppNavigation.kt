@@ -27,6 +27,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.wandermore.travelcompanion.data.repository.BackupRepository
+import com.wandermore.travelcompanion.data.repository.UserSettingsRepository
 import com.wandermore.travelcompanion.database.ActivityEntity
 import com.wandermore.travelcompanion.database.AppDatabase
 import com.wandermore.travelcompanion.database.ExpenseEntity
@@ -68,7 +69,6 @@ import com.wandermore.travelcompanion.ui.screens.TripHubScreen
 import com.wandermore.travelcompanion.viewmodel.ExchangeRateViewModel
 import com.wandermore.travelcompanion.viewmodel.TripViewModel
 import com.wandermore.travelcompanion.viewmodel.UserSettingsViewModel
-import com.wandermore.travelcompanion.data.repository.UserSettingsRepository
 import java.time.LocalDateTime
 import kotlinx.coroutines.launch
 
@@ -91,6 +91,19 @@ fun AppNavigation(
 
     val coroutineScope = rememberCoroutineScope()
 
+    // =========================================================
+    // SETTINGS REFRESH KEY
+    // =========================================================
+    //
+    // Incremented after a successful restore so SettingsScreen
+    // re-reads restored SharedPreferences values immediately,
+    // even if the user remains on the Settings screen.
+    // =========================================================
+
+    var settingsRefreshKey by remember {
+        mutableStateOf(0)
+    }
+
     val backupRepository =
         remember(
             database,
@@ -98,7 +111,8 @@ fun AppNavigation(
         ) {
             BackupRepository(
                 database = database,
-                userSettingsRepository = userSettingsRepository
+                userSettingsRepository = userSettingsRepository,
+                context = context
             )
         }
 
@@ -167,6 +181,11 @@ fun AppNavigation(
                         backupRepository.restoreBackup(
                             backupJson
                         )
+
+                        // Force SettingsScreen to recreate its
+                        // remembered passport-link state from the
+                        // newly restored SharedPreferences values.
+                        settingsRefreshKey++
 
                         Toast.makeText(
                             context,
@@ -389,6 +408,9 @@ fun AppNavigation(
 
                 SettingsScreen(
 
+                    settingsRefreshKey =
+                        settingsRefreshKey,
+
                     userSettingsViewModel =
                         userSettingsViewModel,
 
@@ -571,17 +593,6 @@ fun AppNavigation(
             // =========================================================
             // TODAY / TOMORROW
             // =========================================================
-            //
-            // This route was missing. Trip Hub navigates to:
-            //
-            // todayTomorrow/{tripId}
-            //
-            // which previously caused the crash:
-            //
-            // "Navigation destination that matches route
-            // todayTomorrow/8 cannot be found..."
-            //
-            // =========================================================
 
             composable(
                 "todayTomorrow/{tripId}"
@@ -599,18 +610,21 @@ fun AppNavigation(
                         tripViewModel = tripViewModel,
 
                         onItineraryClick = { itineraryId ->
+
                             navController.navigate(
                                 "editItinerary/$itineraryId"
                             )
                         },
 
                         onTodoClick = { todoId ->
+
                             navController.navigate(
                                 "editTodo/$todoId"
                             )
                         },
 
                         onBack = {
+
                             navController.popBackStack()
                         }
                     )
@@ -1316,11 +1330,6 @@ fun AppNavigation(
             // =========================================================
             // GLOBAL DESTINATIONS
             // =========================================================
-            // Used by Settings.
-            //
-            // No trip is associated with this screen, so it displays
-            // the global list of active saved destinations.
-            // =========================================================
 
             composable(
                 "destinations"
@@ -1335,8 +1344,8 @@ fun AppNavigation(
 
                     onDestinationClick = { _ ->
 
-                        // Global Settings destinations currently have
-                        // no destination-details screen because
+                        // Global Settings destinations currently
+                        // have no destination-details screen because
                         // DestinationDetailsScreen requires a tripId.
 
                     },
@@ -1501,7 +1510,6 @@ fun AppNavigation(
             // =========================================================
             // OLD TRIP DETAILS
             // =========================================================
-            // Kept temporarily while Trip Hub replaces it.
 
             composable(
                 "tripDetails/{tripId}"
