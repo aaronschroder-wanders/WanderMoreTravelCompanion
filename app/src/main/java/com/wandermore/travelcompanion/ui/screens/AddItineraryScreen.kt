@@ -1,5 +1,8 @@
 package com.wandermore.travelcompanion.ui.screens
 
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -7,7 +10,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -35,10 +37,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.wandermore.travelcompanion.database.ItineraryEntity
 import com.wandermore.travelcompanion.ui.components.DestinationSelector
 import com.wandermore.travelcompanion.viewmodel.TripViewModel
+import java.net.URI
+import java.net.URISyntaxException
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
@@ -85,6 +90,24 @@ fun AddItineraryScreen(
     var booked by remember {
         mutableStateOf(false)
     }
+
+    // =========================================================
+    // WEB LINK STATE
+    // =========================================================
+
+    var webLink by remember {
+        mutableStateOf("")
+    }
+
+    var editingWebLink by remember {
+        mutableStateOf(true)
+    }
+
+    var webLinkError by remember {
+        mutableStateOf("")
+    }
+
+    val context = LocalContext.current
 
     // =========================================================
     // DESTINATION STATE
@@ -144,6 +167,98 @@ fun AddItineraryScreen(
         DateTimeFormatter.ofPattern("HH:mm")
 
     // =========================================================
+    // WEB LINK FUNCTIONS
+    // =========================================================
+
+    fun isValidWebLink(
+        link: String
+    ): Boolean {
+
+        if (link.isBlank()) return false
+
+        return try {
+
+            val uri =
+                URI(link)
+
+            val scheme =
+                uri.scheme?.lowercase()
+
+            !uri.host.isNullOrBlank() &&
+                    (
+                            scheme == "http" ||
+                                    scheme == "https"
+                            )
+
+        } catch (
+            _: URISyntaxException
+        ) {
+
+            false
+        }
+    }
+
+    fun linkWebAddress() {
+
+        val cleanedLink =
+            webLink.trim()
+
+        if (
+            !isValidWebLink(
+                cleanedLink
+            )
+        ) {
+
+            webLinkError =
+                "Please enter a valid web link starting with https://"
+
+        } else {
+
+            webLink =
+                cleanedLink
+
+            webLinkError =
+                ""
+
+            editingWebLink =
+                false
+        }
+    }
+
+    fun openWebLink(
+        context: Context,
+        link: String
+    ) {
+
+        if (
+            !isValidWebLink(
+                link
+            )
+        ) {
+            return
+        }
+
+        try {
+
+            val intent =
+                Intent(
+                    Intent.ACTION_VIEW,
+                    Uri.parse(link)
+                )
+
+            context.startActivity(
+                intent
+            )
+
+        } catch (
+            _: Exception
+        ) {
+
+            // Do nothing if the link cannot be opened.
+        }
+    }
+
+    // =========================================================
     // SCREEN
     // =========================================================
 
@@ -153,7 +268,6 @@ fun AddItineraryScreen(
             .verticalScroll(
                 rememberScrollState()
             )
-            .imePadding()
             .padding(16.dp)
     ) {
 
@@ -278,7 +392,8 @@ fun AddItineraryScreen(
             expanded = typeExpanded,
 
             onExpandedChange = {
-                typeExpanded = !typeExpanded
+                typeExpanded =
+                    !typeExpanded
             },
 
             modifier =
@@ -309,9 +424,10 @@ fun AddItineraryScreen(
                         )
                 },
 
-                modifier = Modifier
-                    .menuAnchor()
-                    .fillMaxWidth(),
+                modifier =
+                    Modifier
+                        .menuAnchor()
+                        .fillMaxWidth(),
 
                 singleLine = true
             )
@@ -459,17 +575,6 @@ fun AddItineraryScreen(
                     it
             },
 
-            /*
-             * Create a new global destination and immediately
-             * return its database ID.
-             *
-             * The destination is then selected for this
-             * itinerary item.
-             *
-             * The destination will be associated with the trip
-             * when addItinerary() saves the selected destinations.
-             */
-
             onAddDestination = {
                     destinationName,
                     onResult ->
@@ -479,7 +584,9 @@ fun AddItineraryScreen(
                         destinationName
                     ) { destinationId ->
 
-                        if (destinationId != null) {
+                        if (
+                            destinationId != null
+                        ) {
 
                             selectedDestinationIds =
                                 selectedDestinationIds +
@@ -494,6 +601,141 @@ fun AddItineraryScreen(
                     }
             }
         )
+
+        Spacer(
+            modifier = Modifier.height(12.dp)
+        )
+
+        // =====================================================
+        // WEB LINK
+        // =====================================================
+
+        Text(
+            text = "Web Link",
+            style =
+                MaterialTheme.typography.labelLarge
+        )
+
+        Spacer(
+            modifier = Modifier.height(8.dp)
+        )
+
+        if (
+            editingWebLink
+        ) {
+
+            OutlinedTextField(
+                value =
+                    webLink,
+
+                onValueChange = {
+                    webLink = it
+                    webLinkError = ""
+                },
+
+                label = {
+                    Text("Web Link")
+                },
+
+                placeholder = {
+                    Text("Paste web link")
+                },
+
+                isError =
+                    webLinkError.isNotBlank(),
+
+                supportingText = {
+
+                    if (
+                        webLinkError.isNotBlank()
+                    ) {
+
+                        Text(
+                            webLinkError
+                        )
+                    }
+                },
+
+                modifier =
+                    Modifier.fillMaxWidth(),
+
+                singleLine = true
+            )
+
+            Spacer(
+                modifier = Modifier.height(8.dp)
+            )
+
+            Button(
+                onClick = {
+                    linkWebAddress()
+                },
+
+                modifier =
+                    Modifier.fillMaxWidth()
+            ) {
+
+                Text("Link")
+            }
+
+        } else {
+
+            Text(
+                text = "✓ Link added",
+                style =
+                    MaterialTheme.typography
+                        .bodyLarge
+            )
+
+            Spacer(
+                modifier = Modifier.height(8.dp)
+            )
+
+            Row(
+                modifier =
+                    Modifier.fillMaxWidth(),
+
+                horizontalArrangement =
+                    Arrangement.spacedBy(8.dp)
+            ) {
+
+                Button(
+                    onClick = {
+
+                        openWebLink(
+                            context,
+                            webLink
+                        )
+                    },
+
+                    modifier =
+                        Modifier.weight(1f)
+                ) {
+
+                    Text("Open Link")
+                }
+
+                Button(
+                    onClick = {
+
+                        webLink =
+                            ""
+
+                        webLinkError =
+                            ""
+
+                        editingWebLink =
+                            true
+                    },
+
+                    modifier =
+                        Modifier.weight(1f)
+                ) {
+
+                    Text("Change Link")
+                }
+            }
+        }
 
         Spacer(
             modifier = Modifier.height(12.dp)
@@ -582,18 +824,6 @@ fun AddItineraryScreen(
                             nights =
                                 nights,
 
-                            /*
-                             * Legacy Location field.
-                             *
-                             * Location is no longer collected or
-                             * displayed by the UI. New itinerary
-                             * items therefore deliberately store
-                             * null here.
-                             *
-                             * Destination is now handled through
-                             * ItineraryDestinationEntity.
-                             */
-
                             location =
                                 null,
 
@@ -604,16 +834,16 @@ fun AddItineraryScreen(
                                         null
                                     },
 
+                            webLink =
+                                webLink
+                                    .trim()
+                                    .ifBlank {
+                                        null
+                                    },
+
                             booked =
                                 booked
                         )
-
-                    /*
-                     * selectedDestinationIds is passed explicitly.
-                     *
-                     * An empty Set means the user deliberately
-                     * selected no destinations.
-                     */
 
                     tripViewModel.addItinerary(
                         itinerary,

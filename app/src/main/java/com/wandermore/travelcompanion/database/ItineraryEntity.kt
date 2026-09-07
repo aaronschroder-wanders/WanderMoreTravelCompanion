@@ -47,6 +47,8 @@ data class ItineraryEntity(
 
     val notes: String? = null,
 
+    val webLink: String? = null,
+
     // Reserved for a future proper Booking relationship.
     val bookingId: Long? = null,
 

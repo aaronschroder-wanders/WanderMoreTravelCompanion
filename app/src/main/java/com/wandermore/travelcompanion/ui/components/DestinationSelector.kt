@@ -144,6 +144,7 @@ fun DestinationSelector(
                             text = {
 
                                 Row(
+                                    modifier = Modifier.fillMaxWidth(),
                                     verticalAlignment =
                                         Alignment.CenterVertically
                                 ) {
@@ -159,7 +160,7 @@ fun DestinationSelector(
                                     )
 
                                     Text(
-                                        destination.name
+                                        text = destination.name
                                     )
                                 }
                             },
@@ -185,6 +186,26 @@ fun DestinationSelector(
                         )
                     }
                 }
+
+                // -------------------------------------------------
+                // DONE
+                // -------------------------------------------------
+
+                DropdownMenuItem(
+
+                    text = {
+                        Text(
+                            "✓ Done",
+                            style =
+                                MaterialTheme.typography
+                                    .labelLarge
+                        )
+                    },
+
+                    onClick = {
+                        expanded = false
+                    }
+                )
 
                 // -------------------------------------------------
                 // ADD NEW DESTINATION

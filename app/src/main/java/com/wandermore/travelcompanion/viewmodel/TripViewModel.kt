@@ -1,5 +1,6 @@
 package com.wandermore.travelcompanion.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.wandermore.travelcompanion.data.repository.TripRepository
@@ -1436,6 +1437,11 @@ class TripViewModel(
                         itinerary.id
                     )
 
+            Log.d(
+                "ITINERARY_DEBUG",
+                "Updating itinerary ${itinerary.id}, webLink=${itinerary.webLink}"
+            )
+
             itineraryDao.updateItinerary(
                 itinerary
             )
@@ -1638,9 +1644,7 @@ class TripViewModel(
 
             for (destinationId in oldDestinationIds) {
 
-                cleanupOrphanedDestination(
-                    destinationId
-                )
+                cleanupOrphanedDestination(destinationId)
             }
         }
     }

@@ -21,7 +21,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         ItineraryDestinationEntity::class,
         ActivityDestinationEntity::class
     ],
-    version = 13,
+    version = 14,
     exportSchema = false
 )
 @TypeConverters(DateConverter::class)
@@ -407,19 +407,6 @@ abstract class AppDatabase : RoomDatabase() {
         // ---------------------------------------------------------
         // VERSION 10 → 11
         // EXPENSE SCHEMA UPDATE
-        //
-        // ExpenseEntity now expects:
-        //
-        // - homeCurrency TEXT NOT NULL
-        // - exchangeRate REAL NOT NULL
-        // - convertedAmount REAL NOT NULL
-        //
-        // The previous schema had SQLite DEFAULT values on
-        // exchangeRate and convertedAmount and did not have
-        // homeCurrency.
-        //
-        // SQLite ALTER TABLE cannot remove those defaults, so
-        // the expenses table must be rebuilt.
         // ---------------------------------------------------------
 
         val MIGRATION_10_11 = object : Migration(10, 11) {
@@ -427,11 +414,6 @@ abstract class AppDatabase : RoomDatabase() {
             override fun migrate(
                 database: SupportSQLiteDatabase
             ) {
-
-                // -------------------------------------------------
-                // Create the new expenses table with the exact
-                // schema expected by Room / ExpenseEntity.
-                // -------------------------------------------------
 
                 database.execSQL(
                     """
@@ -453,18 +435,6 @@ abstract class AppDatabase : RoomDatabase() {
                     )
                     """.trimIndent()
                 )
-
-
-                // -------------------------------------------------
-                // Copy existing expenses.
-                //
-                // Existing expenses were stored using NZD as the
-                // application's home currency, so existing rows
-                // are migrated with homeCurrency = NZD.
-                //
-                // The existing exchangeRate and convertedAmount
-                // values are retained.
-                // -------------------------------------------------
 
                 database.execSQL(
                     """
@@ -497,21 +467,11 @@ abstract class AppDatabase : RoomDatabase() {
                     """.trimIndent()
                 )
 
-
-                // -------------------------------------------------
-                // Remove the old table.
-                // -------------------------------------------------
-
                 database.execSQL(
                     """
                     DROP TABLE expenses
                     """.trimIndent()
                 )
-
-
-                // -------------------------------------------------
-                // Rename the new table.
-                // -------------------------------------------------
 
                 database.execSQL(
                     """
@@ -519,11 +479,6 @@ abstract class AppDatabase : RoomDatabase() {
                     RENAME TO expenses
                     """.trimIndent()
                 )
-
-
-                // -------------------------------------------------
-                // Recreate the Room-generated index.
-                // -------------------------------------------------
 
                 database.execSQL(
                     """
@@ -538,11 +493,6 @@ abstract class AppDatabase : RoomDatabase() {
         // ---------------------------------------------------------
         // VERSION 11 → 12
         // DESTINATIONS
-        //
-        // Introduces reusable Destinations and many-to-many
-        // relationships with Trips, Itinerary items and Activities.
-        //
-        // Existing Location values are migrated into Destinations.
         // ---------------------------------------------------------
 
         val MIGRATION_11_12 = object : Migration(11, 12) {
@@ -762,10 +712,6 @@ abstract class AppDatabase : RoomDatabase() {
 
                 // -------------------------------------------------
                 // LINK DESTINATIONS TO THEIR TRIPS
-                //
-                // A destination becomes part of a trip if it is
-                // associated with an itinerary item or activity
-                // belonging to that trip.
                 // -------------------------------------------------
 
                 database.execSQL(
@@ -800,14 +746,15 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+
         // ---------------------------------------------------------
-// VERSION 12 → 13
-// DESTINATION ACTIVE / ARCHIVED STATUS
-//
-// Destinations are global and reusable across trips.
-// The active flag allows destinations to be temporarily
-// archived without deleting them.
-// ---------------------------------------------------------
+        // VERSION 12 → 13
+        // DESTINATION ACTIVE / ARCHIVED STATUS
+        //
+        // Destinations are global and reusable across trips.
+        // The active flag allows destinations to be temporarily
+        // archived without deleting them.
+        // ---------------------------------------------------------
 
         val MIGRATION_12_13 = object : Migration(12, 13) {
 
@@ -817,9 +764,35 @@ abstract class AppDatabase : RoomDatabase() {
 
                 database.execSQL(
                     """
-            ALTER TABLE destinations
-            ADD COLUMN active INTEGER NOT NULL DEFAULT 1
-            """.trimIndent()
+                    ALTER TABLE destinations
+                    ADD COLUMN active INTEGER NOT NULL DEFAULT 1
+                    """.trimIndent()
+                )
+            }
+        }
+
+
+        // ---------------------------------------------------------
+        // VERSION 13 → 14
+        // ITINERARY WEB LINK
+        //
+        // Adds an optional normal HTTP/HTTPS web link to each
+        // itinerary item.
+        //
+        // Existing itinerary items receive NULL.
+        // ---------------------------------------------------------
+
+        val MIGRATION_13_14 = object : Migration(13, 14) {
+
+            override fun migrate(
+                database: SupportSQLiteDatabase
+            ) {
+
+                database.execSQL(
+                    """
+                    ALTER TABLE itinerary
+                    ADD COLUMN webLink TEXT
+                    """.trimIndent()
                 )
             }
         }

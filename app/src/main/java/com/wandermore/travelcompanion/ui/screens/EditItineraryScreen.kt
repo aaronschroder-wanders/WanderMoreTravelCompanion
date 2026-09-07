@@ -1,5 +1,9 @@
 package com.wandermore.travelcompanion.ui.screens
 
+import android.content.ActivityNotFoundException
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -38,10 +42,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.wandermore.travelcompanion.database.ItineraryEntity
 import com.wandermore.travelcompanion.ui.components.DestinationSelector
 import com.wandermore.travelcompanion.viewmodel.TripViewModel
+import java.net.URI
+import java.net.URISyntaxException
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
@@ -104,6 +112,24 @@ fun EditItineraryScreen(
     var booked by remember {
         mutableStateOf(false)
     }
+
+    // =========================================================
+    // WEB LINK STATE
+    // =========================================================
+
+    var webLink by remember {
+        mutableStateOf("")
+    }
+
+    var editingWebLink by remember {
+        mutableStateOf(true)
+    }
+
+    var webLinkError by remember {
+        mutableStateOf("")
+    }
+
+    val context = LocalContext.current
 
     // =========================================================
     // DESTINATION STATE
@@ -194,6 +220,13 @@ fun EditItineraryScreen(
             booked =
                 item.booked
 
+            // Load existing Web Link.
+            webLink =
+                item.webLink ?: ""
+
+            editingWebLink =
+                item.webLink.isNullOrBlank()
+
             selectedDestinationIds =
                 tripViewModel
                     .getDestinationIdsForItinerary(
@@ -219,13 +252,6 @@ fun EditItineraryScreen(
 
     // =========================================================
     // CREATED FROM ACTIVITY
-    //
-    // An itinerary item with an activityId was automatically
-    // created from an Activity or Attraction.
-    //
-    // These items should not show a Booked switch because the
-    // itinerary item exists as a representation of the booked
-    // Activity/Attraction.
     // =========================================================
 
     val createdFromActivity =
@@ -233,12 +259,6 @@ fun EditItineraryScreen(
 
     // =========================================================
     // ALL ACTIVE GLOBAL DESTINATIONS
-    //
-    // This matches AddItineraryScreen.
-    //
-    // Destinations created in Settings are therefore available
-    // even if they have not previously been associated with this
-    // trip.
     // =========================================================
 
     val destinations by
@@ -485,13 +505,6 @@ fun EditItineraryScreen(
             // =================================================
             // BOOKED / CREATED FROM ACTIVITY
             // =================================================
-            //
-            // Manually-created itinerary items retain the
-            // normal Booked switch.
-            //
-            // Items created from Activities/Attractions instead
-            // show an informational message.
-            // =================================================
 
             Spacer(
                 modifier =
@@ -506,15 +519,15 @@ fun EditItineraryScreen(
                 ) {
 
                     Text(
-                        text = "Created from Activity",
+                        text =
+                            "Created from Activity",
 
                         style =
                             MaterialTheme.typography
                                 .bodyLarge,
 
                         fontWeight =
-                            androidx.compose.ui.text.font
-                                .FontWeight.SemiBold,
+                            FontWeight.SemiBold,
 
                         color =
                             MaterialTheme.colorScheme
@@ -655,17 +668,6 @@ fun EditItineraryScreen(
                             it
                     },
 
-                    /*
-                     * Create a new global destination and
-                     * immediately return its database ID.
-                     *
-                     * We do NOT add it to the trip here.
-                     *
-                     * The selected destination will be
-                     * associated with the trip when
-                     * updateItinerary() saves the item.
-                     */
-
                     onAddDestination = {
                             destinationName,
                             onResult ->
@@ -692,6 +694,183 @@ fun EditItineraryScreen(
                             }
                     }
                 )
+            }
+
+            Spacer(
+                modifier =
+                    Modifier.height(12.dp)
+            )
+
+            // =================================================
+            // WEB LINK
+            // =================================================
+
+            Text(
+                text = "Web Link",
+
+                style =
+                    MaterialTheme.typography
+                        .labelLarge
+            )
+
+            Spacer(
+                modifier =
+                    Modifier.height(8.dp)
+            )
+
+            if (editingWebLink) {
+
+                OutlinedTextField(
+                    value =
+                        webLink,
+
+                    onValueChange = {
+                        webLink = it
+                        webLinkError = ""
+                    },
+
+                    modifier =
+                        Modifier.fillMaxWidth(),
+
+                    label = {
+                        Text("Web Link")
+                    },
+
+                    placeholder = {
+                        Text("Paste web link")
+                    },
+
+                    singleLine = true,
+
+                    isError =
+                        webLinkError.isNotBlank()
+                )
+
+                if (
+                    webLinkError.isNotBlank()
+                ) {
+
+                    Text(
+                        text =
+                            webLinkError,
+
+                        style =
+                            MaterialTheme.typography
+                                .bodySmall,
+
+                        color =
+                            MaterialTheme.colorScheme
+                                .error
+                    )
+                }
+
+                Spacer(
+                    modifier =
+                        Modifier.height(8.dp)
+                )
+
+                Button(
+                    onClick = {
+
+                        val cleanedLink =
+                            webLink.trim()
+
+                        if (
+                            !isValidWebLink(
+                                cleanedLink
+                            )
+                        ) {
+
+                            webLinkError =
+                                "Please enter a valid web link starting with https://"
+
+                        } else {
+
+                            webLink =
+                                cleanedLink
+
+                            webLinkError =
+                                ""
+
+                            editingWebLink =
+                                false
+
+                            android.util.Log.d(
+                                "ITINERARY_DEBUG",
+                                "Link button accepted URL: $cleanedLink"
+                            )
+                        }
+                    },
+
+                    modifier =
+                        Modifier.fillMaxWidth(),
+
+                    enabled =
+                        webLink
+                            .trim()
+                            .isNotEmpty()
+                ) {
+
+                    Text("Link")
+                }
+
+            } else {
+
+                Text(
+                    text = "✓ Link added",
+
+                    style =
+                        MaterialTheme.typography
+                            .bodyMedium
+                )
+
+                Spacer(
+                    modifier =
+                        Modifier.height(8.dp)
+                )
+
+                Row(
+                    modifier =
+                        Modifier.fillMaxWidth(),
+
+                    horizontalArrangement =
+                        Arrangement.spacedBy(8.dp)
+                ) {
+
+                    Button(
+                        onClick = {
+
+                            openWebLink(
+                                context,
+                                webLink
+                            )
+                        },
+
+                        modifier =
+                            Modifier.weight(1f)
+                    ) {
+
+                        Text("Open Link")
+                    }
+
+                    Button(
+                        onClick = {
+
+                            webLink = ""
+
+                            webLinkError = ""
+
+                            editingWebLink =
+                                true
+                        },
+
+                        modifier =
+                            Modifier.weight(1f)
+                    ) {
+
+                        Text("Change Link")
+                    }
+                }
             }
 
             Spacer(
@@ -810,13 +989,6 @@ fun EditItineraryScreen(
                                 nightsText
                                     .toIntOrNull(),
 
-                            /*
-                             * Location is deliberately
-                             * preserved from the existing
-                             * record because the field is
-                             * hidden from the UI.
-                             */
-
                             location =
                                 location
                                     .trim()
@@ -831,14 +1003,13 @@ fun EditItineraryScreen(
                                         null
                                     },
 
-                            /*
-                             * For items created from an
-                             * Activity/Attraction, the booked
-                             * state remains true.
-                             *
-                             * The user cannot change it from
-                             * the itinerary edit screen.
-                             */
+                            webLink =
+                                webLink
+                                    .trim()
+                                    .ifBlank {
+                                        null
+                                    },
+
                             booked =
                                 if (createdFromActivity) {
                                     true
@@ -847,12 +1018,10 @@ fun EditItineraryScreen(
                                 }
                         )
 
-                    // =================================================
-                    // SAVE WITH EXPLICIT DESTINATIONS
-                    //
-                    // An empty Set is intentional:
-                    // it means the user has selected no destinations.
-                    // =================================================
+                    android.util.Log.d(
+                        "ITINERARY_DEBUG",
+                        "Edit screen saving itinerary ${updatedItem.id}, webLink=${updatedItem.webLink}"
+                    )
 
                     tripViewModel.updateItinerary(
                         updatedItem,
@@ -1058,5 +1227,78 @@ fun EditItineraryScreen(
                 }
             }
         )
+    }
+}
+
+// =============================================================
+// WEB LINK VALIDATION
+// =============================================================
+
+private fun isValidWebLink(
+    link: String
+): Boolean {
+
+    if (link.isBlank()) {
+        return false
+    }
+
+    return try {
+
+        val uri =
+            URI(link)
+
+        val scheme =
+            uri.scheme?.lowercase()
+
+        !uri.host.isNullOrBlank() &&
+                (
+                        scheme == "http" ||
+                                scheme == "https"
+                        )
+
+    } catch (
+        exception: URISyntaxException
+    ) {
+
+        false
+    }
+}
+
+// =============================================================
+// SAFE WEB LINK OPENING
+// =============================================================
+
+private fun openWebLink(
+    context: Context,
+    link: String
+) {
+
+    if (!isValidWebLink(link)) {
+        return
+    }
+
+    try {
+
+        val intent =
+            Intent(
+                Intent.ACTION_VIEW,
+                Uri.parse(link)
+            )
+
+        context.startActivity(intent)
+
+    } catch (
+        exception: ActivityNotFoundException
+    ) {
+
+        // Deliberately do nothing.
+        // The app must never crash because a saved web link
+        // cannot be opened.
+
+    } catch (
+        exception: SecurityException
+    ) {
+
+        // Deliberately do nothing.
     }
 }
