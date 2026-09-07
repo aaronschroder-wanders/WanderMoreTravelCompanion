@@ -1,5 +1,7 @@
 package com.wandermore.travelcompanion.ui.screens
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -29,14 +31,16 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import com.wandermore.travelcompanion.database.ItineraryEntity
 import com.wandermore.travelcompanion.ui.components.itinerarySymbol
 import com.wandermore.travelcompanion.viewmodel.TripViewModel
+import java.net.URI
 import java.time.format.DateTimeFormatter
 
 @Composable
@@ -65,6 +69,12 @@ fun ItineraryDetailsScreen(
     }
 
     // =========================================================
+    // CONTEXT
+    // =========================================================
+
+    val context = LocalContext.current
+
+    // =========================================================
     // LIFECYCLE
     // =========================================================
 
@@ -73,10 +83,6 @@ fun ItineraryDetailsScreen(
 
     // =========================================================
     // LOAD DESTINATIONS
-    //
-    // The Destination relationships are stored separately from
-    // ItineraryEntity, so they must be reloaded when this screen
-    // becomes active again after returning from Edit Itinerary.
     // =========================================================
 
     LaunchedEffect(
@@ -127,7 +133,7 @@ fun ItineraryDetailsScreen(
         )
 
     // =========================================================
-    // DELETE CONFIRMATION DIALOG
+    // DELETE CONFIRMATION
     // =========================================================
 
     if (showDeleteDialog) {
@@ -138,17 +144,14 @@ fun ItineraryDetailsScreen(
             },
 
             title = {
-                Text(
-                    text = "Delete Item?"
-                )
+                Text("Delete Item?")
             },
 
             text = {
                 Text(
-                    text =
-                        "Are you sure you want to delete " +
-                                "\"${itinerary.title}\"? " +
-                                "This cannot be undone."
+                    "Are you sure you want to delete " +
+                            "\"${itinerary.title}\"? " +
+                            "This cannot be undone."
                 )
             },
 
@@ -200,13 +203,17 @@ fun ItineraryDetailsScreen(
         // =====================================================
 
         Column(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth()
-                .verticalScroll(
-                    rememberScrollState()
-                )
-                .padding(16.dp)
+            modifier =
+                Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .verticalScroll(
+                        rememberScrollState()
+                    )
+                    .padding(
+                        horizontal = 16.dp,
+                        vertical = 12.dp
+                    )
         ) {
 
             // -------------------------------------------------
@@ -216,14 +223,14 @@ fun ItineraryDetailsScreen(
             Text(
                 text = "Itinerary Item",
                 style =
-                    MaterialTheme.typography.headlineMedium,
+                    MaterialTheme.typography.headlineSmall,
                 fontWeight =
                     FontWeight.SemiBold
             )
 
             Spacer(
                 modifier =
-                    Modifier.height(16.dp)
+                    Modifier.height(10.dp)
             )
 
             // -------------------------------------------------
@@ -251,7 +258,7 @@ fun ItineraryDetailsScreen(
                     modifier =
                         Modifier
                             .fillMaxWidth()
-                            .padding(16.dp),
+                            .padding(14.dp),
 
                     verticalAlignment =
                         Alignment.Top
@@ -272,12 +279,12 @@ fun ItineraryDetailsScreen(
                                 .headlineMedium,
 
                         modifier =
-                            Modifier.size(42.dp)
+                            Modifier.size(40.dp)
                     )
 
                     Spacer(
                         modifier =
-                            Modifier.size(12.dp)
+                            Modifier.size(10.dp)
                     )
 
                     // -----------------------------------------
@@ -307,7 +314,7 @@ fun ItineraryDetailsScreen(
 
                             Spacer(
                                 modifier =
-                                    Modifier.height(3.dp)
+                                    Modifier.height(2.dp)
                             )
 
                             Text(
@@ -330,14 +337,6 @@ fun ItineraryDetailsScreen(
 
                     // -----------------------------------------
                     // BOOKED
-                    //
-                    // Only manually-created itinerary items
-                    // should display the BOOKED indicator.
-                    //
-                    // Activity-created itinerary items have
-                    // activityId != null, so their booked state
-                    // comes from the linked Activity and should
-                    // NOT be displayed here.
                     // -----------------------------------------
 
                     if (
@@ -347,7 +346,7 @@ fun ItineraryDetailsScreen(
 
                         Spacer(
                             modifier =
-                                Modifier.size(8.dp)
+                                Modifier.size(6.dp)
                         )
 
                         AssistChip(
@@ -377,36 +376,19 @@ fun ItineraryDetailsScreen(
 
             Spacer(
                 modifier =
-                    Modifier.height(14.dp)
+                    Modifier.height(10.dp)
             )
 
             // -------------------------------------------------
-            // DATE & TIME CARD
+            // DATE / TIME / STAY
             // -------------------------------------------------
 
-            Card(
-                modifier =
-                    Modifier.fillMaxWidth(),
-
-                elevation =
-                    CardDefaults.cardElevation(
-                        defaultElevation = 1.dp
-                    )
-            ) {
+            DetailSectionCard {
 
                 Column(
-                    modifier =
-                        Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-
                     verticalArrangement =
-                        Arrangement.spacedBy(14.dp)
+                        Arrangement.spacedBy(10.dp)
                 ) {
-
-                    // -----------------------------------------
-                    // DATE
-                    // -----------------------------------------
 
                     DetailLine(
                         icon = "📅",
@@ -416,10 +398,6 @@ fun ItineraryDetailsScreen(
                                 dateFormatter
                             )
                     )
-
-                    // -----------------------------------------
-                    // TIME
-                    // -----------------------------------------
 
                     itinerary.time?.let { time ->
 
@@ -433,10 +411,6 @@ fun ItineraryDetailsScreen(
                         )
                     }
 
-                    // -----------------------------------------
-                    // DEPARTURE
-                    // -----------------------------------------
-
                     itinerary.nights?.let { nights ->
 
                         if (nights > 0) {
@@ -447,12 +421,20 @@ fun ItineraryDetailsScreen(
                                 )
 
                             DetailLine(
-                                icon = "🚪",
-                                label = "Departure",
+                                icon = "🛏",
+                                label = "Stay",
                                 value =
-                                    departureDate.format(
-                                        dateFormatter
-                                    )
+                                    if (nights == 1) {
+                                        "1 night • Departure " +
+                                                departureDate.format(
+                                                    dateFormatter
+                                                )
+                                    } else {
+                                        "$nights nights • Departure " +
+                                                departureDate.format(
+                                                    dateFormatter
+                                                )
+                                    }
                             )
                         }
                     }
@@ -470,7 +452,7 @@ fun ItineraryDetailsScreen(
 
                 Spacer(
                     modifier =
-                        Modifier.height(14.dp)
+                        Modifier.height(10.dp)
                 )
 
                 DetailSectionCard {
@@ -479,6 +461,7 @@ fun ItineraryDetailsScreen(
 
                         Text(
                             text = "Destinations",
+
                             style =
                                 MaterialTheme.typography
                                     .titleMedium,
@@ -493,7 +476,7 @@ fun ItineraryDetailsScreen(
 
                         Spacer(
                             modifier =
-                                Modifier.height(8.dp)
+                                Modifier.height(6.dp)
                         )
 
                         destinationNames.forEach { name ->
@@ -511,7 +494,7 @@ fun ItineraryDetailsScreen(
 
                                 Spacer(
                                     modifier =
-                                        Modifier.height(10.dp)
+                                        Modifier.height(7.dp)
                                 )
                             }
                         }
@@ -520,30 +503,113 @@ fun ItineraryDetailsScreen(
             }
 
             // -------------------------------------------------
-            // NIGHTS
+            // WEB LINK
+            //
+            // Read-only here. The link is edited from the
+            // Add/Edit Itinerary screens.
             // -------------------------------------------------
 
-            itinerary.nights?.let { nights ->
+            if (
+                !itinerary.webLink
+                    .isNullOrBlank()
+            ) {
 
-                if (nights > 0) {
+                Spacer(
+                    modifier =
+                        Modifier.height(10.dp)
+                )
 
-                    Spacer(
-                        modifier =
-                            Modifier.height(14.dp)
-                    )
+                DetailSectionCard {
 
-                    DetailSectionCard {
+                    Column {
 
-                        DetailLine(
-                            icon = "🛏",
-                            label = "Stay",
-                            value =
-                                if (nights == 1) {
-                                    "1 night"
-                                } else {
-                                    "$nights nights"
-                                }
+                        Text(
+                            text = "Web Link",
+
+                            style =
+                                MaterialTheme.typography
+                                    .titleMedium,
+
+                            fontWeight =
+                                FontWeight.SemiBold,
+
+                            color =
+                                MaterialTheme.colorScheme
+                                    .primary
                         )
+
+                        Spacer(
+                            modifier =
+                                Modifier.height(5.dp)
+                        )
+
+                        Text(
+                            text =
+                                itinerary.webLink!!,
+
+                            style =
+                                MaterialTheme.typography
+                                    .bodyMedium,
+
+                            color =
+                                MaterialTheme.colorScheme
+                                    .onSurfaceVariant
+                        )
+
+                        Spacer(
+                            modifier =
+                                Modifier.height(8.dp)
+                        )
+
+                        Button(
+                            onClick = {
+
+                                try {
+
+                                    val uri =
+                                        URI(
+                                            itinerary.webLink!!
+                                                .trim()
+                                        )
+
+                                    if (
+                                        (uri.scheme.equals(
+                                            "http",
+                                            ignoreCase = true
+                                        ) ||
+                                                uri.scheme.equals(
+                                                    "https",
+                                                    ignoreCase = true
+                                                )) &&
+                                        !uri.host.isNullOrBlank()
+                                    ) {
+
+                                        val intent =
+                                            Intent(
+                                                Intent.ACTION_VIEW,
+                                                Uri.parse(
+                                                    itinerary.webLink!!
+                                                        .trim()
+                                                )
+                                            )
+
+                                        context.startActivity(
+                                            intent
+                                        )
+                                    }
+
+                                } catch (
+                                    _: Exception
+                                ) {
+                                    // Do nothing if the link
+                                    // cannot be opened safely.
+                                }
+                            },
+                            modifier =
+                                Modifier.fillMaxWidth()
+                        ) {
+                            Text("Open Link")
+                        }
                     }
                 }
             }
@@ -559,28 +625,16 @@ fun ItineraryDetailsScreen(
 
                 Spacer(
                     modifier =
-                        Modifier.height(14.dp)
+                        Modifier.height(10.dp)
                 )
 
-                Card(
-                    modifier =
-                        Modifier.fillMaxWidth(),
+                DetailSectionCard {
 
-                    elevation =
-                        CardDefaults.cardElevation(
-                            defaultElevation = 1.dp
-                        )
-                ) {
-
-                    Column(
-                        modifier =
-                            Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp)
-                    ) {
+                    Column {
 
                         Text(
                             text = "Notes",
+
                             style =
                                 MaterialTheme.typography
                                     .titleMedium,
@@ -595,7 +649,7 @@ fun ItineraryDetailsScreen(
 
                         Spacer(
                             modifier =
-                                Modifier.height(8.dp)
+                                Modifier.height(6.dp)
                         )
 
                         Text(
@@ -618,7 +672,7 @@ fun ItineraryDetailsScreen(
 
                 Spacer(
                     modifier =
-                        Modifier.height(14.dp)
+                        Modifier.height(10.dp)
                 )
 
                 DetailSectionCard {
@@ -634,7 +688,7 @@ fun ItineraryDetailsScreen(
 
             Spacer(
                 modifier =
-                    Modifier.height(20.dp)
+                    Modifier.height(12.dp)
             )
         }
 
@@ -643,14 +697,15 @@ fun ItineraryDetailsScreen(
         // =====================================================
 
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(
-                    start = 16.dp,
-                    end = 16.dp,
-                    top = 8.dp,
-                    bottom = 10.dp
-                ),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(
+                        start = 16.dp,
+                        end = 16.dp,
+                        top = 6.dp,
+                        bottom = 10.dp
+                    ),
 
             horizontalArrangement =
                 Arrangement.spacedBy(8.dp)
@@ -720,7 +775,7 @@ private fun DetailSectionCard(
             modifier =
                 Modifier
                     .fillMaxWidth()
-                    .padding(16.dp)
+                    .padding(14.dp)
         ) {
 
             content()
@@ -755,12 +810,12 @@ private fun DetailLine(
                     .titleMedium,
 
             modifier =
-                Modifier.size(30.dp)
+                Modifier.size(28.dp)
         )
 
         Spacer(
             modifier =
-                Modifier.size(8.dp)
+                Modifier.size(7.dp)
         )
 
         Column(
@@ -787,7 +842,7 @@ private fun DetailLine(
 
                 Spacer(
                     modifier =
-                        Modifier.height(2.dp)
+                        Modifier.height(1.dp)
                 )
             }
 

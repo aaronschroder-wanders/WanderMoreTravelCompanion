@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -265,395 +266,124 @@ fun AddItineraryScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .verticalScroll(
-                rememberScrollState()
-            )
-            .padding(16.dp)
+            .imePadding()
     ) {
 
         // =====================================================
-        // HEADER
+        // SCROLLABLE FORM
         // =====================================================
 
-        Text(
-            text = "Add Itinerary Item",
-            style =
-                MaterialTheme.typography.headlineMedium
-        )
-
-        Spacer(
-            modifier = Modifier.height(4.dp)
-        )
-
-        Text(
-            text =
-                "Add a key event, stay or travel plan.",
-            style =
-                MaterialTheme.typography.bodyMedium,
-            color =
-                MaterialTheme.colorScheme
-                    .onSurfaceVariant
-        )
-
-        Spacer(
-            modifier = Modifier.height(20.dp)
-        )
-
-        // =====================================================
-        // DATE
-        // =====================================================
-
-        OutlinedButton(
-            onClick = {
-                showDatePicker = true
-            },
-            modifier =
-                Modifier.fillMaxWidth()
-        ) {
-
-            Text(
-                text =
-                    if (date == null) {
-                        "Select date"
-                    } else {
-                        date!!.format(
-                            dateFormatter
-                        )
-                    }
-            )
-        }
-
-        Spacer(
-            modifier = Modifier.height(12.dp)
-        )
-
-        // =====================================================
-        // TIME
-        // =====================================================
-
-        OutlinedButton(
-            onClick = {
-                showTimePicker = true
-            },
-            modifier =
-                Modifier.fillMaxWidth()
-        ) {
-
-            Text(
-                text =
-                    if (time == null) {
-                        "Select time — optional"
-                    } else {
-                        time!!.format(
-                            timeFormatter
-                        )
-                    }
-            )
-        }
-
-        Spacer(
-            modifier = Modifier.height(12.dp)
-        )
-
-        // =====================================================
-        // TITLE
-        // =====================================================
-
-        OutlinedTextField(
-            value = title,
-
-            onValueChange = {
-                title = it
-            },
-
-            label = {
-                Text("Title")
-            },
-
-            placeholder = {
-                Text("e.g. London to Budapest")
-            },
-
-            modifier =
-                Modifier.fillMaxWidth(),
-
-            singleLine = true
-        )
-
-        Spacer(
-            modifier = Modifier.height(12.dp)
-        )
-
-        // =====================================================
-        // TYPE
-        // =====================================================
-
-        ExposedDropdownMenuBox(
-            expanded = typeExpanded,
-
-            onExpandedChange = {
-                typeExpanded =
-                    !typeExpanded
-            },
-
-            modifier =
-                Modifier.fillMaxWidth()
-        ) {
-
-            OutlinedTextField(
-                value = type,
-
-                onValueChange = {},
-
-                readOnly = true,
-
-                label = {
-                    Text("Type")
-                },
-
-                placeholder = {
-                    Text("Select type")
-                },
-
-                trailingIcon = {
-
-                    ExposedDropdownMenuDefaults
-                        .TrailingIcon(
-                            expanded =
-                                typeExpanded
-                        )
-                },
-
-                modifier =
-                    Modifier
-                        .menuAnchor()
-                        .fillMaxWidth(),
-
-                singleLine = true
-            )
-
-            ExposedDropdownMenu(
-                expanded = typeExpanded,
-
-                onDismissRequest = {
-                    typeExpanded = false
-                }
-            ) {
-
-                itineraryTypes.forEach {
-                        itineraryType ->
-
-                    DropdownMenuItem(
-                        text = {
-                            Text(
-                                itineraryType
-                            )
-                        },
-
-                        onClick = {
-
-                            type =
-                                itineraryType
-
-                            typeExpanded =
-                                false
-                        }
-                    )
-                }
-            }
-        }
-
-        Spacer(
-            modifier = Modifier.height(12.dp)
-        )
-
-        // =====================================================
-        // BOOKED
-        // =====================================================
-
-        Row(
-            modifier =
-                Modifier.fillMaxWidth(),
-
-            horizontalArrangement =
-                Arrangement.SpaceBetween,
-
-            verticalAlignment =
-                Alignment.CenterVertically
-        ) {
-
-            Column(
-                modifier =
-                    Modifier.weight(1f)
-            ) {
-
-                Text(
-                    text = "Booked",
-
-                    style =
-                        MaterialTheme.typography
-                            .bodyLarge
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth()
+                .verticalScroll(
+                    rememberScrollState()
                 )
+                .padding(16.dp)
+        ) {
+
+            // =================================================
+            // HEADER
+            // =================================================
+
+            Text(
+                text = "Add Itinerary Item",
+                style =
+                    MaterialTheme.typography.headlineMedium
+            )
+
+            Spacer(
+                modifier = Modifier.height(4.dp)
+            )
+
+            Text(
+                text =
+                    "Add a key event, stay or travel plan.",
+                style =
+                    MaterialTheme.typography.bodyMedium,
+                color =
+                    MaterialTheme.colorScheme
+                        .onSurfaceVariant
+            )
+
+            Spacer(
+                modifier = Modifier.height(20.dp)
+            )
+
+            // =================================================
+            // DATE
+            // =================================================
+
+            OutlinedButton(
+                onClick = {
+                    showDatePicker = true
+                },
+                modifier =
+                    Modifier.fillMaxWidth()
+            ) {
 
                 Text(
                     text =
-                        "Mark this item as already booked.",
-
-                    style =
-                        MaterialTheme.typography
-                            .bodySmall,
-
-                    color =
-                        MaterialTheme.colorScheme
-                            .onSurfaceVariant
+                        if (date == null) {
+                            "Select date"
+                        } else {
+                            date!!.format(
+                                dateFormatter
+                            )
+                        }
                 )
             }
 
-            Switch(
-                checked = booked,
-
-                onCheckedChange = {
-                    booked = it
-                }
+            Spacer(
+                modifier = Modifier.height(12.dp)
             )
-        }
 
-        Spacer(
-            modifier = Modifier.height(12.dp)
-        )
+            // =================================================
+            // TIME
+            // =================================================
 
-        // =====================================================
-        // NIGHTS
-        // =====================================================
+            OutlinedButton(
+                onClick = {
+                    showTimePicker = true
+                },
+                modifier =
+                    Modifier.fillMaxWidth()
+            ) {
 
-        OutlinedTextField(
-            value = nightsText,
-
-            onValueChange = {
-
-                if (
-                    it.all { character ->
-                        character.isDigit()
-                    }
-                ) {
-                    nightsText = it
-                }
-            },
-
-            label = {
-                Text("Nights")
-            },
-
-            placeholder = {
-                Text("Optional")
-            },
-
-            modifier =
-                Modifier.fillMaxWidth(),
-
-            singleLine = true
-        )
-
-        Spacer(
-            modifier = Modifier.height(12.dp)
-        )
-
-        // =====================================================
-        // DESTINATION
-        // =====================================================
-
-        DestinationSelector(
-
-            destinations =
-                destinations,
-
-            selectedDestinationIds =
-                selectedDestinationIds,
-
-            onSelectionChanged = {
-                selectedDestinationIds =
-                    it
-            },
-
-            onAddDestination = {
-                    destinationName,
-                    onResult ->
-
-                tripViewModel
-                    .addDestinationAndReturnId(
-                        destinationName
-                    ) { destinationId ->
-
-                        if (
-                            destinationId != null
-                        ) {
-
-                            selectedDestinationIds =
-                                selectedDestinationIds +
-                                        destinationId
-
-                            onResult(true)
-
+                Text(
+                    text =
+                        if (time == null) {
+                            "Select time — optional"
                         } else {
-
-                            onResult(false)
+                            time!!.format(
+                                timeFormatter
+                            )
                         }
-                    }
+                )
             }
-        )
 
-        Spacer(
-            modifier = Modifier.height(12.dp)
-        )
+            Spacer(
+                modifier = Modifier.height(12.dp)
+            )
 
-        // =====================================================
-        // WEB LINK
-        // =====================================================
-
-        Text(
-            text = "Web Link",
-            style =
-                MaterialTheme.typography.labelLarge
-        )
-
-        Spacer(
-            modifier = Modifier.height(8.dp)
-        )
-
-        if (
-            editingWebLink
-        ) {
+            // =================================================
+            // TITLE
+            // =================================================
 
             OutlinedTextField(
-                value =
-                    webLink,
+                value = title,
 
                 onValueChange = {
-                    webLink = it
-                    webLinkError = ""
+                    title = it
                 },
 
                 label = {
-                    Text("Web Link")
+                    Text("Title")
                 },
 
                 placeholder = {
-                    Text("Paste web link")
-                },
-
-                isError =
-                    webLinkError.isNotBlank(),
-
-                supportingText = {
-
-                    if (
-                        webLinkError.isNotBlank()
-                    ) {
-
-                        Text(
-                            webLinkError
-                        )
-                    }
+                    Text("e.g. London to Budapest")
                 },
 
                 modifier =
@@ -663,126 +393,420 @@ fun AddItineraryScreen(
             )
 
             Spacer(
-                modifier = Modifier.height(8.dp)
+                modifier = Modifier.height(12.dp)
             )
 
-            Button(
-                onClick = {
-                    linkWebAddress()
+            // =================================================
+            // TYPE
+            // =================================================
+
+            ExposedDropdownMenuBox(
+                expanded = typeExpanded,
+
+                onExpandedChange = {
+                    typeExpanded =
+                        !typeExpanded
                 },
 
                 modifier =
                     Modifier.fillMaxWidth()
             ) {
 
-                Text("Link")
+                OutlinedTextField(
+                    value = type,
+
+                    onValueChange = {},
+
+                    readOnly = true,
+
+                    label = {
+                        Text("Type")
+                    },
+
+                    placeholder = {
+                        Text("Select type")
+                    },
+
+                    trailingIcon = {
+
+                        ExposedDropdownMenuDefaults
+                            .TrailingIcon(
+                                expanded =
+                                    typeExpanded
+                            )
+                    },
+
+                    modifier =
+                        Modifier
+                            .menuAnchor()
+                            .fillMaxWidth(),
+
+                    singleLine = true
+                )
+
+                ExposedDropdownMenu(
+                    expanded = typeExpanded,
+
+                    onDismissRequest = {
+                        typeExpanded = false
+                    }
+                ) {
+
+                    itineraryTypes.forEach {
+                            itineraryType ->
+
+                        DropdownMenuItem(
+                            text = {
+                                Text(
+                                    itineraryType
+                                )
+                            },
+
+                            onClick = {
+
+                                type =
+                                    itineraryType
+
+                                typeExpanded =
+                                    false
+                            }
+                        )
+                    }
+                }
             }
 
-        } else {
-
-            Text(
-                text = "✓ Link added",
-                style =
-                    MaterialTheme.typography
-                        .bodyLarge
-            )
-
             Spacer(
-                modifier = Modifier.height(8.dp)
+                modifier = Modifier.height(12.dp)
             )
+
+            // =================================================
+            // BOOKED
+            // =================================================
 
             Row(
                 modifier =
                     Modifier.fillMaxWidth(),
 
                 horizontalArrangement =
-                    Arrangement.spacedBy(8.dp)
+                    Arrangement.SpaceBetween,
+
+                verticalAlignment =
+                    Alignment.CenterVertically
             ) {
 
-                Button(
-                    onClick = {
-
-                        openWebLink(
-                            context,
-                            webLink
-                        )
-                    },
-
+                Column(
                     modifier =
                         Modifier.weight(1f)
                 ) {
 
-                    Text("Open Link")
+                    Text(
+                        text = "Booked",
+
+                        style =
+                            MaterialTheme.typography
+                                .bodyLarge
+                    )
+
+                    Text(
+                        text =
+                            "Mark this item as already booked.",
+
+                        style =
+                            MaterialTheme.typography
+                                .bodySmall,
+
+                        color =
+                            MaterialTheme.colorScheme
+                                .onSurfaceVariant
+                    )
                 }
 
-                Button(
-                    onClick = {
+                Switch(
+                    checked = booked,
 
-                        webLink =
-                            ""
+                    onCheckedChange = {
+                        booked = it
+                    }
+                )
+            }
 
-                        webLinkError =
-                            ""
+            Spacer(
+                modifier = Modifier.height(12.dp)
+            )
 
-                        editingWebLink =
-                            true
+            // =================================================
+            // NIGHTS
+            // =================================================
+
+            OutlinedTextField(
+                value = nightsText,
+
+                onValueChange = {
+
+                    if (
+                        it.all { character ->
+                            character.isDigit()
+                        }
+                    ) {
+                        nightsText = it
+                    }
+                },
+
+                label = {
+                    Text("Nights")
+                },
+
+                placeholder = {
+                    Text("Optional")
+                },
+
+                modifier =
+                    Modifier.fillMaxWidth(),
+
+                singleLine = true
+            )
+
+            Spacer(
+                modifier = Modifier.height(12.dp)
+            )
+
+            // =================================================
+            // DESTINATION
+            // =================================================
+
+            DestinationSelector(
+
+                destinations =
+                    destinations,
+
+                selectedDestinationIds =
+                    selectedDestinationIds,
+
+                onSelectionChanged = {
+                    selectedDestinationIds =
+                        it
+                },
+
+                onAddDestination = {
+                        destinationName,
+                        onResult ->
+
+                    tripViewModel
+                        .addDestinationAndReturnId(
+                            destinationName
+                        ) { destinationId ->
+
+                            if (
+                                destinationId != null
+                            ) {
+
+                                selectedDestinationIds =
+                                    selectedDestinationIds +
+                                            destinationId
+
+                                onResult(true)
+
+                            } else {
+
+                                onResult(false)
+                            }
+                        }
+                }
+            )
+
+            Spacer(
+                modifier = Modifier.height(12.dp)
+            )
+
+            // =================================================
+            // WEB LINK
+            // =================================================
+
+            Text(
+                text = "Web Link",
+                style =
+                    MaterialTheme.typography.labelLarge
+            )
+
+            Spacer(
+                modifier = Modifier.height(8.dp)
+            )
+
+            if (
+                editingWebLink
+            ) {
+
+                OutlinedTextField(
+                    value =
+                        webLink,
+
+                    onValueChange = {
+                        webLink = it
+                        webLinkError = ""
+                    },
+
+                    label = {
+                        Text("Web Link")
+                    },
+
+                    placeholder = {
+                        Text("Paste web link")
+                    },
+
+                    isError =
+                        webLinkError.isNotBlank(),
+
+                    supportingText = {
+
+                        if (
+                            webLinkError.isNotBlank()
+                        ) {
+
+                            Text(
+                                webLinkError
+                            )
+                        }
                     },
 
                     modifier =
-                        Modifier.weight(1f)
+                        Modifier.fillMaxWidth(),
+
+                    singleLine = true
+                )
+
+                Spacer(
+                    modifier = Modifier.height(8.dp)
+                )
+
+                Button(
+                    onClick = {
+                        linkWebAddress()
+                    },
+
+                    modifier =
+                        Modifier.fillMaxWidth()
                 ) {
 
-                    Text("Change Link")
+                    Text("Link")
+                }
+
+            } else {
+
+                Text(
+                    text = "✓ Link added",
+                    style =
+                        MaterialTheme.typography
+                            .bodyLarge
+                )
+
+                Spacer(
+                    modifier = Modifier.height(8.dp)
+                )
+
+                Row(
+                    modifier =
+                        Modifier.fillMaxWidth(),
+
+                    horizontalArrangement =
+                        Arrangement.spacedBy(8.dp)
+                ) {
+
+                    Button(
+                        onClick = {
+
+                            openWebLink(
+                                context,
+                                webLink
+                            )
+                        },
+
+                        modifier =
+                            Modifier.weight(1f)
+                    ) {
+
+                        Text("Open Link")
+                    }
+
+                    Button(
+                        onClick = {
+
+                            webLink =
+                                ""
+
+                            webLinkError =
+                                ""
+
+                            editingWebLink =
+                                true
+                        },
+
+                        modifier =
+                            Modifier.weight(1f)
+                    ) {
+
+                        Text("Change Link")
+                    }
                 }
             }
+
+            Spacer(
+                modifier = Modifier.height(12.dp)
+            )
+
+            // =================================================
+            // NOTES
+            // =================================================
+
+            OutlinedTextField(
+                value = notes,
+
+                onValueChange = {
+                    notes = it
+                },
+
+                label = {
+                    Text("Notes")
+                },
+
+                placeholder = {
+                    Text(
+                        "Transport information, address, reminders, etc."
+                    )
+                },
+
+                modifier =
+                    Modifier.fillMaxWidth(),
+
+                minLines = 3
+            )
+
+            Spacer(
+                modifier = Modifier.height(20.dp)
+            )
         }
 
-        Spacer(
-            modifier = Modifier.height(12.dp)
-        )
-
         // =====================================================
-        // NOTES
-        // =====================================================
-
-        OutlinedTextField(
-            value = notes,
-
-            onValueChange = {
-                notes = it
-            },
-
-            label = {
-                Text("Notes")
-            },
-
-            placeholder = {
-                Text(
-                    "Transport information, address, reminders, etc."
-                )
-            },
-
-            modifier =
-                Modifier.fillMaxWidth(),
-
-            minLines = 3
-        )
-
-        Spacer(
-            modifier = Modifier.height(24.dp)
-        )
-
-        // =====================================================
-        // BUTTONS
+        // FIXED ACTION BUTTONS
         // =====================================================
 
         Row(
             modifier =
-                Modifier.fillMaxWidth(),
+                Modifier
+                    .fillMaxWidth()
+                    .padding(
+                        start = 16.dp,
+                        end = 16.dp,
+                        top = 8.dp,
+                        bottom = 10.dp
+                    ),
 
             horizontalArrangement =
-                Arrangement.spacedBy(12.dp)
+                Arrangement.spacedBy(6.dp)
         ) {
+
+            // =================================================
+            // CANCEL
+            // =================================================
 
             OutlinedButton(
                 onClick = onBack,
@@ -793,6 +817,10 @@ fun AddItineraryScreen(
 
                 Text("Cancel")
             }
+
+            // =================================================
+            // ADD ITEM
+            // =================================================
 
             Button(
                 onClick = {
@@ -865,10 +893,6 @@ fun AddItineraryScreen(
                 Text("Add Item")
             }
         }
-
-        Spacer(
-            modifier = Modifier.height(16.dp)
-        )
     }
 
     // =========================================================
