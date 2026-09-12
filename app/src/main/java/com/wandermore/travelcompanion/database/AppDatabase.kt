@@ -14,6 +14,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         TodoEntity::class,
         ActivityEntity::class,
         ItineraryEntity::class,
+        ItineraryLinkEntity::class,
         BookingEntity::class,
         TripEstimateEntity::class,
         DestinationEntity::class,
@@ -21,7 +22,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         ItineraryDestinationEntity::class,
         ActivityDestinationEntity::class
     ],
-    version = 14,
+    version = 15,
     exportSchema = false
 )
 @TypeConverters(DateConverter::class)
@@ -38,6 +39,8 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun activityDao(): ActivityDao
 
     abstract fun itineraryDao(): ItineraryDao
+
+    abstract fun itineraryLinkDao(): ItineraryLinkDao
 
     abstract fun tripEstimateDao(): TripEstimateDao
 
@@ -792,6 +795,68 @@ abstract class AppDatabase : RoomDatabase() {
                     """
                     ALTER TABLE itinerary
                     ADD COLUMN webLink TEXT
+                    """.trimIndent()
+                )
+            }
+        }
+
+        // ---------------------------------------------------------
+        // VERSION 14 → 15
+        // ITINERARY LINKS / DOCUMENTS
+        //
+        // An itinerary item can have multiple links.
+        // Existing single webLink values are migrated into this
+        // new table so no existing links are lost.
+        // ---------------------------------------------------------
+
+        val MIGRATION_14_15 = object : Migration(14, 15) {
+
+            override fun migrate(
+                database: SupportSQLiteDatabase
+            ) {
+
+                database.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS itinerary_links (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        itineraryId INTEGER NOT NULL,
+                        label TEXT NOT NULL,
+                        url TEXT NOT NULL,
+                        FOREIGN KEY(itineraryId)
+                            REFERENCES itinerary(id)
+                            ON DELETE CASCADE
+                    )
+                    """.trimIndent()
+                )
+
+                database.execSQL(
+                    """
+                    CREATE INDEX IF NOT EXISTS
+                    index_itinerary_links_itineraryId
+                    ON itinerary_links(itineraryId)
+                    """.trimIndent()
+                )
+
+                // -------------------------------------------------
+                // MIGRATE EXISTING WEB LINKS
+                //
+                // Each existing webLink becomes one ItineraryLink.
+                // -------------------------------------------------
+
+                database.execSQL(
+                    """
+                    INSERT INTO itinerary_links (
+                        itineraryId,
+                        label,
+                        url
+                    )
+                    SELECT
+                        id,
+                        'Web Link',
+                        webLink
+                    FROM itinerary
+                    WHERE webLink IS NOT NULL
+                      AND TRIM(webLink) != ''
                     """.trimIndent()
                 )
             }

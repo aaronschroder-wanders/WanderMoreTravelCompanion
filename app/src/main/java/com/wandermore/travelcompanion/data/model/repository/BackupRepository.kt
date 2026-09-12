@@ -80,11 +80,6 @@ class BackupRepository(
 
         // -----------------------------------------------------
         // Primary User
-        //
-        // Prefer the already-migrated normal web link.
-        // If that doesn't exist, use the old primary link.
-        // Only migrate passport_aaron_uri if it is actually
-        // a normal HTTP/HTTPS web link.
         // -----------------------------------------------------
 
         if (existingPrimaryLink.isNullOrBlank()) {
@@ -172,6 +167,20 @@ class BackupRepository(
         val itinerary =
             database.itineraryDao()
                 .getAllItineraryForBackup()
+
+        // ---------------------------------------------------------
+        // ITINERARY LINKS / DOCUMENTS
+        // ---------------------------------------------------------
+
+        val itineraryLinks =
+            itinerary.flatMap { itineraryItem ->
+
+                database.itineraryLinkDao()
+                    .getLinksForItinerary(
+                        itineraryItem.id
+                    )
+                    .first()
+            }
 
         val bookings =
             database.bookingDao()
@@ -267,7 +276,7 @@ class BackupRepository(
 
         val backup =
             BackupData(
-                backupVersion = 4,
+                backupVersion = 5,
 
                 createdAt =
                     LocalDateTime.now().toString(),
@@ -292,6 +301,9 @@ class BackupRepository(
 
                 itinerary =
                     itinerary,
+
+                itineraryLinks =
+                    itineraryLinks,
 
                 bookings =
                     bookings,
@@ -415,6 +427,16 @@ class BackupRepository(
 
                 database.itineraryDao()
                     .insertItinerary(itineraryItem)
+            }
+
+            // -------------------------------------------------
+            // RESTORE ITINERARY LINKS / DOCUMENTS
+            // -------------------------------------------------
+
+            backup.itineraryLinks.forEach { itineraryLink ->
+
+                database.itineraryLinkDao()
+                    .insert(itineraryLink)
             }
 
             // -------------------------------------------------

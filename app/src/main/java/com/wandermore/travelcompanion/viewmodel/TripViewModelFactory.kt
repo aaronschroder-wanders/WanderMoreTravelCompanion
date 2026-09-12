@@ -8,6 +8,7 @@ import com.wandermore.travelcompanion.database.DestinationDao
 import com.wandermore.travelcompanion.database.ExpenseDao
 import com.wandermore.travelcompanion.database.ItineraryDao
 import com.wandermore.travelcompanion.database.ItineraryDestinationDao
+import com.wandermore.travelcompanion.database.ItineraryLinkDao
 import com.wandermore.travelcompanion.database.TodoDao
 import com.wandermore.travelcompanion.database.TripDao
 import com.wandermore.travelcompanion.database.TripDestinationDao
@@ -19,6 +20,7 @@ class TripViewModelFactory(
     private val todoDao: TodoDao,
     private val activityDao: ActivityDao,
     private val itineraryDao: ItineraryDao,
+    private val itineraryLinkDao: ItineraryLinkDao,
     private val tripEstimateDao: TripEstimateDao,
     private val destinationDao: DestinationDao,
     private val itineraryDestinationDao: ItineraryDestinationDao,
@@ -40,6 +42,7 @@ class TripViewModelFactory(
                 todoDao,
                 activityDao,
                 itineraryDao,
+                itineraryLinkDao,
                 tripEstimateDao,
                 destinationDao,
                 itineraryDestinationDao,

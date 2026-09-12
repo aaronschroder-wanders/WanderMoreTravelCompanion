@@ -1,6 +1,5 @@
 package com.wandermore.travelcompanion.viewmodel
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.wandermore.travelcompanion.data.repository.TripRepository
@@ -16,6 +15,8 @@ import com.wandermore.travelcompanion.database.ItineraryDao
 import com.wandermore.travelcompanion.database.ItineraryDestinationDao
 import com.wandermore.travelcompanion.database.ItineraryDestinationEntity
 import com.wandermore.travelcompanion.database.ItineraryEntity
+import com.wandermore.travelcompanion.database.ItineraryLinkDao
+import com.wandermore.travelcompanion.database.ItineraryLinkEntity
 import com.wandermore.travelcompanion.database.TodoDao
 import com.wandermore.travelcompanion.database.TodoEntity
 import com.wandermore.travelcompanion.database.TripDao
@@ -37,6 +38,7 @@ class TripViewModel(
     private val todoDao: TodoDao,
     private val activityDao: ActivityDao,
     private val itineraryDao: ItineraryDao,
+    private val itineraryLinkDao: ItineraryLinkDao,
     private val tripEstimateDao: TripEstimateDao,
     private val destinationDao: DestinationDao,
     private val itineraryDestinationDao: ItineraryDestinationDao,
@@ -498,6 +500,42 @@ class TripViewModel(
             .getDestinationIdsForItinerary(
                 itineraryId
             )
+    }
+
+    // =========================================================
+    // ITINERARY LINKS / DOCUMENTS
+    // =========================================================
+
+    fun getItineraryLinks(
+        itineraryId: Long
+    ): Flow<List<ItineraryLinkEntity>> {
+        return itineraryLinkDao.getLinksForItinerary(
+            itineraryId
+        )
+    }
+
+    suspend fun addItineraryLink(
+        link: ItineraryLinkEntity
+    ) {
+        val insertedId =
+            itineraryLinkDao.insert(link)
+
+        android.util.Log.d(
+            "ItineraryLinks",
+            "Inserted link: id=$insertedId itineraryId=${link.itineraryId} label=${link.label}"
+        )
+    }
+
+    suspend fun updateItineraryLink(
+        link: ItineraryLinkEntity
+    ) {
+        itineraryLinkDao.update(link)
+    }
+
+    suspend fun deleteItineraryLink(
+        link: ItineraryLinkEntity
+    ) {
+        itineraryLinkDao.delete(link)
     }
 
     // =========================================================
@@ -1299,7 +1337,8 @@ class TripViewModel(
 
     fun addItinerary(
         itinerary: ItineraryEntity,
-        destinationIds: Set<Long> = emptySet()
+        destinationIds: Set<Long> = emptySet(),
+        links: List<ItineraryLinkEntity> = emptyList()
     ) {
 
         viewModelScope.launch {
@@ -1313,6 +1352,17 @@ class TripViewModel(
                 itinerary.copy(
                     id = itineraryId
                 )
+
+            // Save any links/documents attached to this itinerary item.
+            for (link in links) {
+
+                itineraryLinkDao.insert(
+                    link.copy(
+                        id = 0,
+                        itineraryId = itineraryId
+                    )
+                )
+            }
 
             syncItineraryToExplicitDestinations(
                 savedItinerary,
@@ -1419,14 +1469,13 @@ class TripViewModel(
     suspend fun getItineraryById(
         itineraryId: Long
     ): ItineraryEntity? {
-        return itineraryDao.getItineraryById(
-            itineraryId
-        )
+        return itineraryDao.getItineraryById(itineraryId)
     }
 
     fun updateItinerary(
         itinerary: ItineraryEntity,
-        destinationIds: Set<Long>
+        destinationIds: Set<Long>,
+        onUpdated: () -> Unit = {}
     ) {
 
         viewModelScope.launch {
@@ -1436,11 +1485,6 @@ class TripViewModel(
                     .getDestinationIdsForItinerary(
                         itinerary.id
                     )
-
-            Log.d(
-                "ITINERARY_DEBUG",
-                "Updating itinerary ${itinerary.id}, webLink=${itinerary.webLink}"
-            )
 
             itineraryDao.updateItinerary(
                 itinerary
@@ -1577,6 +1621,10 @@ class TripViewModel(
                     )
                 }
             }
+
+            // Tell EditItineraryScreen that the complete save
+            // operation has finished.
+            onUpdated()
         }
     }
 

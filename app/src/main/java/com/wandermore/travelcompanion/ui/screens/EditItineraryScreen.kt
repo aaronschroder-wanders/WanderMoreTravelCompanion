@@ -15,8 +15,12 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DropdownMenuItem
@@ -37,15 +41,19 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.onFocusEvent
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.wandermore.travelcompanion.database.ItineraryEntity
+import com.wandermore.travelcompanion.database.ItineraryLinkEntity
 import com.wandermore.travelcompanion.ui.components.DestinationSelector
 import com.wandermore.travelcompanion.viewmodel.TripViewModel
 import java.net.URI
@@ -55,6 +63,8 @@ import java.time.LocalDate
 import java.time.LocalTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -114,22 +124,54 @@ fun EditItineraryScreen(
     }
 
     // =========================================================
-    // WEB LINK STATE
+    // LINKS / DOCUMENTS STATE
     // =========================================================
 
-    var webLink by remember {
+    val links = remember {
+        mutableStateListOf<ItineraryLinkDraft>()
+    }
+
+    var linkLabel by remember {
         mutableStateOf("")
     }
 
-    var editingWebLink by remember {
-        mutableStateOf(true)
+    var linkUrl by remember {
+        mutableStateOf("")
     }
 
-    var webLinkError by remember {
+    var linkError by remember {
         mutableStateOf("")
+    }
+
+    var editingLinkId by remember {
+        mutableStateOf<Long?>(null)
+    }
+
+    var showLinkEditor by remember {
+        mutableStateOf(false)
+    }
+
+    var linksLoaded by remember {
+        mutableStateOf(false)
     }
 
     val context = LocalContext.current
+
+    val coroutineScope =
+        rememberCoroutineScope()
+
+    /*
+     * One requester for the whole document editor.
+     *
+     * This is deliberately attached to the editor container
+     * rather than only to the Update/Add button. That means
+     * focusing either the label or URL asks Compose to bring
+     * the entire editor into view.
+     */
+    val linkEditorBringIntoViewRequester =
+        remember {
+            BringIntoViewRequester()
+        }
 
     // =========================================================
     // DESTINATION STATE
@@ -196,36 +238,14 @@ fun EditItineraryScreen(
 
             existingItem = item
 
-            date =
-                item.date
-
-            time =
-                item.time
-
-            title =
-                item.title
-
-            type =
-                item.type
-
-            nightsText =
-                item.nights?.toString() ?: ""
-
-            location =
-                item.location ?: ""
-
-            notes =
-                item.notes ?: ""
-
-            booked =
-                item.booked
-
-            // Load existing Web Link.
-            webLink =
-                item.webLink ?: ""
-
-            editingWebLink =
-                item.webLink.isNullOrBlank()
+            date = item.date
+            time = item.time
+            title = item.title
+            type = item.type
+            nightsText = item.nights?.toString() ?: ""
+            location = item.location ?: ""
+            notes = item.notes ?: ""
+            booked = item.booked
 
             selectedDestinationIds =
                 tripViewModel
@@ -234,9 +254,72 @@ fun EditItineraryScreen(
                     )
                     .toSet()
 
-            destinationsLoaded =
-                true
+            destinationsLoaded = true
         }
+    }
+
+    // =========================================================
+    // EXISTING LINKS / DOCUMENTS
+    // =========================================================
+
+    val savedLinks by
+    tripViewModel
+        .getItineraryLinks(itineraryId)
+        .collectAsState(
+            initial = emptyList()
+        )
+
+    LaunchedEffect(itineraryId) {
+
+        val initialLinks =
+            tripViewModel
+                .getItineraryLinks(itineraryId)
+                .first()
+
+        if (initialLinks.isNotEmpty()) {
+
+            links.clear()
+
+            initialLinks.forEach { link ->
+
+                links.add(
+                    ItineraryLinkDraft(
+                        id = link.id,
+                        label = link.label,
+                        url = link.url
+                    )
+                )
+            }
+
+        } else {
+
+            /*
+             * Backwards compatibility for an itinerary item
+             * that still has the old single webLink value.
+             */
+            val item =
+                tripViewModel.getItineraryById(
+                    itineraryId
+                )
+
+            if (
+                item != null &&
+                !item.webLink.isNullOrBlank()
+            ) {
+
+                links.clear()
+
+                links.add(
+                    ItineraryLinkDraft(
+                        id = 0,
+                        label = "Web Link",
+                        url = item.webLink
+                    )
+                )
+            }
+        }
+
+        linksLoaded = true
     }
 
     // =========================================================
@@ -281,6 +364,126 @@ fun EditItineraryScreen(
         DateTimeFormatter.ofPattern(
             "HH:mm"
         )
+
+    // =========================================================
+    // LINK FUNCTIONS
+    // =========================================================
+
+    fun clearLinkEditor() {
+
+        linkLabel = ""
+        linkUrl = ""
+        linkError = ""
+        editingLinkId = null
+        showLinkEditor = false
+    }
+
+    fun addOrUpdateLink() {
+
+        val cleanedLabel =
+            linkLabel.trim()
+
+        val cleanedUrl =
+            linkUrl.trim()
+
+        if (cleanedLabel.isBlank()) {
+
+            linkError =
+                "Please enter a label."
+
+            return
+        }
+
+        if (!isValidWebLink(cleanedUrl)) {
+
+            linkError =
+                "Please enter a valid web link starting with https://"
+
+            return
+        }
+
+        val existingId =
+            editingLinkId
+
+        if (existingId == null) {
+
+            links.add(
+                ItineraryLinkDraft(
+                    id = 0,
+                    label = cleanedLabel,
+                    url = cleanedUrl
+                )
+            )
+
+        } else {
+
+            val index =
+                links.indexOfFirst {
+                    it.id == existingId
+                }
+
+            if (index >= 0) {
+
+                links[index] =
+                    ItineraryLinkDraft(
+                        id = existingId,
+                        label = cleanedLabel,
+                        url = cleanedUrl
+                    )
+            }
+        }
+
+        clearLinkEditor()
+    }
+
+    fun editLink(
+        link: ItineraryLinkDraft
+    ) {
+
+        editingLinkId =
+            link.id
+
+        linkLabel =
+            link.label
+
+        linkUrl =
+            link.url
+
+        linkError =
+            ""
+
+        showLinkEditor =
+            true
+    }
+
+    fun startAddingLink() {
+
+        linkLabel = ""
+        linkUrl = ""
+        linkError = ""
+        editingLinkId = null
+        showLinkEditor = true
+    }
+
+    // =========================================================
+    // BRING DOCUMENT EDITOR INTO VIEW
+    // =========================================================
+
+    LaunchedEffect(showLinkEditor) {
+
+        if (showLinkEditor) {
+
+            /*
+             * Give Compose a moment to place the editor in
+             * the layout before requesting it to scroll into
+             * view.
+             */
+            kotlinx.coroutines.delay(100)
+
+            linkEditorBringIntoViewRequester
+                .bringIntoView()
+        }
+    }
 
     // =========================================================
     // SCREEN
@@ -698,15 +901,15 @@ fun EditItineraryScreen(
 
             Spacer(
                 modifier =
-                    Modifier.height(12.dp)
+                    Modifier.height(16.dp)
             )
 
             // =================================================
-            // WEB LINK
+            // LINKS / DOCUMENTS
             // =================================================
 
             Text(
-                text = "Web Link",
+                text = "Links / Documents",
 
                 style =
                     MaterialTheme.typography
@@ -715,167 +918,379 @@ fun EditItineraryScreen(
 
             Spacer(
                 modifier =
-                    Modifier.height(8.dp)
+                    Modifier.height(4.dp)
             )
 
-            if (editingWebLink) {
+            Text(
+                text =
+                    "Add tickets, confirmations, timetables or other useful documents.",
 
-                OutlinedTextField(
-                    value =
-                        webLink,
+                style =
+                    MaterialTheme.typography
+                        .bodySmall,
 
-                    onValueChange = {
-                        webLink = it
-                        webLinkError = ""
-                    },
+                color =
+                    MaterialTheme.colorScheme
+                        .onSurfaceVariant
+            )
 
+            Spacer(
+                modifier =
+                    Modifier.height(10.dp)
+            )
+
+            // =================================================
+            // EXISTING LINKS
+            // =================================================
+
+            links.forEach { link ->
+
+                Card(
                     modifier =
-                        Modifier.fillMaxWidth(),
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(
+                                bottom = 8.dp
+                            ),
 
-                    label = {
-                        Text("Web Link")
-                    },
-
-                    placeholder = {
-                        Text("Paste web link")
-                    },
-
-                    singleLine = true,
-
-                    isError =
-                        webLinkError.isNotBlank()
-                )
-
-                if (
-                    webLinkError.isNotBlank()
+                    colors =
+                        CardDefaults.cardColors(
+                            containerColor =
+                                MaterialTheme
+                                    .colorScheme
+                                    .surfaceVariant
+                        )
                 ) {
 
-                    Text(
-                        text =
-                            webLinkError,
+                    Row(
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(
+                                    horizontal = 12.dp,
+                                    vertical = 8.dp
+                                ),
 
-                        style =
-                            MaterialTheme.typography
-                                .bodySmall,
+                        verticalAlignment =
+                            Alignment.CenterVertically
+                    ) {
 
-                        color =
-                            MaterialTheme.colorScheme
-                                .error
-                    )
+                        Text(
+                            text = link.label,
+
+                            style =
+                                MaterialTheme.typography
+                                    .bodyLarge,
+
+                            fontWeight =
+                                FontWeight.SemiBold,
+
+                            modifier =
+                                Modifier.weight(1f)
+                        )
+
+                        TextButton(
+                            onClick = {
+
+                                openWebLink(
+                                    context,
+                                    link.url
+                                )
+                            }
+                        ) {
+                            Text("Open")
+                        }
+
+                        TextButton(
+                            onClick = {
+                                editLink(link)
+                            }
+                        ) {
+                            Text("Edit")
+                        }
+
+                        TextButton(
+                            onClick = {
+
+                                links.remove(link)
+
+                                if (
+                                    editingLinkId ==
+                                    link.id
+                                ) {
+                                    clearLinkEditor()
+                                }
+                            }
+                        ) {
+                            Text(
+                                text = "Delete",
+                                color =
+                                    MaterialTheme
+                                        .colorScheme
+                                        .error
+                            )
+                        }
+                    }
                 }
+            }
+
+            // =================================================
+            // ADD LINK BUTTON
+            // =================================================
+
+            if (!showLinkEditor) {
 
                 Spacer(
                     modifier =
-                        Modifier.height(8.dp)
+                        Modifier.height(4.dp)
                 )
 
                 Button(
                     onClick = {
-
-                        val cleanedLink =
-                            webLink.trim()
-
-                        if (
-                            !isValidWebLink(
-                                cleanedLink
-                            )
-                        ) {
-
-                            webLinkError =
-                                "Please enter a valid web link starting with https://"
-
-                        } else {
-
-                            webLink =
-                                cleanedLink
-
-                            webLinkError =
-                                ""
-
-                            editingWebLink =
-                                false
-
-                            android.util.Log.d(
-                                "ITINERARY_DEBUG",
-                                "Link button accepted URL: $cleanedLink"
-                            )
-                        }
+                        startAddingLink()
                     },
 
                     modifier =
-                        Modifier.fillMaxWidth(),
-
-                    enabled =
-                        webLink
-                            .trim()
-                            .isNotEmpty()
+                        Modifier.fillMaxWidth()
                 ) {
-
-                    Text("Link")
+                    Text(
+                        "+ Add Link / Document"
+                    )
                 }
+            }
 
-            } else {
+            // =================================================
+            // LINK EDITOR
+            // =================================================
 
-                Text(
-                    text = "✓ Link added",
+            if (showLinkEditor) {
 
-                    style =
-                        MaterialTheme.typography
-                            .bodyMedium
-                )
-
-                Spacer(
+                Card(
                     modifier =
-                        Modifier.height(8.dp)
-                )
+                        Modifier
+                            .fillMaxWidth()
+                            .bringIntoViewRequester(
+                                linkEditorBringIntoViewRequester
+                            ),
 
-                Row(
-                    modifier =
-                        Modifier.fillMaxWidth(),
-
-                    horizontalArrangement =
-                        Arrangement.spacedBy(8.dp)
+                    colors =
+                        CardDefaults.cardColors(
+                            containerColor =
+                                MaterialTheme
+                                    .colorScheme
+                                    .surfaceVariant
+                        )
                 ) {
 
-                    Button(
-                        onClick = {
+                    Column(
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(12.dp)
+                    ) {
 
-                            openWebLink(
-                                context,
-                                webLink
+                        Text(
+                            text =
+                                if (
+                                    editingLinkId == null
+                                ) {
+                                    "Add Link / Document"
+                                } else {
+                                    "Edit Link / Document"
+                                },
+
+                            style =
+                                MaterialTheme.typography
+                                    .titleMedium,
+
+                            fontWeight =
+                                FontWeight.SemiBold
+                        )
+
+                        Spacer(
+                            modifier =
+                                Modifier.height(10.dp)
+                        )
+
+                        OutlinedTextField(
+                            value =
+                                linkLabel,
+
+                            onValueChange = {
+                                linkLabel = it
+                                linkError = ""
+                            },
+
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .onFocusEvent {
+                                            focusState ->
+
+                                        if (
+                                            focusState.isFocused
+                                        ) {
+
+                                            coroutineScope
+                                                .launch {
+
+                                                    kotlinx
+                                                        .coroutines
+                                                        .delay(100)
+
+                                                    linkEditorBringIntoViewRequester
+                                                        .bringIntoView()
+                                                }
+                                        }
+                                    },
+
+                            label = {
+                                Text(
+                                    "Document label"
+                                )
+                            },
+
+                            placeholder = {
+                                Text(
+                                    "e.g. Aaron — Train ticket"
+                                )
+                            },
+
+                            singleLine = true
+                        )
+
+                        Spacer(
+                            modifier =
+                                Modifier.height(8.dp)
+                        )
+
+                        OutlinedTextField(
+                            value =
+                                linkUrl,
+
+                            onValueChange = {
+                                linkUrl = it
+                                linkError = ""
+                            },
+
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .onFocusEvent {
+                                            focusState ->
+
+                                        if (
+                                            focusState.isFocused
+                                        ) {
+
+                                            coroutineScope
+                                                .launch {
+
+                                                    kotlinx
+                                                        .coroutines
+                                                        .delay(100)
+
+                                                    linkEditorBringIntoViewRequester
+                                                        .bringIntoView()
+                                                }
+                                        }
+                                    },
+
+                            label = {
+                                Text("Web link")
+                            },
+
+                            placeholder = {
+                                Text(
+                                    "Paste web link"
+                                )
+                            },
+
+                            singleLine = true,
+
+                            isError =
+                                linkError.isNotBlank()
+                        )
+
+                        if (
+                            linkError.isNotBlank()
+                        ) {
+
+                            Spacer(
+                                modifier =
+                                    Modifier.height(4.dp)
                             )
-                        },
 
-                        modifier =
-                            Modifier.weight(1f)
-                    ) {
+                            Text(
+                                text =
+                                    linkError,
 
-                        Text("Open Link")
-                    }
+                                style =
+                                    MaterialTheme.typography
+                                        .bodySmall,
 
-                    Button(
-                        onClick = {
+                                color =
+                                    MaterialTheme.colorScheme
+                                        .error
+                            )
+                        }
 
-                            webLink = ""
+                        Spacer(
+                            modifier =
+                                Modifier.height(12.dp)
+                        )
 
-                            webLinkError = ""
+                        Button(
+                            onClick = {
+                                addOrUpdateLink()
+                            },
 
-                            editingWebLink =
-                                true
-                        },
+                            enabled =
+                                linkLabel
+                                    .trim()
+                                    .isNotEmpty() &&
+                                        linkUrl
+                                            .trim()
+                                            .isNotEmpty(),
 
-                        modifier =
-                            Modifier.weight(1f)
-                    ) {
+                            modifier =
+                                Modifier.fillMaxWidth()
+                        ) {
 
-                        Text("Change Link")
+                            Text(
+                                if (
+                                    editingLinkId == null
+                                ) {
+                                    "+ Add Link / Document"
+                                } else {
+                                    "Update Link / Document"
+                                }
+                            )
+                        }
+
+                        Spacer(
+                            modifier =
+                                Modifier.height(8.dp)
+                        )
+
+                        OutlinedButton(
+                            onClick = {
+                                clearLinkEditor()
+                            },
+
+                            modifier =
+                                Modifier.fillMaxWidth()
+                        ) {
+
+                            Text("Cancel")
+                        }
                     }
                 }
             }
 
             Spacer(
                 modifier =
-                    Modifier.height(12.dp)
+                    Modifier.height(16.dp)
             )
 
             // =================================================
@@ -929,23 +1344,14 @@ fun EditItineraryScreen(
                 Arrangement.spacedBy(6.dp)
         ) {
 
-            // =================================================
-            // BACK
-            // =================================================
-
             Button(
                 onClick = onBack,
 
                 modifier =
                     Modifier.weight(1f)
             ) {
-
                 Text("Back")
             }
-
-            // =================================================
-            // DELETE
-            // =================================================
 
             Button(
                 onClick = {
@@ -956,13 +1362,8 @@ fun EditItineraryScreen(
                 modifier =
                     Modifier.weight(1f)
             ) {
-
                 Text("Delete")
             }
-
-            // =================================================
-            // SAVE
-            // =================================================
 
             Button(
                 onClick = {
@@ -1004,11 +1405,7 @@ fun EditItineraryScreen(
                                     },
 
                             webLink =
-                                webLink
-                                    .trim()
-                                    .ifBlank {
-                                        null
-                                    },
+                                null,
 
                             booked =
                                 if (createdFromActivity) {
@@ -1018,29 +1415,105 @@ fun EditItineraryScreen(
                                 }
                         )
 
-                    android.util.Log.d(
-                        "ITINERARY_DEBUG",
-                        "Edit screen saving itinerary ${updatedItem.id}, webLink=${updatedItem.webLink}"
-                    )
+                    coroutineScope.launch {
 
-                    tripViewModel.updateItinerary(
-                        updatedItem,
-                        selectedDestinationIds
-                    )
+                        // =====================================
+                        // DELETE REMOVED LINKS
+                        // =====================================
 
-                    onItineraryUpdated()
+                        savedLinks.forEach { savedLink ->
+
+                            if (
+                                links.none {
+                                    it.id == savedLink.id
+                                }
+                            ) {
+
+                                tripViewModel
+                                    .deleteItineraryLink(
+                                        savedLink
+                                    )
+                            }
+                        }
+
+                        // =====================================
+                        // ADD NEW / UPDATE EXISTING LINKS
+                        // =====================================
+
+                        links.forEach { link ->
+
+                            if (link.id == 0L) {
+
+                                tripViewModel
+                                    .addItineraryLink(
+                                        ItineraryLinkEntity(
+                                            id = 0,
+                                            itineraryId =
+                                                itineraryId,
+                                            label =
+                                                link.label,
+                                            url =
+                                                link.url
+                                        )
+                                    )
+
+                            } else {
+
+                                val original =
+                                    savedLinks.find {
+                                        it.id == link.id
+                                    }
+
+                                if (
+                                    original != null &&
+                                    (
+                                            original.label !=
+                                                    link.label ||
+                                                    original.url !=
+                                                    link.url
+                                            )
+                                ) {
+
+                                    tripViewModel
+                                        .updateItineraryLink(
+                                            ItineraryLinkEntity(
+                                                id =
+                                                    link.id,
+                                                itineraryId =
+                                                    itineraryId,
+                                                label =
+                                                    link.label,
+                                                url =
+                                                    link.url
+                                            )
+                                        )
+                                }
+                            }
+                        }
+
+                        // =====================================
+                        // UPDATE ITINERARY
+                        // =====================================
+
+                        tripViewModel.updateItinerary(
+                            updatedItem,
+                            selectedDestinationIds
+                        ) {
+                            onItineraryUpdated()
+                        }
+                    }
                 },
 
                 enabled =
                     date != null &&
                             title.isNotBlank() &&
                             type.isNotBlank() &&
-                            destinationsLoaded,
+                            destinationsLoaded &&
+                            linksLoaded,
 
                 modifier =
                     Modifier.weight(1f)
             ) {
-
                 Text("Save")
             }
         }
@@ -1084,8 +1557,7 @@ fun EditItineraryScreen(
                                             millis
                                         )
                                         .atZone(
-                                            ZoneId
-                                                .systemDefault()
+                                            ZoneId.systemDefault()
                                         )
                                         .toLocalDate()
                             }
@@ -1094,7 +1566,6 @@ fun EditItineraryScreen(
                             false
                     }
                 ) {
-
                     Text("OK")
                 }
             },
@@ -1107,7 +1578,6 @@ fun EditItineraryScreen(
                             false
                     }
                 ) {
-
                     Text("Cancel")
                 }
             }
@@ -1156,7 +1626,6 @@ fun EditItineraryScreen(
                             false
                     }
                 ) {
-
                     Text("OK")
                 }
             },
@@ -1209,7 +1678,6 @@ fun EditItineraryScreen(
                         )
                     }
                 ) {
-
                     Text("Delete")
                 }
             },
@@ -1222,7 +1690,6 @@ fun EditItineraryScreen(
                             false
                     }
                 ) {
-
                     Text("Cancel")
                 }
             }

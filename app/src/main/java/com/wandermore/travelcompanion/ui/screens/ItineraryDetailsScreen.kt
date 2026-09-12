@@ -16,12 +16,12 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.Button
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -38,6 +38,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import com.wandermore.travelcompanion.database.ItineraryEntity
+import com.wandermore.travelcompanion.database.ItineraryLinkEntity
 import com.wandermore.travelcompanion.ui.components.itinerarySymbol
 import com.wandermore.travelcompanion.viewmodel.TripViewModel
 import java.net.URI
@@ -66,6 +67,14 @@ fun ItineraryDetailsScreen(
 
     var destinationsLoaded by remember {
         mutableStateOf(false)
+    }
+
+    // =========================================================
+    // ITINERARY LINKS STATE
+    // =========================================================
+
+    var itineraryLinks by remember {
+        mutableStateOf<List<ItineraryLinkEntity>>(emptyList())
     }
 
     // =========================================================
@@ -116,6 +125,24 @@ fun ItineraryDetailsScreen(
 
             destinationsLoaded = true
         }
+    }
+
+    // =========================================================
+    // LOAD ITINERARY LINKS
+    // =========================================================
+
+    LaunchedEffect(
+        itinerary.id
+    ) {
+
+        tripViewModel
+            .getItineraryLinks(
+                itinerary.id
+            )
+            .collect { links ->
+
+                itineraryLinks = links
+            }
     }
 
     // =========================================================
@@ -503,13 +530,99 @@ fun ItineraryDetailsScreen(
             }
 
             // -------------------------------------------------
-            // WEB LINK
+            // LINKS / DOCUMENTS
             //
-            // Read-only here. The link is edited from the
+            // Read-only here. Links are edited from the
             // Add/Edit Itinerary screens.
             // -------------------------------------------------
 
+            if (itineraryLinks.isNotEmpty()) {
+
+                Spacer(
+                    modifier =
+                        Modifier.height(10.dp)
+                )
+
+                DetailSectionCard {
+
+                    Column {
+
+                        Text(
+                            text = "Links / Documents",
+
+                            style =
+                                MaterialTheme.typography
+                                    .titleMedium,
+
+                            fontWeight =
+                                FontWeight.SemiBold,
+
+                            color =
+                                MaterialTheme.colorScheme
+                                    .primary
+                        )
+
+                        Spacer(
+                            modifier =
+                                Modifier.height(6.dp)
+                        )
+
+                        itineraryLinks.forEach { link ->
+
+                            Row(
+                                modifier =
+                                    Modifier.fillMaxWidth(),
+
+                                verticalAlignment =
+                                    Alignment.CenterVertically
+                            ) {
+
+                                Text(
+                                    text = link.label,
+
+                                    style =
+                                        MaterialTheme.typography
+                                            .bodyLarge,
+
+                                    fontWeight =
+                                        FontWeight.SemiBold,
+
+                                    color =
+                                        Color.White,
+
+                                    modifier =
+                                        Modifier.weight(1f)
+                                )
+
+                                TextButton(
+                                    onClick = {
+
+                                        openItineraryLink(
+                                            context,
+                                            link.url
+                                        )
+                                    }
+                                ) {
+                                    Text(
+                                        text = "Open",
+                                        color = Color.White
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // -------------------------------------------------
+            // LEGACY WEB LINK
+            //
+            // Kept temporarily for older itinerary items
+            // that still have a webLink value.
+            // -------------------------------------------------
+
             if (
+                itineraryLinks.isEmpty() &&
                 !itinerary.webLink
                     .isNullOrBlank()
             ) {
@@ -564,47 +677,12 @@ fun ItineraryDetailsScreen(
                         Button(
                             onClick = {
 
-                                try {
-
-                                    val uri =
-                                        URI(
-                                            itinerary.webLink!!
-                                                .trim()
-                                        )
-
-                                    if (
-                                        (uri.scheme.equals(
-                                            "http",
-                                            ignoreCase = true
-                                        ) ||
-                                                uri.scheme.equals(
-                                                    "https",
-                                                    ignoreCase = true
-                                                )) &&
-                                        !uri.host.isNullOrBlank()
-                                    ) {
-
-                                        val intent =
-                                            Intent(
-                                                Intent.ACTION_VIEW,
-                                                Uri.parse(
-                                                    itinerary.webLink!!
-                                                        .trim()
-                                                )
-                                            )
-
-                                        context.startActivity(
-                                            intent
-                                        )
-                                    }
-
-                                } catch (
-                                    _: Exception
-                                ) {
-                                    // Do nothing if the link
-                                    // cannot be opened safely.
-                                }
+                                openItineraryLink(
+                                    context,
+                                    itinerary.webLink!!
+                                )
                             },
+
                             modifier =
                                 Modifier.fillMaxWidth()
                         ) {
@@ -749,6 +827,56 @@ fun ItineraryDetailsScreen(
                 Text("Delete")
             }
         }
+    }
+}
+
+// =============================================================
+// OPEN ITINERARY LINK
+// =============================================================
+
+private fun openItineraryLink(
+    context: android.content.Context,
+    url: String
+) {
+
+    try {
+
+        val uri =
+            URI(
+                url.trim()
+            )
+
+        if (
+            (
+                    uri.scheme.equals(
+                        "http",
+                        ignoreCase = true
+                    ) ||
+                            uri.scheme.equals(
+                                "https",
+                                ignoreCase = true
+                            )
+                    ) &&
+            !uri.host.isNullOrBlank()
+        ) {
+
+            val intent =
+                Intent(
+                    Intent.ACTION_VIEW,
+                    Uri.parse(
+                        url.trim()
+                    )
+                )
+
+            context.startActivity(
+                intent
+            )
+        }
+
+    } catch (
+        _: Exception
+    ) {
+        // Do nothing if the link cannot be opened safely.
     }
 }
 

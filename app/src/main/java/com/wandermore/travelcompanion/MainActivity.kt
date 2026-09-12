@@ -51,6 +51,7 @@ class MainActivity : ComponentActivity() {
                                 database.todoDao(),
                                 database.activityDao(),
                                 database.itineraryDao(),
+                                database.itineraryLinkDao(),
                                 database.tripEstimateDao(),
                                 database.destinationDao(),
                                 database.itineraryDestinationDao(),

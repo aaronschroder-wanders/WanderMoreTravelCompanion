@@ -13,8 +13,12 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DropdownMenuItem
@@ -26,21 +30,28 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TimePicker
 import androidx.compose.material3.TimePickerDialog
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.onFocusEvent
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.wandermore.travelcompanion.database.ItineraryEntity
+import com.wandermore.travelcompanion.database.ItineraryLinkEntity
 import com.wandermore.travelcompanion.ui.components.DestinationSelector
 import com.wandermore.travelcompanion.viewmodel.TripViewModel
 import java.net.URI
@@ -50,6 +61,14 @@ import java.time.LocalDate
 import java.time.LocalTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+
+data class ItineraryLinkDraft(
+    val id: Long,
+    val label: String,
+    val url: String
+)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -93,22 +112,46 @@ fun AddItineraryScreen(
     }
 
     // =========================================================
-    // WEB LINK STATE
+    // LINKS / DOCUMENTS STATE
     // =========================================================
 
-    var webLink by remember {
+    var linkLabel by remember {
         mutableStateOf("")
     }
 
-    var editingWebLink by remember {
-        mutableStateOf(true)
-    }
-
-    var webLinkError by remember {
+    var linkUrl by remember {
         mutableStateOf("")
     }
 
-    val context = LocalContext.current
+    var linkError by remember {
+        mutableStateOf("")
+    }
+
+    var addingLink by remember {
+        mutableStateOf(false)
+    }
+
+    val links =
+        remember {
+            mutableStateListOf<ItineraryLinkDraft>()
+        }
+
+    val context =
+        LocalContext.current
+
+    val coroutineScope =
+        rememberCoroutineScope()
+
+    /*
+     * This requester belongs to the whole document editor.
+     *
+     * When the keyboard appears, we bring the complete
+     * editor into view rather than only the button.
+     */
+    val linkEditorBringIntoViewRequester =
+        remember {
+            BringIntoViewRequester()
+        }
 
     // =========================================================
     // DESTINATION STATE
@@ -117,16 +160,6 @@ fun AddItineraryScreen(
     var selectedDestinationIds by remember {
         mutableStateOf<Set<Long>>(emptySet())
     }
-
-    /*
-     * Use ALL ACTIVE destinations here.
-     *
-     * This means destinations created in Settings will appear
-     * even if they have not yet been associated with this trip.
-     *
-     * The selected destinations are associated with the trip
-     * when the itinerary item is saved.
-     */
 
     val destinations by
     tripViewModel
@@ -151,31 +184,38 @@ fun AddItineraryScreen(
         mutableStateOf(false)
     }
 
-    val itineraryTypes = listOf(
-        "Travel",
-        "Accommodation",
-        "Activity",
-        "Attraction",
-        "Arrival",
-        "Departure",
-        "Other"
-    )
+    val itineraryTypes =
+        listOf(
+            "Travel",
+            "Accommodation",
+            "Activity",
+            "Attraction",
+            "Arrival",
+            "Departure",
+            "Other"
+        )
 
     val dateFormatter =
-        DateTimeFormatter.ofPattern("dd MMM yyyy")
+        DateTimeFormatter.ofPattern(
+            "dd MMM yyyy"
+        )
 
     val timeFormatter =
-        DateTimeFormatter.ofPattern("HH:mm")
+        DateTimeFormatter.ofPattern(
+            "HH:mm"
+        )
 
     // =========================================================
-    // WEB LINK FUNCTIONS
+    // LINK FUNCTIONS
     // =========================================================
 
     fun isValidWebLink(
         link: String
     ): Boolean {
 
-        if (link.isBlank()) return false
+        if (link.isBlank()) {
+            return false
+        }
 
         return try {
 
@@ -199,31 +239,51 @@ fun AddItineraryScreen(
         }
     }
 
-    fun linkWebAddress() {
+    fun clearLinkEditor() {
 
-        val cleanedLink =
-            webLink.trim()
+        linkLabel = ""
+        linkUrl = ""
+        linkError = ""
+        addingLink = false
+    }
+
+    fun addLink() {
+
+        val cleanedLabel =
+            linkLabel.trim()
+
+        val cleanedUrl =
+            linkUrl.trim()
+
+        if (cleanedLabel.isBlank()) {
+
+            linkError =
+                "Please enter a label."
+
+            return
+        }
 
         if (
             !isValidWebLink(
-                cleanedLink
+                cleanedUrl
             )
         ) {
 
-            webLinkError =
+            linkError =
                 "Please enter a valid web link starting with https://"
 
-        } else {
-
-            webLink =
-                cleanedLink
-
-            webLinkError =
-                ""
-
-            editingWebLink =
-                false
+            return
         }
+
+        links.add(
+            ItineraryLinkDraft(
+                id = 0,
+                label = cleanedLabel,
+                url = cleanedUrl
+            )
+        )
+
+        clearLinkEditor()
     }
 
     fun openWebLink(
@@ -260,13 +320,34 @@ fun AddItineraryScreen(
     }
 
     // =========================================================
+    // BRING DOCUMENT EDITOR INTO VIEW
+    // =========================================================
+
+    LaunchedEffect(addingLink) {
+
+        if (addingLink) {
+
+            /*
+             * Give Compose a moment to place the editor in
+             * the layout before requesting it to scroll into
+             * view.
+             */
+            delay(100)
+
+            linkEditorBringIntoViewRequester
+                .bringIntoView()
+        }
+    }
+
+    // =========================================================
     // SCREEN
     // =========================================================
 
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .imePadding()
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .imePadding()
     ) {
 
         // =====================================================
@@ -274,13 +355,14 @@ fun AddItineraryScreen(
         // =====================================================
 
         Column(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth()
-                .verticalScroll(
-                    rememberScrollState()
-                )
-                .padding(16.dp)
+            modifier =
+                Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .verticalScroll(
+                        rememberScrollState()
+                    )
+                    .padding(16.dp)
         ) {
 
             // =================================================
@@ -288,27 +370,35 @@ fun AddItineraryScreen(
             // =================================================
 
             Text(
-                text = "Add Itinerary Item",
+                text =
+                    "Add Itinerary Item",
+
                 style =
-                    MaterialTheme.typography.headlineMedium
+                    MaterialTheme.typography
+                        .headlineMedium
             )
 
             Spacer(
-                modifier = Modifier.height(4.dp)
+                modifier =
+                    Modifier.height(4.dp)
             )
 
             Text(
                 text =
                     "Add a key event, stay or travel plan.",
+
                 style =
-                    MaterialTheme.typography.bodyMedium,
+                    MaterialTheme.typography
+                        .bodyMedium,
+
                 color =
                     MaterialTheme.colorScheme
                         .onSurfaceVariant
             )
 
             Spacer(
-                modifier = Modifier.height(20.dp)
+                modifier =
+                    Modifier.height(20.dp)
             )
 
             // =================================================
@@ -319,6 +409,7 @@ fun AddItineraryScreen(
                 onClick = {
                     showDatePicker = true
                 },
+
                 modifier =
                     Modifier.fillMaxWidth()
             ) {
@@ -336,7 +427,8 @@ fun AddItineraryScreen(
             }
 
             Spacer(
-                modifier = Modifier.height(12.dp)
+                modifier =
+                    Modifier.height(12.dp)
             )
 
             // =================================================
@@ -347,6 +439,7 @@ fun AddItineraryScreen(
                 onClick = {
                     showTimePicker = true
                 },
+
                 modifier =
                     Modifier.fillMaxWidth()
             ) {
@@ -364,7 +457,8 @@ fun AddItineraryScreen(
             }
 
             Spacer(
-                modifier = Modifier.height(12.dp)
+                modifier =
+                    Modifier.height(12.dp)
             )
 
             // =================================================
@@ -393,7 +487,8 @@ fun AddItineraryScreen(
             )
 
             Spacer(
-                modifier = Modifier.height(12.dp)
+                modifier =
+                    Modifier.height(12.dp)
             )
 
             // =================================================
@@ -401,7 +496,8 @@ fun AddItineraryScreen(
             // =================================================
 
             ExposedDropdownMenuBox(
-                expanded = typeExpanded,
+                expanded =
+                    typeExpanded,
 
                 onExpandedChange = {
                     typeExpanded =
@@ -445,7 +541,8 @@ fun AddItineraryScreen(
                 )
 
                 ExposedDropdownMenu(
-                    expanded = typeExpanded,
+                    expanded =
+                        typeExpanded,
 
                     onDismissRequest = {
                         typeExpanded = false
@@ -476,7 +573,8 @@ fun AddItineraryScreen(
             }
 
             Spacer(
-                modifier = Modifier.height(12.dp)
+                modifier =
+                    Modifier.height(12.dp)
             )
 
             // =================================================
@@ -500,7 +598,8 @@ fun AddItineraryScreen(
                 ) {
 
                     Text(
-                        text = "Booked",
+                        text =
+                            "Booked",
 
                         style =
                             MaterialTheme.typography
@@ -522,7 +621,8 @@ fun AddItineraryScreen(
                 }
 
                 Switch(
-                    checked = booked,
+                    checked =
+                        booked,
 
                     onCheckedChange = {
                         booked = it
@@ -531,7 +631,8 @@ fun AddItineraryScreen(
             }
 
             Spacer(
-                modifier = Modifier.height(12.dp)
+                modifier =
+                    Modifier.height(12.dp)
             )
 
             // =================================================
@@ -539,7 +640,8 @@ fun AddItineraryScreen(
             // =================================================
 
             OutlinedTextField(
-                value = nightsText,
+                value =
+                    nightsText,
 
                 onValueChange = {
 
@@ -548,7 +650,9 @@ fun AddItineraryScreen(
                             character.isDigit()
                         }
                     ) {
-                        nightsText = it
+
+                        nightsText =
+                            it
                     }
                 },
 
@@ -567,7 +671,8 @@ fun AddItineraryScreen(
             )
 
             Spacer(
-                modifier = Modifier.height(12.dp)
+                modifier =
+                    Modifier.height(12.dp)
             )
 
             // =================================================
@@ -615,142 +720,367 @@ fun AddItineraryScreen(
             )
 
             Spacer(
-                modifier = Modifier.height(12.dp)
+                modifier =
+                    Modifier.height(16.dp)
             )
 
             // =================================================
-            // WEB LINK
+            // LINKS / DOCUMENTS
             // =================================================
 
             Text(
-                text = "Web Link",
+                text =
+                    "Links / Documents",
+
                 style =
-                    MaterialTheme.typography.labelLarge
+                    MaterialTheme.typography
+                        .labelLarge
             )
 
             Spacer(
-                modifier = Modifier.height(8.dp)
+                modifier =
+                    Modifier.height(4.dp)
             )
 
-            if (
-                editingWebLink
-            ) {
+            Text(
+                text =
+                    "Add tickets, confirmations, timetables or other useful documents.",
 
-                OutlinedTextField(
-                    value =
-                        webLink,
+                style =
+                    MaterialTheme.typography
+                        .bodySmall,
 
-                    onValueChange = {
-                        webLink = it
-                        webLinkError = ""
-                    },
+                color =
+                    MaterialTheme.colorScheme
+                        .onSurfaceVariant
+            )
 
-                    label = {
-                        Text("Web Link")
-                    },
+            Spacer(
+                modifier =
+                    Modifier.height(10.dp)
+            )
 
-                    placeholder = {
-                        Text("Paste web link")
-                    },
+            // =================================================
+            // EXISTING LINKS
+            // =================================================
 
-                    isError =
-                        webLinkError.isNotBlank(),
+            links.forEach { link ->
 
-                    supportingText = {
+                Card(
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(
+                                bottom = 8.dp
+                            ),
 
-                        if (
-                            webLinkError.isNotBlank()
+                    colors =
+                        CardDefaults.cardColors(
+                            containerColor =
+                                MaterialTheme
+                                    .colorScheme
+                                    .surfaceVariant
+                        )
+                ) {
+
+                    Row(
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(
+                                    horizontal = 12.dp,
+                                    vertical = 8.dp
+                                ),
+
+                        verticalAlignment =
+                            Alignment.CenterVertically
+                    ) {
+
+                        Text(
+                            text =
+                                link.label,
+
+                            style =
+                                MaterialTheme.typography
+                                    .bodyLarge,
+
+                            fontWeight =
+                                FontWeight.SemiBold,
+
+                            modifier =
+                                Modifier.weight(1f)
+                        )
+
+                        TextButton(
+                            onClick = {
+
+                                openWebLink(
+                                    context,
+                                    link.url
+                                )
+                            }
+                        ) {
+
+                            Text("Open")
+                        }
+
+                        TextButton(
+                            onClick = {
+
+                                links.remove(link)
+                            }
                         ) {
 
                             Text(
-                                webLinkError
+                                text =
+                                    "Delete",
+
+                                color =
+                                    MaterialTheme.colorScheme
+                                        .error
                             )
                         }
-                    },
+                    }
+                }
+            }
 
-                    modifier =
-                        Modifier.fillMaxWidth(),
+            // =================================================
+            // ADD LINK / DOCUMENT BUTTON
+            // =================================================
 
-                    singleLine = true
-                )
-
-                Spacer(
-                    modifier = Modifier.height(8.dp)
-                )
+            if (!addingLink) {
 
                 Button(
                     onClick = {
-                        linkWebAddress()
+                        addingLink = true
                     },
 
                     modifier =
                         Modifier.fillMaxWidth()
                 ) {
 
-                    Text("Link")
+                    Text(
+                        "+ Add Link / Document"
+                    )
                 }
+            }
 
-            } else {
+            // =================================================
+            // NEW LINK EDITOR
+            // =================================================
 
-                Text(
-                    text = "✓ Link added",
-                    style =
-                        MaterialTheme.typography
-                            .bodyLarge
-                )
+            if (addingLink) {
 
-                Spacer(
-                    modifier = Modifier.height(8.dp)
-                )
-
-                Row(
+                Card(
                     modifier =
-                        Modifier.fillMaxWidth(),
+                        Modifier
+                            .fillMaxWidth()
+                            .bringIntoViewRequester(
+                                linkEditorBringIntoViewRequester
+                            ),
 
-                    horizontalArrangement =
-                        Arrangement.spacedBy(8.dp)
+                    colors =
+                        CardDefaults.cardColors(
+                            containerColor =
+                                MaterialTheme
+                                    .colorScheme
+                                    .surfaceVariant
+                        )
                 ) {
 
-                    Button(
-                        onClick = {
+                    Column(
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(12.dp)
+                    ) {
 
-                            openWebLink(
-                                context,
-                                webLink
+                        Text(
+                            text =
+                                "Add Link / Document",
+
+                            style =
+                                MaterialTheme.typography
+                                    .titleMedium,
+
+                            fontWeight =
+                                FontWeight.SemiBold
+                        )
+
+                        Spacer(
+                            modifier =
+                                Modifier.height(10.dp)
+                        )
+
+                        OutlinedTextField(
+                            value =
+                                linkLabel,
+
+                            onValueChange = {
+
+                                linkLabel = it
+                                linkError = ""
+                            },
+
+                            label = {
+                                Text(
+                                    "Document label"
+                                )
+                            },
+
+                            placeholder = {
+                                Text(
+                                    "e.g. Aaron — Train ticket"
+                                )
+                            },
+
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .onFocusEvent {
+                                            focusState ->
+
+                                        if (
+                                            focusState.isFocused
+                                        ) {
+
+                                            coroutineScope
+                                                .launch {
+
+                                                    delay(100)
+
+                                                    linkEditorBringIntoViewRequester
+                                                        .bringIntoView()
+                                                }
+                                        }
+                                    },
+
+                            singleLine = true
+                        )
+
+                        Spacer(
+                            modifier =
+                                Modifier.height(8.dp)
+                        )
+
+                        OutlinedTextField(
+                            value =
+                                linkUrl,
+
+                            onValueChange = {
+
+                                linkUrl = it
+                                linkError = ""
+                            },
+
+                            label = {
+                                Text("Web link")
+                            },
+
+                            placeholder = {
+                                Text("Paste web link")
+                            },
+
+                            isError =
+                                linkError.isNotBlank(),
+
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .onFocusEvent {
+                                            focusState ->
+
+                                        if (
+                                            focusState.isFocused
+                                        ) {
+
+                                            coroutineScope
+                                                .launch {
+
+                                                    delay(100)
+
+                                                    linkEditorBringIntoViewRequester
+                                                        .bringIntoView()
+                                                }
+                                        }
+                                    },
+
+                            singleLine = true
+                        )
+
+                        if (
+                            linkError.isNotBlank()
+                        ) {
+
+                            Spacer(
+                                modifier =
+                                    Modifier.height(4.dp)
                             )
-                        },
 
-                        modifier =
-                            Modifier.weight(1f)
-                    ) {
+                            Text(
+                                text =
+                                    linkError,
 
-                        Text("Open Link")
-                    }
+                                style =
+                                    MaterialTheme.typography
+                                        .bodySmall,
 
-                    Button(
-                        onClick = {
+                                color =
+                                    MaterialTheme.colorScheme
+                                        .error
+                            )
+                        }
 
-                            webLink =
-                                ""
+                        Spacer(
+                            modifier =
+                                Modifier.height(12.dp)
+                        )
 
-                            webLinkError =
-                                ""
+                        Button(
+                            onClick = {
+                                addLink()
+                            },
 
-                            editingWebLink =
-                                true
-                        },
+                            enabled =
+                                linkLabel
+                                    .trim()
+                                    .isNotEmpty() &&
+                                        linkUrl
+                                            .trim()
+                                            .isNotEmpty(),
 
-                        modifier =
-                            Modifier.weight(1f)
-                    ) {
+                            modifier =
+                                Modifier.fillMaxWidth()
+                        ) {
 
-                        Text("Change Link")
+                            Text(
+                                "+ Add Link / Document"
+                            )
+                        }
+
+                        Spacer(
+                            modifier =
+                                Modifier.height(8.dp)
+                        )
+
+                        OutlinedButton(
+                            onClick = {
+                                clearLinkEditor()
+                            },
+
+                            modifier =
+                                Modifier.fillMaxWidth()
+                        ) {
+
+                            Text("Cancel")
+                        }
                     }
                 }
             }
 
             Spacer(
-                modifier = Modifier.height(12.dp)
+                modifier =
+                    Modifier.height(16.dp)
             )
 
             // =================================================
@@ -758,7 +1088,8 @@ fun AddItineraryScreen(
             // =================================================
 
             OutlinedTextField(
-                value = notes,
+                value =
+                    notes,
 
                 onValueChange = {
                     notes = it
@@ -781,7 +1112,8 @@ fun AddItineraryScreen(
             )
 
             Spacer(
-                modifier = Modifier.height(20.dp)
+                modifier =
+                    Modifier.height(20.dp)
             )
         }
 
@@ -863,19 +1195,29 @@ fun AddItineraryScreen(
                                     },
 
                             webLink =
-                                webLink
-                                    .trim()
-                                    .ifBlank {
-                                        null
-                                    },
+                                null,
 
                             booked =
                                 booked
                         )
 
+                    val itineraryLinks =
+                        links.map { link ->
+
+                            ItineraryLinkEntity(
+                                id = 0,
+                                itineraryId = 0,
+                                label =
+                                    link.label,
+                                url =
+                                    link.url
+                            )
+                        }
+
                     tripViewModel.addItinerary(
                         itinerary,
-                        selectedDestinationIds
+                        selectedDestinationIds,
+                        itineraryLinks
                     )
 
                     onItineraryAdded()
