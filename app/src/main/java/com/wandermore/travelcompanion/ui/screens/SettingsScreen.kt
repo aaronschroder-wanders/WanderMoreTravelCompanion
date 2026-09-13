@@ -6,6 +6,7 @@ import android.net.Uri
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -61,14 +62,6 @@ fun SettingsScreen(
 
     // =========================================================
     // MIGRATE EXISTING PASSPORT LINKS
-    // =========================================================
-    //
-    // This moves any existing HTTP/HTTPS passport links from the
-    // old temporary preference file into the production file.
-    //
-    // Old content:// document URIs are deliberately ignored
-    // because they are device-specific and cannot be restored
-    // to another phone.
     // =========================================================
 
     remember {
@@ -159,12 +152,6 @@ fun SettingsScreen(
     // =========================================================
     // PRIMARY USER PASSPORT
     // =========================================================
-    //
-    // settingsRefreshKey is deliberately used as the remember
-    // key. After a successful restore, AppNavigation increments
-    // this value, causing these states to be recreated from the
-    // restored SharedPreferences values.
-    // =========================================================
 
     var primaryPassportLink by remember(settingsRefreshKey) {
         mutableStateOf(
@@ -237,7 +224,7 @@ fun SettingsScreen(
             .padding(16.dp),
 
         verticalArrangement =
-            Arrangement.spacedBy(12.dp)
+            Arrangement.spacedBy(10.dp)
     ) {
 
         // =====================================================
@@ -246,55 +233,46 @@ fun SettingsScreen(
 
         Text(
             text = "Settings",
-            style =
-                MaterialTheme.typography.headlineMedium
+            style = MaterialTheme.typography.headlineMedium,
+            modifier = Modifier.padding(
+                bottom = 4.dp
+            )
         )
 
         // =====================================================
         // CURRENCY
         // =====================================================
 
-        Text(
-            text = "CURRENCY",
-            style =
-                MaterialTheme.typography.labelLarge,
-
-            modifier = Modifier.padding(
-                top = 4.dp
-            )
+        SettingsSectionHeading(
+            text = "CURRENCY"
         )
 
-        // =====================================================
+        // -----------------------------------------------------
         // HOME CURRENCY
-        // =====================================================
+        // -----------------------------------------------------
 
         Card(
-            modifier =
-                Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth()
         ) {
 
             Column(
-                modifier =
-                    Modifier.padding(12.dp),
-
-                verticalArrangement =
-                    Arrangement.spacedBy(4.dp)
+                modifier = Modifier.padding(12.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp)
             ) {
 
                 Text(
                     text = "Home Currency",
-                    style =
-                        MaterialTheme.typography.titleMedium
+                    style = MaterialTheme.typography.titleMedium
                 )
 
                 Text(
                     text =
-                        "Used as the currency for new trips and calculations."
+                        "Used as the currency for new trips and calculations.",
+                    style = MaterialTheme.typography.bodyMedium
                 )
 
                 CurrencyDropdown(
-                    selectedCurrency =
-                        homeCurrency,
+                    selectedCurrency = homeCurrency,
 
                     onCurrencySelected = { currency ->
 
@@ -307,503 +285,216 @@ fun SettingsScreen(
             }
         }
 
-        // =====================================================
+        // -----------------------------------------------------
         // EXCHANGE RATES
-        // =====================================================
+        // -----------------------------------------------------
 
-        Card(
-            modifier =
-                Modifier.fillMaxWidth()
-        ) {
-
-            Button(
-                onClick =
-                    onExchangeRates,
-
-                modifier =
-                    Modifier.fillMaxWidth()
-            ) {
-
-                Text(
-                    text =
-                        "Currency Exchange Rates"
-                )
-            }
-        }
+        SettingsActionCard(
+            text = "Currency Exchange Rates",
+            onClick = onExchangeRates
+        )
 
         // =====================================================
         // DESTINATIONS
         // =====================================================
 
-        Card(
-            modifier =
-                Modifier.fillMaxWidth()
-        ) {
+        SettingsSectionHeading(
+            text = "DESTINATIONS"
+        )
 
-            Button(
-                onClick =
-                    onDestinations,
-
-                modifier =
-                    Modifier.fillMaxWidth()
-            ) {
-
-                Text(
-                    text =
-                        "Destinations"
-                )
-            }
-        }
+        SettingsActionCard(
+            text = "Manage Destinations",
+            onClick = onDestinations
+        )
 
         // =====================================================
         // DATA & BACKUP
         // =====================================================
 
-        Text(
-            text = "DATA & BACKUP",
-            style =
-                MaterialTheme.typography.labelLarge,
-
-            modifier = Modifier.padding(
-                top = 4.dp
-            )
+        SettingsSectionHeading(
+            text = "DATA & BACKUP"
         )
 
-        // =====================================================
-        // BACKUP
-        // =====================================================
+        SettingsActionCard(
+            text = "Backup to Google Drive",
+            onClick = onBackup
+        )
 
-        Card(
-            modifier =
-                Modifier.fillMaxWidth()
-        ) {
-
-            Button(
-                onClick =
-                    onBackup,
-
-                modifier =
-                    Modifier.fillMaxWidth()
-            ) {
-
-                Text(
-                    text =
-                        "Backup to Google Drive"
-                )
-            }
-        }
-
-        // =====================================================
-        // RESTORE
-        // =====================================================
-
-        Card(
-            modifier =
-                Modifier.fillMaxWidth()
-        ) {
-
-            Button(
-                onClick =
-                    onRestore,
-
-                modifier =
-                    Modifier.fillMaxWidth()
-            ) {
-
-                Text(
-                    text =
-                        "Restore from Google Drive"
-                )
-            }
-        }
+        SettingsActionCard(
+            text = "Restore from Google Drive",
+            onClick = onRestore
+        )
 
         // =====================================================
         // PASSPORT DOCUMENTS
         // =====================================================
 
+        SettingsSectionHeading(
+            text = "PASSPORT DOCUMENTS"
+        )
+
         Card(
-            modifier =
-                Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth()
         ) {
 
             Column(
-                modifier =
-                    Modifier.padding(12.dp),
-
-                verticalArrangement =
-                    Arrangement.spacedBy(10.dp)
+                modifier = Modifier.padding(12.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
 
                 Text(
                     text =
-                        "Passport Documents",
-
-                    style =
-                        MaterialTheme.typography.titleMedium
-                )
-
-                Text(
-                    text =
-                        "Add web links to the passports for both app users."
+                        "Add web links to the passports for both app users.",
+                    style = MaterialTheme.typography.bodyMedium
                 )
 
                 // =================================================
-                // PRIMARY USER PASSPORT
+                // PRIMARY USER
                 // =================================================
 
-                Text(
-                    text =
-                        "Primary User Passport",
+                PassportSettingRow(
+                    name = "Primary User",
 
-                    style =
-                        MaterialTheme.typography.titleSmall,
+                    link = primaryPassportLink,
 
-                    modifier = Modifier.padding(
-                        top = 2.dp
-                    )
+                    editing = editingPrimaryPassport,
+
+                    error = primaryPassportError,
+
+                    onLinkChanged = {
+                        primaryPassportLink = it
+                        primaryPassportError = ""
+                    },
+
+                    onSave = {
+
+                        val cleanedLink =
+                            primaryPassportLink.trim()
+
+                        if (
+                            !isValidWebLink(
+                                cleanedLink
+                            )
+                        ) {
+
+                            primaryPassportError =
+                                "Please enter a valid web link starting with https://"
+
+                        } else {
+
+                            preferences.edit()
+                                .putString(
+                                    "primary_user_passport_link",
+                                    cleanedLink
+                                )
+                                .apply()
+
+                            savedPrimaryPassportLink =
+                                cleanedLink
+
+                            primaryPassportLink =
+                                cleanedLink
+
+                            primaryPassportError =
+                                ""
+
+                            editingPrimaryPassport =
+                                false
+                        }
+                    },
+
+                    onOpen = {
+
+                        openWebLink(
+                            context,
+                            savedPrimaryPassportLink
+                        )
+                    },
+
+                    onChange = {
+
+                        primaryPassportLink = ""
+
+                        primaryPassportError = ""
+
+                        editingPrimaryPassport = true
+                    }
                 )
 
-                if (editingPrimaryPassport) {
-
-                    OutlinedTextField(
-                        value =
-                            primaryPassportLink,
-
-                        onValueChange = {
-                            primaryPassportLink = it
-                            primaryPassportError = ""
-                        },
-
-                        modifier =
-                            Modifier.fillMaxWidth(),
-
-                        label = {
-                            Text("Web Link")
-                        },
-
-                        placeholder = {
-                            Text("Paste web link")
-                        },
-
-                        singleLine = true,
-
-                        isError =
-                            primaryPassportError.isNotBlank()
-                    )
-
-                    if (
-                        primaryPassportError.isNotBlank()
-                    ) {
-
-                        Text(
-                            text =
-                                primaryPassportError,
-
-                            style =
-                                MaterialTheme.typography.bodySmall,
-
-                            color =
-                                MaterialTheme.colorScheme.error
-                        )
-                    }
-
-                    Button(
-                        onClick = {
-
-                            val cleanedLink =
-                                primaryPassportLink.trim()
-
-                            if (
-                                !isValidWebLink(
-                                    cleanedLink
-                                )
-                            ) {
-
-                                primaryPassportError =
-                                    "Please enter a valid web link starting with https://"
-
-                            } else {
-
-                                preferences.edit()
-                                    .putString(
-                                        "primary_user_passport_link",
-                                        cleanedLink
-                                    )
-                                    .apply()
-
-                                savedPrimaryPassportLink =
-                                    cleanedLink
-
-                                primaryPassportLink =
-                                    cleanedLink
-
-                                primaryPassportError =
-                                    ""
-
-                                editingPrimaryPassport =
-                                    false
-                            }
-                        },
-
-                        modifier =
-                            Modifier.fillMaxWidth(),
-
-                        enabled =
-                            primaryPassportLink
-                                .trim()
-                                .isNotEmpty()
-                    ) {
-
-                        Text(
-                            text =
-                                "Link Passport"
-                        )
-                    }
-
-                } else {
-
-                    Text(
-                        text =
-                            "✓ Passport linked",
-
-                        style =
-                            MaterialTheme.typography.bodyMedium,
-
-                        color =
-                            Color(0xFF008000)
-                    )
-
-                    Row(
-                        modifier =
-                            Modifier.fillMaxWidth(),
-
-                        horizontalArrangement =
-                            Arrangement.spacedBy(8.dp)
-                    ) {
-
-                        Button(
-                            onClick = {
-
-                                openWebLink(
-                                    context,
-                                    savedPrimaryPassportLink
-                                )
-                            },
-
-                            modifier =
-                                Modifier.weight(1f)
-                        ) {
-
-                            Text(
-                                text =
-                                    "Open Passport"
-                            )
-                        }
-
-                        Button(
-                            onClick = {
-
-                                primaryPassportLink =
-                                    ""
-
-                                primaryPassportError =
-                                    ""
-
-                                editingPrimaryPassport =
-                                    true
-                            },
-
-                            modifier =
-                                Modifier.weight(1f)
-                        ) {
-
-                            Text(
-                                text =
-                                    "Change Link"
-                            )
-                        }
-                    }
-                }
-
                 // =================================================
-                // TRAVEL PARTNER PASSPORT
+                // TRAVEL PARTNER
                 // =================================================
 
-                Text(
-                    text =
-                        "Travel Partner Passport",
+                PassportSettingRow(
+                    name = "Travel Partner",
 
-                    style =
-                        MaterialTheme.typography.titleSmall,
+                    link = travelPartnerPassportLink,
 
-                    modifier = Modifier.padding(
-                        top = 6.dp
-                    )
+                    editing =
+                        editingTravelPartnerPassport,
+
+                    error =
+                        travelPartnerPassportError,
+
+                    onLinkChanged = {
+                        travelPartnerPassportLink = it
+                        travelPartnerPassportError = ""
+                    },
+
+                    onSave = {
+
+                        val cleanedLink =
+                            travelPartnerPassportLink.trim()
+
+                        if (
+                            !isValidWebLink(
+                                cleanedLink
+                            )
+                        ) {
+
+                            travelPartnerPassportError =
+                                "Please enter a valid web link starting with https://"
+
+                        } else {
+
+                            preferences.edit()
+                                .putString(
+                                    "travel_partner_passport_link",
+                                    cleanedLink
+                                )
+                                .apply()
+
+                            savedTravelPartnerPassportLink =
+                                cleanedLink
+
+                            travelPartnerPassportLink =
+                                cleanedLink
+
+                            travelPartnerPassportError =
+                                ""
+
+                            editingTravelPartnerPassport =
+                                false
+                        }
+                    },
+
+                    onOpen = {
+
+                        openWebLink(
+                            context,
+                            savedTravelPartnerPassportLink
+                        )
+                    },
+
+                    onChange = {
+
+                        travelPartnerPassportLink = ""
+
+                        travelPartnerPassportError = ""
+
+                        editingTravelPartnerPassport = true
+                    }
                 )
-
-                if (editingTravelPartnerPassport) {
-
-                    OutlinedTextField(
-                        value =
-                            travelPartnerPassportLink,
-
-                        onValueChange = {
-                            travelPartnerPassportLink = it
-                            travelPartnerPassportError = ""
-                        },
-
-                        modifier =
-                            Modifier.fillMaxWidth(),
-
-                        label = {
-                            Text("Web Link")
-                        },
-
-                        placeholder = {
-                            Text("Paste web link")
-                        },
-
-                        singleLine = true,
-
-                        isError =
-                            travelPartnerPassportError
-                                .isNotBlank()
-                    )
-
-                    if (
-                        travelPartnerPassportError
-                            .isNotBlank()
-                    ) {
-
-                        Text(
-                            text =
-                                travelPartnerPassportError,
-
-                            style =
-                                MaterialTheme.typography.bodySmall,
-
-                            color =
-                                MaterialTheme.colorScheme.error
-                        )
-                    }
-
-                    Button(
-                        onClick = {
-
-                            val cleanedLink =
-                                travelPartnerPassportLink.trim()
-
-                            if (
-                                !isValidWebLink(
-                                    cleanedLink
-                                )
-                            ) {
-
-                                travelPartnerPassportError =
-                                    "Please enter a valid web link starting with https://"
-
-                            } else {
-
-                                preferences.edit()
-                                    .putString(
-                                        "travel_partner_passport_link",
-                                        cleanedLink
-                                    )
-                                    .apply()
-
-                                savedTravelPartnerPassportLink =
-                                    cleanedLink
-
-                                travelPartnerPassportLink =
-                                    cleanedLink
-
-                                travelPartnerPassportError =
-                                    ""
-
-                                editingTravelPartnerPassport =
-                                    false
-                            }
-                        },
-
-                        modifier =
-                            Modifier.fillMaxWidth(),
-
-                        enabled =
-                            travelPartnerPassportLink
-                                .trim()
-                                .isNotEmpty()
-                    ) {
-
-                        Text(
-                            text =
-                                "Link Passport"
-                        )
-                    }
-
-                } else {
-
-                    Text(
-                        text =
-                            "✓ Passport linked",
-
-                        style =
-                            MaterialTheme.typography.bodyMedium,
-
-                        color =
-                            Color(0xFF008000)
-                    )
-
-                    Row(
-                        modifier =
-                            Modifier.fillMaxWidth(),
-
-                        horizontalArrangement =
-                            Arrangement.spacedBy(8.dp)
-                    ) {
-
-                        Button(
-                            onClick = {
-
-                                openWebLink(
-                                    context,
-                                    savedTravelPartnerPassportLink
-                                )
-                            },
-
-                            modifier =
-                                Modifier.weight(1f)
-                        ) {
-
-                            Text(
-                                text =
-                                    "Open Passport"
-                            )
-                        }
-
-                        Button(
-                            onClick = {
-
-                                travelPartnerPassportLink =
-                                    ""
-
-                                travelPartnerPassportError =
-                                    ""
-
-                                editingTravelPartnerPassport =
-                                    true
-                            },
-
-                            modifier =
-                                Modifier.weight(1f)
-                        ) {
-
-                            Text(
-                                text =
-                                    "Change Link"
-                            )
-                        }
-                    }
-                }
             }
         }
 
@@ -812,38 +503,24 @@ fun SettingsScreen(
         // =====================================================
 
         Card(
-            modifier =
-                Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth()
         ) {
 
             Column(
-                modifier =
-                    Modifier.padding(12.dp),
-
-                verticalArrangement =
-                    Arrangement.spacedBy(6.dp)
+                modifier = Modifier.padding(12.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp)
             ) {
 
                 Text(
-                    text =
-                        "Wander More Work Less",
-
-                    style =
-                        MaterialTheme.typography.titleLarge,
-
-                    fontWeight =
-                        FontWeight.Bold,
-
-                    color =
-                        Color(0xFF00A6A6)
+                    text = "Wander More Work Less",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF00A6A6)
                 )
 
                 Text(
-                    text =
-                        "Travel videos, tips and adventures.",
-
-                    style =
-                        MaterialTheme.typography.bodyLarge
+                    text = "Travel videos, tips and adventures.",
+                    style = MaterialTheme.typography.bodyLarge
                 )
 
                 Button(
@@ -860,13 +537,11 @@ fun SettingsScreen(
                         context.startActivity(intent)
                     },
 
-                    modifier =
-                        Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth()
                 ) {
 
                     Text(
-                        text =
-                            "Visit our YouTube Channel"
+                        text = "Visit our YouTube Channel"
                     )
                 }
             }
@@ -877,14 +552,190 @@ fun SettingsScreen(
         // =====================================================
 
         Button(
-            onClick =
-                onBack
+            onClick = onBack,
+            modifier = Modifier.fillMaxWidth()
         ) {
 
             Text(
-                text =
-                    "Back"
+                text = "Back"
             )
+        }
+
+        Spacer(
+            modifier = Modifier.padding(
+                bottom = 4.dp
+            )
+        )
+    }
+}
+
+// =============================================================
+// SETTINGS SECTION HEADING
+// =============================================================
+
+@Composable
+private fun SettingsSectionHeading(
+    text: String
+) {
+
+    Text(
+        text = text,
+        style = MaterialTheme.typography.labelLarge,
+        fontWeight = FontWeight.SemiBold,
+        color = MaterialTheme.colorScheme.primary,
+        modifier = Modifier.padding(
+            top = 6.dp,
+            bottom = 1.dp
+        )
+    )
+}
+
+// =============================================================
+// SIMPLE SETTINGS ACTION CARD
+// =============================================================
+
+@Composable
+private fun SettingsActionCard(
+    text: String,
+    onClick: () -> Unit
+) {
+
+    Card(
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+
+        Text(
+            text = text,
+            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(
+                    horizontal = 12.dp,
+                    vertical = 14.dp
+                )
+        )
+    }
+}
+
+// =============================================================
+// PASSPORT SETTING ROW
+// =============================================================
+
+@Composable
+private fun PassportSettingRow(
+    name: String,
+    link: String,
+    editing: Boolean,
+    error: String,
+    onLinkChanged: (String) -> Unit,
+    onSave: () -> Unit,
+    onOpen: () -> Unit,
+    onChange: () -> Unit
+) {
+
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(6.dp)
+    ) {
+
+        // -----------------------------------------------------
+        // PERSON NAME
+        // -----------------------------------------------------
+
+        Text(
+            text = name,
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight.SemiBold
+        )
+
+        if (editing) {
+
+            // -------------------------------------------------
+            // EDITING
+            // -------------------------------------------------
+
+            OutlinedTextField(
+                value = link,
+
+                onValueChange = onLinkChanged,
+
+                modifier = Modifier.fillMaxWidth(),
+
+                label = {
+                    Text("Web Link")
+                },
+
+                placeholder = {
+                    Text("Paste web link")
+                },
+
+                singleLine = true,
+
+                isError =
+                    error.isNotBlank()
+            )
+
+            if (error.isNotBlank()) {
+
+                Text(
+                    text = error,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error
+                )
+            }
+
+            Button(
+                onClick = onSave,
+                modifier = Modifier.fillMaxWidth(),
+                enabled = link.trim().isNotEmpty()
+            ) {
+
+                Text(
+                    text = "Save Link"
+                )
+            }
+
+        } else {
+
+            // -------------------------------------------------
+            // LINKED
+            // -------------------------------------------------
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+
+                Text(
+                    text = "✓ Linked",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(
+                            vertical = 10.dp
+                        )
+                )
+
+                Button(
+                    onClick = onOpen
+                ) {
+
+                    Text(
+                        text = "Open"
+                    )
+                }
+
+                Button(
+                    onClick = onChange
+                ) {
+
+                    Text(
+                        text = "Change"
+                    )
+                }
+            }
         }
     }
 }
