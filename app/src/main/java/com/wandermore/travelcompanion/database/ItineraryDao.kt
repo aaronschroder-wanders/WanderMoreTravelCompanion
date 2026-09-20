@@ -56,6 +56,22 @@ interface ItineraryDao {
     suspend fun getAllItineraryForBackup(): List<ItineraryEntity>
 
     // ---------------------------------------------------------
+    // GET ITINERARY ITEMS FOR CSV EXPORT
+    // ---------------------------------------------------------
+
+    @Query(
+        """
+        SELECT *
+        FROM itinerary
+        WHERE tripId = :tripId
+        ORDER BY date ASC, sortOrder ASC, time ASC
+        """
+    )
+    suspend fun getItineraryForExport(
+        tripId: Long
+    ): List<ItineraryEntity>
+
+    // ---------------------------------------------------------
     // GET ONE ITINERARY ITEM
     // ---------------------------------------------------------
 

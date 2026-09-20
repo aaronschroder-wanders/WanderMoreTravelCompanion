@@ -443,6 +443,114 @@ class BackupRepository(
     }
 
     // ---------------------------------------------------------
+    // CREATE ITINERARY CSV
+    // ---------------------------------------------------------
+
+    suspend fun createItineraryCsv(
+        tripId: Long
+    ): String {
+
+        val trip =
+            database.tripDao()
+                .getAllTripsForBackup()
+                .firstOrNull {
+                    it.id == tripId
+                }
+                ?: throw IllegalArgumentException(
+                    "Trip not found."
+                )
+
+        val itinerary =
+            database.itineraryDao()
+                .getItineraryForExport(tripId)
+
+        val csv =
+            StringBuilder()
+
+        // -----------------------------------------------------
+        // HEADER
+        // -----------------------------------------------------
+
+        csv.append(
+            "Trip,Date,Time,Title,Type,Nights,Destination,Notes,Booked"
+        )
+
+        csv.append('\n')
+
+        // -----------------------------------------------------
+        // ITINERARY
+        // -----------------------------------------------------
+
+        itinerary.forEach { item ->
+
+            val destinations =
+                database.itineraryDestinationDao()
+                    .getDestinationsForItinerary(
+                        item.id
+                    )
+                    .joinToString("; ") {
+                        it.name
+                    }
+
+            csv.append(
+                csvValue(trip.name)
+            )
+
+            csv.append(',')
+
+            csv.append(
+                csvValue(item.date.toString())
+            )
+
+            csv.append(',')
+
+            csv.append(
+                csvValue(item.time?.toString() ?: "")
+            )
+
+            csv.append(',')
+
+            csv.append(
+                csvValue(item.title)
+            )
+
+            csv.append(',')
+
+            csv.append(
+                csvValue(item.type)
+            )
+
+            csv.append(',')
+
+            csv.append(
+                csvValue(item.nights?.toString() ?: "")
+            )
+
+            csv.append(',')
+
+            csv.append(
+                csvValue(destinations)
+            )
+
+            csv.append(',')
+
+            csv.append(
+                csvValue(item.notes ?: "")
+            )
+
+            csv.append(',')
+
+            csv.append(
+                csvValue(item.booked.toString())
+            )
+
+            csv.append('\n')
+        }
+
+        return csv.toString()
+    }
+
+    // ---------------------------------------------------------
     // CSV VALUE ESCAPING
     // ---------------------------------------------------------
     //

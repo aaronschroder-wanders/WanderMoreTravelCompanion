@@ -42,6 +42,7 @@ fun SettingsScreen(
     onBackup: () -> Unit,
     onRestore: () -> Unit,
     onExportTripExpenses: () -> Unit,
+    onExportItinerary: () -> Unit,
     onBack: () -> Unit
 ) {
     val homeCurrency by userSettingsViewModel
@@ -309,29 +310,6 @@ fun SettingsScreen(
         )
 
         // =====================================================
-        // DATA & BACKUP
-        // =====================================================
-
-        SettingsSectionHeading(
-            text = "DATA & BACKUP"
-        )
-
-        SettingsActionCard(
-            text = "Backup to Google Drive",
-            onClick = onBackup
-        )
-
-        SettingsActionCard(
-            text = "Restore from Google Drive",
-            onClick = onRestore
-        )
-
-        SettingsActionCard(
-            text = "Export Trip Expenses (CSV)",
-            onClick = onExportTripExpenses
-        )
-
-        // =====================================================
         // PASSPORT DOCUMENTS
         // =====================================================
 
@@ -503,6 +481,34 @@ fun SettingsScreen(
                 )
             }
         }
+
+        // =====================================================
+        // DATA & BACKUP
+        // =====================================================
+
+        SettingsSectionHeading(
+            text = "DATA & BACKUP"
+        )
+
+        SettingsActionCard(
+            text = "Backup to Google Drive",
+            onClick = onBackup
+        )
+
+        SettingsActionCard(
+            text = "Restore from Google Drive",
+            onClick = onRestore
+        )
+
+        SettingsActionCard(
+            text = "Export Trip Expenses (CSV)",
+            onClick = onExportTripExpenses
+        )
+
+        SettingsActionCard(
+            text = "Export Itinerary (CSV)",
+            onClick = onExportItinerary
+        )
 
         // =====================================================
         // WANDER MORE WORK LESS

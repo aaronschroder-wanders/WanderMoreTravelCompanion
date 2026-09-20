@@ -108,6 +108,10 @@ fun AppNavigation(
         mutableStateOf(0)
     }
 
+    // =========================================================
+    // EXPENSE CSV EXPORT STATE
+    // =========================================================
+
     var showExpenseExportDialog by remember {
         mutableStateOf(false)
     }
@@ -117,6 +121,22 @@ fun AppNavigation(
     }
 
     var selectedExpenseExportTripId by remember {
+        mutableStateOf<Long?>(null)
+    }
+
+    // =========================================================
+    // ITINERARY CSV EXPORT STATE
+    // =========================================================
+
+    var showItineraryExportDialog by remember {
+        mutableStateOf(false)
+    }
+
+    var itineraryExportTrips by remember {
+        mutableStateOf(emptyList<TripEntity>())
+    }
+
+    var selectedItineraryExportTripId by remember {
         mutableStateOf<Long?>(null)
     }
 
@@ -171,9 +191,10 @@ fun AppNavigation(
             }
         }
 
+
     // =========================================================
-// TRIP EXPENSE CSV FILE CREATION
-// =========================================================
+    // TRIP EXPENSE CSV FILE CREATION
+    // =========================================================
 
     val expenseCsvLauncher =
         rememberLauncherForActivityResult(
@@ -228,6 +249,65 @@ fun AppNavigation(
             }
         }
 
+
+    // =========================================================
+    // ITINERARY CSV FILE CREATION
+    // =========================================================
+
+    val itineraryCsvLauncher =
+        rememberLauncherForActivityResult(
+            contract =
+                ActivityResultContracts.CreateDocument(
+                    "text/csv"
+                )
+        ) { uri: Uri? ->
+
+            if (uri != null) {
+
+                val tripId =
+                    selectedItineraryExportTripId
+
+                if (tripId != null) {
+
+                    coroutineScope.launch {
+
+                        try {
+
+                            val csv =
+                                backupRepository.createItineraryCsv(
+                                    tripId
+                                )
+
+                            context.contentResolver
+                                .openOutputStream(uri)
+                                ?.bufferedWriter()
+                                ?.use { writer ->
+
+                                    writer.write(csv)
+                                }
+
+                            Toast.makeText(
+                                context,
+                                "Itinerary CSV Export Successful",
+                                Toast.LENGTH_SHORT
+                            ).show()
+
+                        } catch (
+                            exception: Exception
+                        ) {
+
+                            Toast.makeText(
+                                context,
+                                "Unable to export itinerary",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    }
+                }
+            }
+        }
+
+
     // =========================================================
     // RESTORE FILE PICKER
     // =========================================================
@@ -269,9 +349,10 @@ fun AppNavigation(
             }
         }
 
+
     // =========================================================
-// TRIP EXPENSE CSV SELECTION DIALOG
-// =========================================================
+    // TRIP EXPENSE CSV SELECTION DIALOG
+    // =========================================================
 
     if (showExpenseExportDialog) {
 
@@ -400,6 +481,140 @@ fun AppNavigation(
             }
         )
     }
+
+
+    // =========================================================
+    // ITINERARY CSV SELECTION DIALOG
+    // =========================================================
+
+    if (showItineraryExportDialog) {
+
+        AlertDialog(
+
+            onDismissRequest = {
+
+                showItineraryExportDialog = false
+            },
+
+            title = {
+
+                Text(
+                    text = "Export Itinerary"
+                )
+            },
+
+            text = {
+
+                Column {
+
+                    Text(
+                        text =
+                            "Select the trip you want to export:",
+                        modifier = Modifier.padding(
+                            bottom = 8.dp
+                        )
+                    )
+
+                    itineraryExportTrips.forEach { trip ->
+
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(
+                                    vertical = 4.dp
+                                )
+                        ) {
+
+                            RadioButton(
+                                selected =
+                                    selectedItineraryExportTripId ==
+                                            trip.id,
+
+                                onClick = {
+
+                                    selectedItineraryExportTripId =
+                                        trip.id
+                                }
+                            )
+
+                            Text(
+                                text = trip.name,
+                                modifier = Modifier
+                                    .padding(
+                                        start = 8.dp
+                                    )
+                                    .weight(1f)
+                                    .align(
+                                        androidx.compose.ui.Alignment.CenterVertically
+                                    )
+                            )
+                        }
+                    }
+                }
+            },
+
+            confirmButton = {
+
+                TextButton(
+                    enabled =
+                        selectedItineraryExportTripId != null,
+
+                    onClick = {
+
+                        val trip =
+                            itineraryExportTrips
+                                .firstOrNull {
+                                    it.id ==
+                                            selectedItineraryExportTripId
+                                }
+
+                        if (trip != null) {
+
+                            val safeTripName =
+                                trip.name
+                                    .replace(
+                                        Regex("[^A-Za-z0-9 _-]"),
+                                        "_"
+                                    )
+                                    .trim()
+
+                            val filename =
+                                "${safeTripName}_Itinerary.csv"
+
+                            showItineraryExportDialog =
+                                false
+
+                            itineraryCsvLauncher.launch(
+                                filename
+                            )
+                        }
+                    }
+                ) {
+
+                    Text(
+                        text = "Export"
+                    )
+                }
+            },
+
+            dismissButton = {
+
+                TextButton(
+                    onClick = {
+
+                        showItineraryExportDialog =
+                            false
+                    }
+                ) {
+
+                    Text(
+                        text = "Cancel"
+                    )
+                }
+            }
+        )
+    }
+
 
     Scaffold(
         modifier = Modifier.fillMaxSize()
@@ -673,6 +888,22 @@ fun AppNavigation(
                                 true
                         }
                     },
+
+                    onExportItinerary = {
+
+                        coroutineScope.launch {
+
+                            itineraryExportTrips =
+                                database.tripDao()
+                                    .getAllTripsForBackup()
+
+                            selectedItineraryExportTripId =
+                                null
+
+                            showItineraryExportDialog =
+                                true
+                        }
+                    }
                 )
             }
 
