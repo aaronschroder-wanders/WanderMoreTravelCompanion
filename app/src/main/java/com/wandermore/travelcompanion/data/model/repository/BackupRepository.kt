@@ -32,9 +32,6 @@ class BackupRepository(
 
     // ---------------------------------------------------------
     // MIGRATE OLD DOCUMENT TEST PREFERENCES
-    //
-    // This preserves the passport links already saved during
-    // testing before we renamed the preferences file.
     // ---------------------------------------------------------
 
     private fun migrateOldDocumentPreferences() {
@@ -334,6 +331,145 @@ class BackupRepository(
             BackupData.serializer(),
             backup
         )
+    }
+
+    // ---------------------------------------------------------
+    // CREATE TRIP EXPENSES CSV
+    // ---------------------------------------------------------
+
+    suspend fun createExpensesCsv(
+        tripId: Long
+    ): String {
+
+        val trip =
+            database.tripDao()
+                .getAllTripsForBackup()
+                .firstOrNull {
+                    it.id == tripId
+                }
+                ?: throw IllegalArgumentException(
+                    "Trip not found."
+                )
+
+        val expenses =
+            database.expenseDao()
+                .getExpensesForTrip(tripId)
+                .first()
+
+        val csv =
+            StringBuilder()
+
+        // -----------------------------------------------------
+        // HEADER
+        // -----------------------------------------------------
+
+        csv.append(
+            "Trip,Date,Description,Category,Amount,Currency," +
+                    "Exchange Rate,Home Currency Amount,Home Currency,Nights"
+        )
+
+        csv.append('\n')
+
+        // -----------------------------------------------------
+        // EXPENSES
+        // -----------------------------------------------------
+
+        expenses.forEach { expense ->
+
+            csv.append(
+                csvValue(trip.name)
+            )
+
+            csv.append(',')
+
+            csv.append(
+                csvValue(expense.date.toString())
+            )
+
+            csv.append(',')
+
+            csv.append(
+                csvValue(expense.description)
+            )
+
+            csv.append(',')
+
+            csv.append(
+                csvValue(expense.category)
+            )
+
+            csv.append(',')
+
+            csv.append(
+                csvValue(expense.amount.toString())
+            )
+
+            csv.append(',')
+
+            csv.append(
+                csvValue(expense.currency)
+            )
+
+            csv.append(',')
+
+            csv.append(
+                csvValue(expense.exchangeRate.toString())
+            )
+
+            csv.append(',')
+
+            csv.append(
+                csvValue(expense.convertedAmount.toString())
+            )
+
+            csv.append(',')
+
+            csv.append(
+                csvValue(expense.homeCurrency)
+            )
+
+            csv.append(',')
+
+            csv.append(
+                csvValue(
+                    expense.numberOfNights?.toString() ?: ""
+                )
+            )
+
+            csv.append('\n')
+        }
+
+        return csv.toString()
+    }
+
+    // ---------------------------------------------------------
+    // CSV VALUE ESCAPING
+    // ---------------------------------------------------------
+    //
+    // Values containing commas, quotation marks or line breaks
+    // are enclosed in quotation marks as required by CSV format.
+    // ---------------------------------------------------------
+
+    private fun csvValue(
+        value: String
+    ): String {
+
+        if (
+            value.contains(',') ||
+            value.contains('"') ||
+            value.contains('\n') ||
+            value.contains('\r')
+        ) {
+
+            return "\"" +
+                    value.replace(
+                        "\"",
+                        "\"\""
+                    ) +
+                    "\""
+        }
+
+        return value
     }
 
     // ---------------------------------------------------------

@@ -41,6 +41,7 @@ fun SettingsScreen(
     onDestinations: () -> Unit,
     onBackup: () -> Unit,
     onRestore: () -> Unit,
+    onExportTripExpenses: () -> Unit,
     onBack: () -> Unit
 ) {
     val homeCurrency by userSettingsViewModel
@@ -323,6 +324,11 @@ fun SettingsScreen(
         SettingsActionCard(
             text = "Restore from Google Drive",
             onClick = onRestore
+        )
+
+        SettingsActionCard(
+            text = "Export Trip Expenses (CSV)",
+            onClick = onExportTripExpenses
         )
 
         // =====================================================
@@ -639,10 +645,6 @@ private fun PassportSettingRow(
         verticalArrangement = Arrangement.spacedBy(6.dp)
     ) {
 
-        // -----------------------------------------------------
-        // PERSON NAME
-        // -----------------------------------------------------
-
         Text(
             text = name,
             style = MaterialTheme.typography.titleSmall,
@@ -650,10 +652,6 @@ private fun PassportSettingRow(
         )
 
         if (editing) {
-
-            // -------------------------------------------------
-            // EDITING
-            // -------------------------------------------------
 
             OutlinedTextField(
                 value = link,
@@ -697,10 +695,6 @@ private fun PassportSettingRow(
             }
 
         } else {
-
-            // -------------------------------------------------
-            // LINKED
-            // -------------------------------------------------
 
             Row(
                 modifier = Modifier.fillMaxWidth(),

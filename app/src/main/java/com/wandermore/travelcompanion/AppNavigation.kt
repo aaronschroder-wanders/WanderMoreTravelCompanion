@@ -7,11 +7,14 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.RadioButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -34,6 +37,7 @@ import com.wandermore.travelcompanion.database.ExpenseEntity
 import com.wandermore.travelcompanion.database.ItineraryEntity
 import com.wandermore.travelcompanion.database.TodoEntity
 import com.wandermore.travelcompanion.database.TripEstimateEntity
+import com.wandermore.travelcompanion.database.TripEntity
 import com.wandermore.travelcompanion.model.Trip
 import com.wandermore.travelcompanion.ui.screens.ActivitiesScreen
 import com.wandermore.travelcompanion.ui.screens.AddActivityScreen
@@ -104,6 +108,18 @@ fun AppNavigation(
         mutableStateOf(0)
     }
 
+    var showExpenseExportDialog by remember {
+        mutableStateOf(false)
+    }
+
+    var expenseExportTrips by remember {
+        mutableStateOf(emptyList<TripEntity>())
+    }
+
+    var selectedExpenseExportTripId by remember {
+        mutableStateOf<Long?>(null)
+    }
+
     val backupRepository =
         remember(
             database,
@@ -155,6 +171,62 @@ fun AppNavigation(
             }
         }
 
+    // =========================================================
+// TRIP EXPENSE CSV FILE CREATION
+// =========================================================
+
+    val expenseCsvLauncher =
+        rememberLauncherForActivityResult(
+            contract =
+                ActivityResultContracts.CreateDocument(
+                    "text/csv"
+                )
+        ) { uri: Uri? ->
+
+            if (uri != null) {
+
+                val tripId =
+                    selectedExpenseExportTripId
+
+                if (tripId != null) {
+
+                    coroutineScope.launch {
+
+                        try {
+
+                            val csv =
+                                backupRepository.createExpensesCsv(
+                                    tripId
+                                )
+
+                            context.contentResolver
+                                .openOutputStream(uri)
+                                ?.bufferedWriter()
+                                ?.use { writer ->
+
+                                    writer.write(csv)
+                                }
+
+                            Toast.makeText(
+                                context,
+                                "Expense CSV Export Successful",
+                                Toast.LENGTH_SHORT
+                            ).show()
+
+                        } catch (
+                            exception: Exception
+                        ) {
+
+                            Toast.makeText(
+                                context,
+                                "Unable to export expenses",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    }
+                }
+            }
+        }
 
     // =========================================================
     // RESTORE FILE PICKER
@@ -197,6 +269,137 @@ fun AppNavigation(
             }
         }
 
+    // =========================================================
+// TRIP EXPENSE CSV SELECTION DIALOG
+// =========================================================
+
+    if (showExpenseExportDialog) {
+
+        AlertDialog(
+
+            onDismissRequest = {
+
+                showExpenseExportDialog = false
+            },
+
+            title = {
+
+                Text(
+                    text = "Export Trip Expenses"
+                )
+            },
+
+            text = {
+
+                Column {
+
+                    Text(
+                        text =
+                            "Select the trip you want to export:",
+                        modifier = Modifier.padding(
+                            bottom = 8.dp
+                        )
+                    )
+
+                    expenseExportTrips.forEach { trip ->
+
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(
+                                    vertical = 4.dp
+                                )
+                        ) {
+
+                            RadioButton(
+                                selected =
+                                    selectedExpenseExportTripId ==
+                                            trip.id,
+
+                                onClick = {
+
+                                    selectedExpenseExportTripId =
+                                        trip.id
+                                }
+                            )
+
+                            Text(
+                                text = trip.name,
+                                modifier = Modifier
+                                    .padding(
+                                        start = 8.dp
+                                    )
+                                    .weight(1f)
+                                    .align(
+                                        androidx.compose.ui.Alignment.CenterVertically
+                                    )
+                            )
+                        }
+                    }
+                }
+            },
+
+            confirmButton = {
+
+                TextButton(
+                    enabled =
+                        selectedExpenseExportTripId != null,
+
+                    onClick = {
+
+                        val trip =
+                            expenseExportTrips
+                                .firstOrNull {
+                                    it.id ==
+                                            selectedExpenseExportTripId
+                                }
+
+                        if (trip != null) {
+
+                            val safeTripName =
+                                trip.name
+                                    .replace(
+                                        Regex("[^A-Za-z0-9 _-]"),
+                                        "_"
+                                    )
+                                    .trim()
+
+                            val filename =
+                                "${safeTripName}_Expenses.csv"
+
+                            showExpenseExportDialog =
+                                false
+
+                            expenseCsvLauncher.launch(
+                                filename
+                            )
+                        }
+                    }
+                ) {
+
+                    Text(
+                        text = "Export"
+                    )
+                }
+            },
+
+            dismissButton = {
+
+                TextButton(
+                    onClick = {
+
+                        showExpenseExportDialog =
+                            false
+                    }
+                ) {
+
+                    Text(
+                        text = "Cancel"
+                    )
+                }
+            }
+        )
+    }
 
     Scaffold(
         modifier = Modifier.fillMaxSize()
@@ -453,7 +656,23 @@ fun AppNavigation(
                     onBack = {
 
                         navController.popBackStack()
-                    }
+                    },
+
+                    onExportTripExpenses = {
+
+                        coroutineScope.launch {
+
+                            expenseExportTrips =
+                                database.tripDao()
+                                    .getAllTripsForBackup()
+
+                            selectedExpenseExportTripId =
+                                null
+
+                            showExpenseExportDialog =
+                                true
+                        }
+                    },
                 )
             }
 
