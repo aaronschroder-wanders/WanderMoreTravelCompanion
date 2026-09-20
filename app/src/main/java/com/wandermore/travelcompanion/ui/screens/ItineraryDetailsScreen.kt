@@ -4,6 +4,7 @@ import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -16,30 +17,32 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.Button
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.repeatOnLifecycle
+import com.wandermore.travelcompanion.database.ActivityEntity
 import com.wandermore.travelcompanion.database.ItineraryEntity
 import com.wandermore.travelcompanion.database.ItineraryLinkEntity
 import com.wandermore.travelcompanion.ui.components.itinerarySymbol
+import com.wandermore.travelcompanion.util.formatMoney
 import com.wandermore.travelcompanion.viewmodel.TripViewModel
 import java.net.URI
 import java.time.format.DateTimeFormatter
@@ -53,57 +56,25 @@ fun ItineraryDetailsScreen(
     onBack: () -> Unit
 ) {
 
-    var showDeleteDialog by remember {
-        mutableStateOf(false)
-    }
+    val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
 
-    // =========================================================
-    // DESTINATION STATE
-    // =========================================================
+    // ---------------------------------------------------------
+    // DESTINATIONS
+    // ---------------------------------------------------------
 
     var destinationNames by remember {
         mutableStateOf<List<String>>(emptyList())
     }
 
-    var destinationsLoaded by remember {
-        mutableStateOf(false)
-    }
-
-    // =========================================================
-    // ITINERARY LINKS STATE
-    // =========================================================
-
-    var itineraryLinks by remember {
-        mutableStateOf<List<ItineraryLinkEntity>>(emptyList())
-    }
-
-    // =========================================================
-    // CONTEXT
-    // =========================================================
-
-    val context = LocalContext.current
-
-    // =========================================================
-    // LIFECYCLE
-    // =========================================================
-
-    val lifecycleOwner =
-        LocalLifecycleOwner.current
-
-    // =========================================================
-    // LOAD DESTINATIONS
-    // =========================================================
-
     LaunchedEffect(
-        lifecycleOwner,
-        itinerary.id
+        itinerary.id,
+        lifecycleOwner
     ) {
 
         lifecycleOwner.lifecycle.repeatOnLifecycle(
-            Lifecycle.State.RESUMED
+            Lifecycle.State.STARTED
         ) {
-
-            destinationsLoaded = false
 
             val destinationIds =
                 tripViewModel
@@ -111,7 +82,7 @@ fun ItineraryDetailsScreen(
                         itinerary.id
                     )
 
-            val names =
+            destinationNames =
                 destinationIds.mapNotNull { destinationId ->
 
                     tripViewModel
@@ -120,48 +91,528 @@ fun ItineraryDetailsScreen(
                         )
                         ?.name
                 }
-
-            destinationNames = names
-
-            destinationsLoaded = true
         }
     }
 
-    // =========================================================
-    // LOAD ITINERARY LINKS
-    // =========================================================
+    // ---------------------------------------------------------
+    // LINKS / DOCUMENTS
+    // ---------------------------------------------------------
 
-    LaunchedEffect(
-        itinerary.id
-    ) {
+    val links by tripViewModel
+        .getItineraryLinks(itinerary.id)
+        .collectAsState(initial = emptyList())
 
-        tripViewModel
-            .getItineraryLinks(
-                itinerary.id
-            )
-            .collect { links ->
+    // ---------------------------------------------------------
+    // LINKED ACTIVITY
+    //
+    // Activity-created itinerary items retain the Activity ID.
+    // The Activity remains the source of truth for estimated cost.
+    // ---------------------------------------------------------
 
-                itineraryLinks = links
+    var linkedActivity by remember {
+        mutableStateOf<ActivityEntity?>(null)
+    }
+
+    LaunchedEffect(itinerary.activityId) {
+
+        linkedActivity =
+            itinerary.activityId?.let { activityId ->
+                tripViewModel.getActivityById(activityId)
             }
     }
 
-    // =========================================================
-    // FORMATTERS
-    // =========================================================
+    // ---------------------------------------------------------
+    // TRIP HOME CURRENCY
+    //
+    // Needed to display the converted Activity cost using the
+    // same formatting as the Activities screen.
+    // ---------------------------------------------------------
 
-    val dateFormatter =
-        DateTimeFormatter.ofPattern(
-            "EEEE, dd MMM yyyy"
-        )
+    var tripHomeCurrency by remember {
+        mutableStateOf("NZD")
+    }
 
-    val timeFormatter =
-        DateTimeFormatter.ofPattern(
-            "HH:mm"
-        )
+    LaunchedEffect(itinerary.tripId) {
 
-    // =========================================================
+        val trip =
+            tripViewModel.getTripById(
+                itinerary.tripId
+            )
+
+        if (trip != null) {
+            tripHomeCurrency = trip.homeCurrency
+        }
+    }
+
+    // ---------------------------------------------------------
     // DELETE CONFIRMATION
-    // =========================================================
+    // ---------------------------------------------------------
+
+    var showDeleteDialog by remember {
+        mutableStateOf(false)
+    }
+
+    // ---------------------------------------------------------
+    // SCREEN
+    // ---------------------------------------------------------
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+    ) {
+
+        Text(
+            text = "Itinerary Item",
+            style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.Bold
+        )
+
+        Spacer(
+            modifier = Modifier.height(12.dp)
+        )
+
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth()
+                .verticalScroll(
+                    rememberScrollState()
+                ),
+            verticalArrangement =
+                Arrangement.spacedBy(12.dp)
+        ) {
+
+            // -----------------------------------------------------
+            // TITLE / TYPE / BOOKED
+            // -----------------------------------------------------
+
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors =
+                    CardDefaults.cardColors(
+                        containerColor =
+                            MaterialTheme.colorScheme
+                                .surfaceContainer
+                    )
+            ) {
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    verticalAlignment =
+                        Alignment.CenterVertically
+                ) {
+
+                    Text(
+                        text =
+                            itinerarySymbol(
+                                itinerary.type
+                            ),
+                        style =
+                            MaterialTheme.typography
+                                .headlineMedium
+                    )
+
+                    Spacer(
+                        modifier =
+                            Modifier.size(12.dp)
+                    )
+
+                    Column(
+                        modifier =
+                            Modifier.weight(1f)
+                    ) {
+
+                        Text(
+                            text = itinerary.title,
+                            style =
+                                MaterialTheme.typography
+                                    .titleLarge,
+                            fontWeight =
+                                FontWeight.SemiBold
+                        )
+
+                        if (itinerary.type.isNotBlank()) {
+
+                            Spacer(
+                                modifier =
+                                    Modifier.height(2.dp)
+                            )
+
+                            Text(
+                                text = itinerary.type,
+                                style =
+                                    MaterialTheme.typography
+                                        .bodyMedium,
+                                color =
+                                    MaterialTheme.colorScheme
+                                        .primary
+                            )
+                        }
+                    }
+
+                    // Activity-created itinerary items are
+                    // automatically booked and therefore do not
+                    // need the separate BOOKED chip.
+                    if (
+                        itinerary.booked &&
+                        itinerary.activityId == null
+                    ) {
+
+                        AssistChip(
+                            onClick = {},
+                            label = {
+                                Text("BOOKED")
+                            },
+                            colors =
+                                AssistChipDefaults
+                                    .assistChipColors(
+                                        containerColor =
+                                            MaterialTheme
+                                                .colorScheme
+                                                .primaryContainer,
+                                        labelColor =
+                                            MaterialTheme
+                                                .colorScheme
+                                                .onPrimaryContainer
+                                    )
+                        )
+                    }
+                }
+            }
+
+            // -----------------------------------------------------
+            // DATE / TIME / STAY
+            // -----------------------------------------------------
+
+            DetailSectionCard(
+                title = "Date / Time"
+            ) {
+
+                DetailLine(
+                    label = "Date",
+                    value =
+                        itinerary.date.format(
+                            DateTimeFormatter.ofPattern(
+                                "EEE, d MMM yyyy"
+                            )
+                        )
+                )
+
+                if (itinerary.time != null) {
+
+                    DetailLine(
+                        label = "Time",
+                        value =
+                            itinerary.time.format(
+                                DateTimeFormatter.ofPattern(
+                                    "HH:mm"
+                                )
+                            )
+                    )
+                }
+
+                if (
+                    itinerary.nights != null &&
+                    itinerary.nights > 0
+                ) {
+
+                    DetailLine(
+                        label = "Nights",
+                        value =
+                            itinerary.nights.toString()
+                    )
+                }
+            }
+
+            // -----------------------------------------------------
+            // DESTINATIONS
+            // -----------------------------------------------------
+
+            if (destinationNames.isNotEmpty()) {
+
+                DetailSectionCard(
+                    title = "Destinations"
+                ) {
+
+                    destinationNames.forEach { name ->
+
+                        Row(
+                            verticalAlignment =
+                                Alignment.CenterVertically
+                        ) {
+
+                            Text(
+                                text = "📍",
+                                modifier =
+                                    Modifier.size(20.dp)
+                            )
+
+                            Spacer(
+                                modifier =
+                                    Modifier.size(6.dp)
+                            )
+
+                            Text(
+                                text = name,
+                                style =
+                                    MaterialTheme.typography
+                                        .bodyLarge
+                            )
+                        }
+
+                        if (
+                            name !=
+                            destinationNames.last()
+                        ) {
+
+                            Spacer(
+                                modifier =
+                                    Modifier.height(6.dp)
+                            )
+                        }
+                    }
+                }
+            }
+
+            // -----------------------------------------------------
+            // COST
+            //
+            // Only shown when this itinerary item is linked to
+            // an Activity which has an estimated cost.
+            // -----------------------------------------------------
+
+            val activityCost =
+                linkedActivity?.estimatedCost
+
+            if (
+                linkedActivity != null &&
+                activityCost != null
+            ) {
+
+                DetailSectionCard(
+                    title = "Cost"
+                ) {
+
+                    Row(
+                        modifier =
+                            Modifier.fillMaxWidth(),
+                        horizontalArrangement =
+                            Arrangement.SpaceBetween,
+                        verticalAlignment =
+                            Alignment.Top
+                    ) {
+
+                        Text(
+                            text = "Estimated cost",
+                            style =
+                                MaterialTheme.typography
+                                    .titleMedium,
+                            fontWeight =
+                                FontWeight.SemiBold,
+                            color =
+                                MaterialTheme.colorScheme
+                                    .onSurfaceVariant
+                        )
+
+                        Column(
+                            horizontalAlignment =
+                                Alignment.End
+                        ) {
+
+                            Text(
+                                text =
+                                    formatActivityCost(
+                                        activityCost,
+                                        linkedActivity
+                                            ?.currency
+                                    ),
+                                style =
+                                    MaterialTheme.typography
+                                        .titleMedium,
+                                fontWeight =
+                                    FontWeight.SemiBold
+                            )
+
+                            if (
+                                linkedActivity
+                                    ?.convertedAmount != null
+                            ) {
+
+                                Text(
+                                    text =
+                                        "≈ ${
+                                            formatMoney(
+                                                linkedActivity
+                                                    ?.convertedAmount!!,
+                                                tripHomeCurrency
+                                            )
+                                        }",
+                                    style =
+                                        MaterialTheme.typography
+                                            .bodyMedium,
+                                    color =
+                                        MaterialTheme.colorScheme
+                                            .primary
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            // -----------------------------------------------------
+            // LINKS / DOCUMENTS
+            // -----------------------------------------------------
+
+            if (links.isNotEmpty()) {
+
+                DetailSectionCard(
+                    title = "Links / Documents"
+                ) {
+
+                    links.forEach { link ->
+
+                        TextButton(
+                            onClick = {
+                                openItineraryLink(
+                                    context,
+                                    link.url
+                                )
+                            }
+                        ) {
+
+                            Text(
+                                text =
+                                    link.label.ifBlank {
+                                        link.url
+                                    }
+                            )
+                        }
+                    }
+                }
+            }
+
+            // -----------------------------------------------------
+            // LEGACY WEB LINK
+            //
+            // Retained for older itinerary records which still
+            // contain the original webLink value.
+            // -----------------------------------------------------
+
+            if (
+                links.isEmpty() &&
+                !itinerary.webLink.isNullOrBlank()
+            ) {
+
+                DetailSectionCard(
+                    title = "Web Link"
+                ) {
+
+                    TextButton(
+                        onClick = {
+                            openItineraryLink(
+                                context,
+                                itinerary.webLink!!
+                            )
+                        }
+                    ) {
+
+                        Text(
+                            text = itinerary.webLink!!
+                        )
+                    }
+                }
+            }
+
+            // -----------------------------------------------------
+            // NOTES
+            // -----------------------------------------------------
+
+            if (!itinerary.notes.isNullOrBlank()) {
+
+                DetailSectionCard(
+                    title = "Notes"
+                ) {
+
+                    Text(
+                        text = itinerary.notes!!,
+                        style =
+                            MaterialTheme.typography.bodyLarge
+                    )
+                }
+            }
+
+            // -----------------------------------------------------
+            // LINKED BOOKING
+            // -----------------------------------------------------
+
+            if (itinerary.bookingId != null) {
+
+                DetailSectionCard(
+                    title = "Linked Booking"
+                ) {
+
+                    DetailLine(
+                        label = "Booking ID",
+                        value =
+                            itinerary.bookingId.toString()
+                    )
+                }
+            }
+
+            Spacer(
+                modifier = Modifier.height(4.dp)
+            )
+        }
+
+        Spacer(
+            modifier = Modifier.height(12.dp)
+        )
+
+        // ---------------------------------------------------------
+        // BOTTOM BUTTONS
+        // ---------------------------------------------------------
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement =
+                Arrangement.spacedBy(8.dp)
+        ) {
+
+            Button(
+                onClick = onBack,
+                modifier =
+                    Modifier.weight(1f)
+            ) {
+                Text("Back")
+            }
+
+            Button(
+                onClick = onEdit,
+                modifier =
+                    Modifier.weight(1f)
+            ) {
+                Text("Edit")
+            }
+
+            Button(
+                onClick = {
+                    showDeleteDialog = true
+                },
+                modifier =
+                    Modifier.weight(1f)
+            ) {
+                Text("Delete")
+            }
+        }
+    }
+
+    // ---------------------------------------------------------
+    // DELETE DIALOG
+    // ---------------------------------------------------------
 
     if (showDeleteDialog) {
 
@@ -171,14 +622,12 @@ fun ItineraryDetailsScreen(
             },
 
             title = {
-                Text("Delete Item?")
+                Text("Delete itinerary item?")
             },
 
             text = {
                 Text(
-                    "Are you sure you want to delete " +
-                            "\"${itinerary.title}\"? " +
-                            "This cannot be undone."
+                    "Are you sure you want to delete \"${itinerary.title}\"?"
                 )
             },
 
@@ -186,20 +635,11 @@ fun ItineraryDetailsScreen(
 
                 TextButton(
                     onClick = {
-
                         showDeleteDialog = false
-
                         onDelete()
                     }
                 ) {
-
-                    Text(
-                        text = "Delete",
-                        color =
-                            MaterialTheme.colorScheme.error,
-                        fontWeight =
-                            FontWeight.Bold
-                    )
+                    Text("Delete")
                 }
             },
 
@@ -215,624 +655,12 @@ fun ItineraryDetailsScreen(
             }
         )
     }
-
-    // =========================================================
-    // SCREEN
-    // =========================================================
-
-    Column(
-        modifier =
-            Modifier.fillMaxSize()
-    ) {
-
-        // =====================================================
-        // SCROLLABLE CONTENT
-        // =====================================================
-
-        Column(
-            modifier =
-                Modifier
-                    .weight(1f)
-                    .fillMaxWidth()
-                    .verticalScroll(
-                        rememberScrollState()
-                    )
-                    .padding(
-                        horizontal = 16.dp,
-                        vertical = 12.dp
-                    )
-        ) {
-
-            // -------------------------------------------------
-            // HEADER
-            // -------------------------------------------------
-
-            Text(
-                text = "Itinerary Item",
-                style =
-                    MaterialTheme.typography.headlineSmall,
-                fontWeight =
-                    FontWeight.SemiBold
-            )
-
-            Spacer(
-                modifier =
-                    Modifier.height(10.dp)
-            )
-
-            // -------------------------------------------------
-            // MAIN TITLE CARD
-            // -------------------------------------------------
-
-            Card(
-                modifier =
-                    Modifier.fillMaxWidth(),
-
-                elevation =
-                    CardDefaults.cardElevation(
-                        defaultElevation = 2.dp
-                    ),
-
-                colors =
-                    CardDefaults.cardColors(
-                        containerColor =
-                            MaterialTheme.colorScheme
-                                .surfaceContainer
-                    )
-            ) {
-
-                Row(
-                    modifier =
-                        Modifier
-                            .fillMaxWidth()
-                            .padding(14.dp),
-
-                    verticalAlignment =
-                        Alignment.Top
-                ) {
-
-                    // -----------------------------------------
-                    // TYPE SYMBOL
-                    // -----------------------------------------
-
-                    Text(
-                        text =
-                            itinerarySymbol(
-                                itinerary.type
-                            ),
-
-                        style =
-                            MaterialTheme.typography
-                                .headlineMedium,
-
-                        modifier =
-                            Modifier.size(40.dp)
-                    )
-
-                    Spacer(
-                        modifier =
-                            Modifier.size(10.dp)
-                    )
-
-                    // -----------------------------------------
-                    // TITLE + TYPE
-                    // -----------------------------------------
-
-                    Column(
-                        modifier =
-                            Modifier.weight(1f)
-                    ) {
-
-                        Text(
-                            text =
-                                itinerary.title,
-
-                            style =
-                                MaterialTheme.typography
-                                    .titleLarge,
-
-                            fontWeight =
-                                FontWeight.Bold
-                        )
-
-                        if (
-                            itinerary.type.isNotBlank()
-                        ) {
-
-                            Spacer(
-                                modifier =
-                                    Modifier.height(2.dp)
-                            )
-
-                            Text(
-                                text =
-                                    itinerary.type,
-
-                                style =
-                                    MaterialTheme.typography
-                                        .bodyMedium,
-
-                                color =
-                                    MaterialTheme.colorScheme
-                                        .primary,
-
-                                fontWeight =
-                                    FontWeight.Medium
-                            )
-                        }
-                    }
-
-                    // -----------------------------------------
-                    // BOOKED
-                    // -----------------------------------------
-
-                    if (
-                        itinerary.booked &&
-                        itinerary.activityId == null
-                    ) {
-
-                        Spacer(
-                            modifier =
-                                Modifier.size(6.dp)
-                        )
-
-                        AssistChip(
-                            onClick = {},
-
-                            label = {
-                                Text(
-                                    text = "BOOKED",
-                                    fontWeight =
-                                        FontWeight.Bold
-                                )
-                            },
-
-                            colors =
-                                AssistChipDefaults
-                                    .assistChipColors(
-                                        containerColor =
-                                            Color(0xFFB6FF00),
-
-                                        labelColor =
-                                            Color.Black
-                                    )
-                        )
-                    }
-                }
-            }
-
-            Spacer(
-                modifier =
-                    Modifier.height(10.dp)
-            )
-
-            // -------------------------------------------------
-            // DATE / TIME / STAY
-            // -------------------------------------------------
-
-            DetailSectionCard {
-
-                Column(
-                    verticalArrangement =
-                        Arrangement.spacedBy(10.dp)
-                ) {
-
-                    DetailLine(
-                        icon = "📅",
-                        label = "Date",
-                        value =
-                            itinerary.date.format(
-                                dateFormatter
-                            )
-                    )
-
-                    itinerary.time?.let { time ->
-
-                        DetailLine(
-                            icon = "🕐",
-                            label = "Time",
-                            value =
-                                time.format(
-                                    timeFormatter
-                                )
-                        )
-                    }
-
-                    itinerary.nights?.let { nights ->
-
-                        if (nights > 0) {
-
-                            val departureDate =
-                                itinerary.date.plusDays(
-                                    nights.toLong()
-                                )
-
-                            DetailLine(
-                                icon = "🛏",
-                                label = "Stay",
-                                value =
-                                    if (nights == 1) {
-                                        "1 night • Departure " +
-                                                departureDate.format(
-                                                    dateFormatter
-                                                )
-                                    } else {
-                                        "$nights nights • Departure " +
-                                                departureDate.format(
-                                                    dateFormatter
-                                                )
-                                    }
-                            )
-                        }
-                    }
-                }
-            }
-
-            // -------------------------------------------------
-            // DESTINATIONS
-            // -------------------------------------------------
-
-            if (
-                destinationsLoaded &&
-                destinationNames.isNotEmpty()
-            ) {
-
-                Spacer(
-                    modifier =
-                        Modifier.height(10.dp)
-                )
-
-                DetailSectionCard {
-
-                    Column {
-
-                        Text(
-                            text = "Destinations",
-
-                            style =
-                                MaterialTheme.typography
-                                    .titleMedium,
-
-                            fontWeight =
-                                FontWeight.SemiBold,
-
-                            color =
-                                MaterialTheme.colorScheme
-                                    .primary
-                        )
-
-                        Spacer(
-                            modifier =
-                                Modifier.height(6.dp)
-                        )
-
-                        destinationNames.forEach { name ->
-
-                            DetailLine(
-                                icon = "📍",
-                                label = "",
-                                value = name
-                            )
-
-                            if (
-                                name !=
-                                destinationNames.last()
-                            ) {
-
-                                Spacer(
-                                    modifier =
-                                        Modifier.height(7.dp)
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-
-            // -------------------------------------------------
-            // LINKS / DOCUMENTS
-            //
-            // Read-only here. Links are edited from the
-            // Add/Edit Itinerary screens.
-            // -------------------------------------------------
-
-            if (itineraryLinks.isNotEmpty()) {
-
-                Spacer(
-                    modifier =
-                        Modifier.height(10.dp)
-                )
-
-                DetailSectionCard {
-
-                    Column {
-
-                        Text(
-                            text = "Links / Documents",
-
-                            style =
-                                MaterialTheme.typography
-                                    .titleMedium,
-
-                            fontWeight =
-                                FontWeight.SemiBold,
-
-                            color =
-                                MaterialTheme.colorScheme
-                                    .primary
-                        )
-
-                        Spacer(
-                            modifier =
-                                Modifier.height(6.dp)
-                        )
-
-                        itineraryLinks.forEach { link ->
-
-                            Row(
-                                modifier =
-                                    Modifier.fillMaxWidth(),
-
-                                verticalAlignment =
-                                    Alignment.CenterVertically
-                            ) {
-
-                                Text(
-                                    text = link.label,
-
-                                    style =
-                                        MaterialTheme.typography
-                                            .bodyLarge,
-
-                                    fontWeight =
-                                        FontWeight.SemiBold,
-
-                                    color =
-                                        Color.White,
-
-                                    modifier =
-                                        Modifier.weight(1f)
-                                )
-
-                                TextButton(
-                                    onClick = {
-
-                                        openItineraryLink(
-                                            context,
-                                            link.url
-                                        )
-                                    }
-                                ) {
-                                    Text(
-                                        text = "Open",
-                                        color = Color.White
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            // -------------------------------------------------
-            // LEGACY WEB LINK
-            //
-            // Kept temporarily for older itinerary items
-            // that still have a webLink value.
-            // -------------------------------------------------
-
-            if (
-                itineraryLinks.isEmpty() &&
-                !itinerary.webLink
-                    .isNullOrBlank()
-            ) {
-
-                Spacer(
-                    modifier =
-                        Modifier.height(10.dp)
-                )
-
-                DetailSectionCard {
-
-                    Column {
-
-                        Text(
-                            text = "Web Link",
-
-                            style =
-                                MaterialTheme.typography
-                                    .titleMedium,
-
-                            fontWeight =
-                                FontWeight.SemiBold,
-
-                            color =
-                                MaterialTheme.colorScheme
-                                    .primary
-                        )
-
-                        Spacer(
-                            modifier =
-                                Modifier.height(5.dp)
-                        )
-
-                        Text(
-                            text =
-                                itinerary.webLink!!,
-
-                            style =
-                                MaterialTheme.typography
-                                    .bodyMedium,
-
-                            color =
-                                MaterialTheme.colorScheme
-                                    .onSurfaceVariant
-                        )
-
-                        Spacer(
-                            modifier =
-                                Modifier.height(8.dp)
-                        )
-
-                        Button(
-                            onClick = {
-
-                                openItineraryLink(
-                                    context,
-                                    itinerary.webLink!!
-                                )
-                            },
-
-                            modifier =
-                                Modifier.fillMaxWidth()
-                        ) {
-                            Text("Open Link")
-                        }
-                    }
-                }
-            }
-
-            // -------------------------------------------------
-            // NOTES
-            // -------------------------------------------------
-
-            if (
-                !itinerary.notes
-                    .isNullOrBlank()
-            ) {
-
-                Spacer(
-                    modifier =
-                        Modifier.height(10.dp)
-                )
-
-                DetailSectionCard {
-
-                    Column {
-
-                        Text(
-                            text = "Notes",
-
-                            style =
-                                MaterialTheme.typography
-                                    .titleMedium,
-
-                            fontWeight =
-                                FontWeight.SemiBold,
-
-                            color =
-                                MaterialTheme.colorScheme
-                                    .primary
-                        )
-
-                        Spacer(
-                            modifier =
-                                Modifier.height(6.dp)
-                        )
-
-                        Text(
-                            text =
-                                itinerary.notes!!,
-
-                            style =
-                                MaterialTheme.typography
-                                    .bodyLarge
-                        )
-                    }
-                }
-            }
-
-            // -------------------------------------------------
-            // LINKED BOOKING
-            // -------------------------------------------------
-
-            itinerary.bookingId?.let { bookingId ->
-
-                Spacer(
-                    modifier =
-                        Modifier.height(10.dp)
-                )
-
-                DetailSectionCard {
-
-                    DetailLine(
-                        icon = "🎫",
-                        label = "Booking",
-                        value =
-                            "Booking #$bookingId"
-                    )
-                }
-            }
-
-            Spacer(
-                modifier =
-                    Modifier.height(12.dp)
-            )
-        }
-
-        // =====================================================
-        // FIXED ACTION BUTTONS
-        // =====================================================
-
-        Row(
-            modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .padding(
-                        start = 16.dp,
-                        end = 16.dp,
-                        top = 6.dp,
-                        bottom = 10.dp
-                    ),
-
-            horizontalArrangement =
-                Arrangement.spacedBy(8.dp)
-        ) {
-
-            // -------------------------------------------------
-            // BACK
-            // -------------------------------------------------
-
-            Button(
-                onClick = onBack,
-                modifier =
-                    Modifier.weight(1f)
-            ) {
-                Text("Back")
-            }
-
-            // -------------------------------------------------
-            // EDIT
-            // -------------------------------------------------
-
-            Button(
-                onClick = onEdit,
-                modifier =
-                    Modifier.weight(1f)
-            ) {
-                Text("Edit")
-            }
-
-            // -------------------------------------------------
-            // DELETE
-            // -------------------------------------------------
-
-            Button(
-                onClick = {
-                    showDeleteDialog = true
-                },
-                modifier =
-                    Modifier.weight(1f)
-            ) {
-                Text("Delete")
-            }
-        }
-    }
 }
 
-// =============================================================
+
+// =================================================================
 // OPEN ITINERARY LINK
-// =============================================================
+// =================================================================
 
 private fun openItineraryLink(
     context: android.content.Context,
@@ -842,60 +670,39 @@ private fun openItineraryLink(
     try {
 
         val uri =
-            URI(
-                url.trim()
+            URI(url.trim())
+
+        val intent =
+            Intent(
+                Intent.ACTION_VIEW,
+                Uri.parse(uri.toString())
             )
 
-        if (
-            (
-                    uri.scheme.equals(
-                        "http",
-                        ignoreCase = true
-                    ) ||
-                            uri.scheme.equals(
-                                "https",
-                                ignoreCase = true
-                            )
-                    ) &&
-            !uri.host.isNullOrBlank()
-        ) {
+        context.startActivity(intent)
 
-            val intent =
-                Intent(
-                    Intent.ACTION_VIEW,
-                    Uri.parse(
-                        url.trim()
-                    )
-                )
-
-            context.startActivity(
-                intent
-            )
-        }
-
-    } catch (
-        _: Exception
-    ) {
-        // Do nothing if the link cannot be opened safely.
+    } catch (_: Exception) {
+        // Ignore invalid or unsupported URLs.
     }
 }
 
-// =============================================================
+
+// =================================================================
 // DETAIL SECTION CARD
-// =============================================================
+// =================================================================
 
 @Composable
 private fun DetailSectionCard(
-    content: @Composable () -> Unit
+    title: String,
+    content: @Composable ColumnScope.() -> Unit
 ) {
 
     Card(
-        modifier =
-            Modifier.fillMaxWidth(),
-
-        elevation =
-            CardDefaults.cardElevation(
-                defaultElevation = 1.dp
+        modifier = Modifier.fillMaxWidth(),
+        colors =
+            CardDefaults.cardColors(
+                containerColor =
+                    MaterialTheme.colorScheme
+                        .surfaceContainer
             )
     ) {
 
@@ -903,21 +710,36 @@ private fun DetailSectionCard(
             modifier =
                 Modifier
                     .fillMaxWidth()
-                    .padding(14.dp)
+                    .padding(16.dp)
         ) {
+
+            Text(
+                text = title,
+                style =
+                    MaterialTheme.typography.titleMedium,
+                fontWeight =
+                    FontWeight.SemiBold,
+                color =
+                    MaterialTheme.colorScheme.primary
+            )
+
+            Spacer(
+                modifier =
+                    Modifier.height(10.dp)
+            )
 
             content()
         }
     }
 }
 
-// =============================================================
+
+// =================================================================
 // DETAIL LINE
-// =============================================================
+// =================================================================
 
 @Composable
 private fun DetailLine(
-    icon: String,
     label: String,
     value: String
 ) {
@@ -925,62 +747,57 @@ private fun DetailLine(
     Row(
         modifier =
             Modifier.fillMaxWidth(),
-
+        horizontalArrangement =
+            Arrangement.SpaceBetween,
         verticalAlignment =
             Alignment.Top
     ) {
 
         Text(
-            text = icon,
-
+            text = label,
             style =
-                MaterialTheme.typography
-                    .titleMedium,
-
-            modifier =
-                Modifier.size(28.dp)
+                MaterialTheme.typography.bodyMedium,
+            color =
+                MaterialTheme.colorScheme
+                    .onSurfaceVariant
         )
 
         Spacer(
             modifier =
-                Modifier.size(7.dp)
+                Modifier.size(12.dp)
         )
 
-        Column(
-            modifier =
-                Modifier.weight(1f)
-        ) {
-
-            if (label.isNotBlank()) {
-
-                Text(
-                    text = label,
-
-                    style =
-                        MaterialTheme.typography
-                            .labelLarge,
-
-                    color =
-                        MaterialTheme.colorScheme
-                            .onSurfaceVariant,
-
-                    fontWeight =
-                        FontWeight.SemiBold
-                )
-
-                Spacer(
-                    modifier =
-                        Modifier.height(1.dp)
-                )
-            }
-
-            Text(
-                text = value,
-
-                style =
-                    MaterialTheme.typography
-                        .bodyLarge
-            )
-        }
+        Text(
+            text = value,
+            style =
+                MaterialTheme.typography.bodyLarge,
+            fontWeight =
+                FontWeight.Medium
+        )
     }
+}
+
+
+// =================================================================
+// CURRENCY DISPLAY FORMATTING
+// =================================================================
+
+private fun formatActivityCost(
+    amount: Double,
+    currency: String?
+): String {
+
+    if (currency.isNullOrBlank()) {
+
+        return String.format(
+            java.util.Locale.US,
+            "%,.2f",
+            amount
+        )
+    }
+
+    return formatMoney(
+        amount,
+        currency
+    )
 }
